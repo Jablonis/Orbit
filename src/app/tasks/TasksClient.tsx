@@ -1,0 +1,240 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
+import {
+  Task,
+  TaskComplexity,
+  TaskEstimateMode,
+  TaskPriority,
+  TaskType,
+  formatTaskTime,
+  taskComplexityLabels,
+  taskPriorityLabels,
+  taskTypeLabels,
+} from "@/lib/tasks";
+import { deleteTaskAction, saveTaskAction, toggleTaskAction } from "./actions";
+
+const typeOptions: TaskType[] = ["deep-work", "admin", "learning", "personal"];
+const complexityOptions: TaskComplexity[] = ["easy", "medium", "hard"];
+const priorityOptions: TaskPriority[] = ["low", "normal", "high"];
+const estimateOptions: TaskEstimateMode[] = ["1hr", "2hr", "3hr", "other"];
+
+export function TasksClient({
+  stats,
+  tasks,
+}: {
+  stats: ReturnType<typeof import("@/lib/tasks").getTaskStats>;
+  tasks: Task[];
+}) {
+  const [editing, setEditing] = useState<Task | null>(null);
+  const activeTasks = useMemo(() => tasks.filter((task) => !task.completed), [tasks]);
+
+  return (
+    <section className="mx-auto w-full max-w-[1440px] px-4 py-8 md:px-10">
+      <header className="mb-8">
+        <p className="label-caps text-[#60a5fa]">Task system</p>
+        <h1 className="mt-2 text-[34px] font-semibold leading-[40px] text-white sm:text-[44px] sm:leading-[52px]">
+          Task planning
+        </h1>
+        <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[#c4c7c8]">
+          Capture tasks with type, complexity, priority, estimates and notes. Every
+          row is synced to Supabase under your account.
+        </p>
+      </header>
+
+      <section className="grid gap-6 xl:grid-cols-[390px_1fr]">
+        <aside className="glass-panel rounded-[24px] p-6">
+          <p className="label-caps text-[#c4c7c8]">{editing ? "Edit task" : "New task"}</p>
+          <form action={saveTaskAction} className="mt-5 grid gap-3">
+            <input name="id" type="hidden" value={editing?.id ?? ""} />
+            <Field label="Title">
+              <input
+                className="field-input"
+                defaultValue={editing?.title ?? ""}
+                name="title"
+                required
+              />
+            </Field>
+            <Field label="Category">
+              <input
+                className="field-input"
+                defaultValue={editing?.category ?? "Jadro"}
+                name="category"
+                required
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Type">
+                <select className="field-input" defaultValue={editing?.type ?? "deep-work"} name="type">
+                  {typeOptions.map((value) => (
+                    <option key={value} value={value}>
+                      {taskTypeLabels[value]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Complexity">
+                <select className="field-input" defaultValue={editing?.complexity ?? "medium"} name="complexity">
+                  {complexityOptions.map((value) => (
+                    <option key={value} value={value}>
+                      {taskComplexityLabels[value]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Priority">
+                <select className="field-input" defaultValue={editing?.priority ?? "normal"} name="priority">
+                  {priorityOptions.map((value) => (
+                    <option key={value} value={value}>
+                      {taskPriorityLabels[value]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Estimate">
+                <select className="field-input" defaultValue={editing?.estimateMode ?? "1hr"} name="estimateMode">
+                  {estimateOptions.map((value) => (
+                    <option key={value} value={value}>
+                      {value === "other" ? "Custom" : value}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <Field label="From">
+                <input className="field-input" defaultValue={editing?.timeFrom ?? ""} name="timeFrom" type="time" />
+              </Field>
+              <Field label="To">
+                <input className="field-input" defaultValue={editing?.timeTo ?? ""} name="timeTo" type="time" />
+              </Field>
+              <Field label="Due">
+                <input className="field-input" defaultValue={editing?.dueDate ?? ""} name="dueDate" type="date" />
+              </Field>
+            </div>
+            <Field label="Note">
+              <textarea
+                className="field-input min-h-24 py-3"
+                defaultValue={editing?.note ?? ""}
+                name="note"
+              />
+            </Field>
+            <div className="flex gap-3">
+              <button className="flex-1 rounded-[14px] bg-white px-4 py-3 text-[13px] font-semibold text-[#202020]" type="submit">
+                {editing ? "Save changes" : "Create task"}
+              </button>
+              {editing ? (
+                <button
+                  className="rounded-[14px] border border-white/10 bg-[#201f1f] px-4 py-3 text-[13px] font-semibold text-[#c4c7c8]"
+                  onClick={() => setEditing(null)}
+                  type="button"
+                >
+                  Cancel
+                </button>
+              ) : null}
+            </div>
+          </form>
+        </aside>
+
+        <section className="space-y-6">
+          <div className="grid gap-3 sm:grid-cols-4">
+            <Metric label="Active" value={stats.activeTasksCount} tone="text-white" />
+            <Metric label="Done" value={stats.completedTasksCount} tone="text-[#a3e635]" />
+            <Metric label="Hard" value={stats.hardTasksCount} tone="text-[#f59e0b]" />
+            <Metric label="Focus min" value={stats.totalEstimateMinutes} tone="text-[#60a5fa]" />
+          </div>
+          <div className="glass-panel rounded-[24px] p-5">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <p className="label-caps text-[#c4c7c8]">Active queue</p>
+                <h2 className="mt-2 text-[24px] font-semibold text-white">
+                  {activeTasks.length} open tasks
+                </h2>
+              </div>
+              <span className="rounded-full bg-[#a3e635]/12 px-3 py-1 text-[12px] font-semibold text-[#d9f99d]">
+                {stats.completionPercent}% done
+              </span>
+            </div>
+            <div className="grid gap-3">
+              {tasks.map((task) => (
+                <article
+                  className="grid gap-4 rounded-[18px] border border-white/10 bg-[#201f1f]/55 p-4 lg:grid-cols-[1fr_auto]"
+                  key={task.id}
+                >
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className={`text-[16px] font-semibold ${task.completed ? "text-[#8d9092] line-through" : "text-white"}`}>
+                        {task.title}
+                      </h3>
+                      <span className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-[#c4c7c8]">
+                        {taskTypeLabels[task.type]}
+                      </span>
+                      <span className="rounded-full bg-[#60a5fa]/10 px-2.5 py-1 text-[11px] font-semibold text-[#bfdbfe]">
+                        {task.priority}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-[13px] text-[#c4c7c8]">
+                      {task.category} · {formatTaskTime(task)}
+                      {task.dueDate ? ` · due ${task.dueDate}` : ""}
+                    </p>
+                    {task.note ? (
+                      <p className="mt-2 text-[13px] leading-5 text-[#8d9092]">{task.note}</p>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <form action={toggleTaskAction}>
+                      <input name="id" type="hidden" value={task.id} />
+                      <input name="completed" type="hidden" value={String(!task.completed)} />
+                      <button className="rounded-[12px] border border-white/10 bg-[#2a2a2a] px-3 py-2 text-[12px] font-semibold text-white" type="submit">
+                        {task.completed ? "Reopen" : "Done"}
+                      </button>
+                    </form>
+                    <button
+                      className="rounded-[12px] border border-white/10 bg-[#2a2a2a] px-3 py-2 text-[12px] font-semibold text-[#c4c7c8]"
+                      onClick={() => setEditing(task)}
+                      type="button"
+                    >
+                      Edit
+                    </button>
+                    <form action={deleteTaskAction}>
+                      <input name="id" type="hidden" value={task.id} />
+                      <button className="rounded-[12px] border border-[#ffb4ab]/20 bg-[#ffb4ab]/10 px-3 py-2 text-[12px] font-semibold text-[#ffdad6]" type="submit">
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                </article>
+              ))}
+              {tasks.length === 0 ? (
+                <p className="rounded-[18px] border border-white/10 bg-[#201f1f]/55 p-5 text-[14px] text-[#c4c7c8]">
+                  No tasks yet. Create your first task from the panel.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      </section>
+    </section>
+  );
+}
+
+function Field({ children, label }: { children: ReactNode; label: string }) {
+  return (
+    <label className="grid gap-2">
+      <span className="label-caps text-[#c4c7c8]">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function Metric({ label, tone, value }: { label: string; tone: string; value: number }) {
+  return (
+    <article className="glass-panel rounded-[18px] p-4">
+      <p className="label-caps text-[#c4c7c8]">{label}</p>
+      <p className={`mt-3 text-[28px] font-semibold ${tone}`}>{value}</p>
+    </article>
+  );
+}
