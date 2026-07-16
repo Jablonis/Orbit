@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   FinanceTransaction,
   formatCurrency,
@@ -11,6 +12,7 @@ import {
   ImportState,
   clearFinanceDataAction,
   importFinanceCsvAction,
+  restoreFinanceDataAction,
 } from "./actions";
 
 const initialImportState: ImportState = { errors: [], message: "" };
@@ -27,6 +29,7 @@ export function FinanceClient({
     importFinanceCsvAction,
     initialImportState,
   );
+  const [archivedAt, setArchivedAt] = useState<string | null>(null);
 
   function download(filename: string, content: string) {
     const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
@@ -82,11 +85,34 @@ export function FinanceClient({
           </div>
         </article>
 
-        <ImportCard importAction={importAction} importPending={importPending} importState={importState} />
+        <ImportCard
+          importAction={importAction}
+          importPending={importPending}
+          importState={importState}
+          onCleared={setArchivedAt}
+        />
         <CashflowCard summary={summary} />
         <TransactionsCard transactions={summary.recentTransactions} />
         <CategoryCard summary={summary} />
       </section>
+      {archivedAt ? (
+        <div
+          className="glass-modal fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-full px-4 py-3 text-[13px] text-white md:left-[calc(50%+56px)]"
+          role="status"
+        >
+          Finance data archived.
+          <button
+            className="font-bold text-[#a3e635]"
+            onClick={async () => {
+              const result = await restoreFinanceDataAction(archivedAt);
+              if (result.ok) setArchivedAt(null);
+            }}
+            type="button"
+          >
+            Undo
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -95,13 +121,15 @@ function ImportCard({
   importAction,
   importPending,
   importState,
+  onCleared,
 }: {
   importAction: (formData: FormData) => void;
   importPending: boolean;
   importState: ImportState;
+  onCleared: (archivedAt: string) => void;
 }) {
   return (
-    <article className="glass-panel rounded-[24px] p-6 xl:col-span-6">
+    <article className="glass-panel rounded-[24px] p-6 xl:col-span-6" id="csv-tools">
       <p className="label-caps text-[#c4c7c8]">CSV tools</p>
       <form action={importAction} className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
         <input
@@ -131,11 +159,21 @@ function ImportCard({
           ))}
         </div>
       ) : null}
-      <form action={clearFinanceDataAction} className="mt-4">
-        <button className="rounded-[14px] border border-[#ffb4ab]/20 bg-[#ffb4ab]/10 px-4 py-2 text-[13px] font-semibold text-[#ffdad6]" type="submit">
-          Clear finance data
-        </button>
-      </form>
+      <div className="mt-4">
+        <ConfirmDialog
+          confirmationPhrase="CLEAR FINANCE"
+          confirmLabel="Clear all data"
+          description="Every active finance transaction will be archived. Your dashboard totals will reset, and you can undo immediately after clearing."
+          onConfirm={async () => {
+            const result = await clearFinanceDataAction();
+            if (result.ok) onCleared(result.archivedAt);
+            return result;
+          }}
+          title="Clear all finance data?"
+          triggerClassName="rounded-[14px] border border-[#ffb4ab]/20 bg-[#ffb4ab]/10 px-4 py-2 text-[13px] font-semibold text-[#ffdad6]"
+          triggerLabel="Clear finance data"
+        />
+      </div>
     </article>
   );
 }

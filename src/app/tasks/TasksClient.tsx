@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   Task,
   TaskComplexity,
@@ -14,7 +15,12 @@ import {
   taskPriorityLabels,
   taskTypeLabels,
 } from "@/lib/tasks";
-import { deleteTaskAction, saveTaskAction, toggleTaskAction } from "./actions";
+import {
+  archiveTaskAction,
+  restoreTaskAction,
+  saveTaskAction,
+  toggleTaskAction,
+} from "./actions";
 
 const typeOptions: TaskType[] = ["deep-work", "admin", "learning", "personal"];
 const complexityOptions: TaskComplexity[] = ["easy", "medium", "hard"];
@@ -33,7 +39,9 @@ export function TasksClient({
   today: string;
 }) {
   const [editing, setEditing] = useState<Task | null>(null);
-  const activeTasks = useMemo(() => tasks.filter((task) => !task.completed), [tasks]);
+  const [archivedTaskId, setArchivedTaskId] = useState<string | null>(null);
+  const displayTasks = tasks.filter((task) => task.id !== archivedTaskId);
+  const activeTasks = displayTasks.filter((task) => !task.completed);
 
   return (
     <section className="mx-auto w-full max-w-[1440px] px-4 py-8 md:px-10">
@@ -49,7 +57,7 @@ export function TasksClient({
       </header>
 
       <section className="grid gap-6 xl:grid-cols-[390px_1fr]">
-        <aside className="glass-panel rounded-[24px] p-6">
+        <aside className="glass-panel rounded-[24px] p-6" id="new-task">
           <p className="label-caps text-[#c4c7c8]">{editing ? "Edit task" : "New task"}</p>
           <form action={saveTaskAction} className="mt-5 grid gap-3" key={editing?.id ?? "new-task"}>
             <input name="id" type="hidden" value={editing?.id ?? ""} />
@@ -176,7 +184,7 @@ export function TasksClient({
               </span>
             </div>
             <div className="grid gap-3">
-              {tasks.map((task) => {
+              {displayTasks.map((task) => {
                 const dayStatus = getTaskDayStatus(task, today);
                 const tone = taskDayTones[dayStatus];
 
@@ -223,17 +231,24 @@ export function TasksClient({
                     >
                       Edit
                     </button>
-                    <form action={deleteTaskAction}>
-                      <input name="id" type="hidden" value={task.id} />
-                      <button className="rounded-[12px] border border-[#ffb4ab]/20 bg-[#ffb4ab]/10 px-3 py-2 text-[12px] font-semibold text-[#ffdad6]" type="submit">
-                        Delete
-                      </button>
-                    </form>
+                    <ConfirmDialog
+                      confirmLabel="Archive task"
+                      description={`“${task.title}” will leave your active task list. Its completion history remains intact, and you can undo this action.`}
+                      onConfirm={() => {
+                        const formData = new FormData();
+                        formData.set("id", task.id);
+                        return archiveTaskAction(formData);
+                      }}
+                      onSuccess={() => setArchivedTaskId(task.id)}
+                      title="Archive this task?"
+                      triggerClassName="rounded-[12px] border border-[#ffb4ab]/20 bg-[#ffb4ab]/10 px-3 py-2 text-[12px] font-semibold text-[#ffdad6]"
+                      triggerLabel="Archive"
+                    />
                   </div>
                   </article>
                 );
               })}
-              {tasks.length === 0 ? (
+              {displayTasks.length === 0 ? (
                 <p className="rounded-[18px] border border-white/10 bg-[#201f1f]/55 p-5 text-[14px] text-[#c4c7c8]">
                   No tasks yet. Create your first task from the panel.
                 </p>
@@ -242,6 +257,24 @@ export function TasksClient({
           </div>
         </section>
       </section>
+      {archivedTaskId ? (
+        <div
+          className="glass-modal fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-full px-4 py-3 text-[13px] text-white md:left-[calc(50%+56px)]"
+          role="status"
+        >
+          Task archived.
+          <button
+            className="font-bold text-[#a3e635]"
+            onClick={async () => {
+              const result = await restoreTaskAction(archivedTaskId);
+              if (result.ok) setArchivedTaskId(null);
+            }}
+            type="button"
+          >
+            Undo
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -9,6 +9,10 @@ export type ImportState = {
   errors: string[];
 };
 
+export type FinanceClearResult =
+  | { ok: true; archivedAt: string }
+  | { ok: false; error: string };
+
 export async function importFinanceCsvAction(
   _state: ImportState,
   formData: FormData,
@@ -26,7 +30,9 @@ export async function importFinanceCsvAction(
     const { error } = await supabase
       .from("finance_transactions")
       .insert(parsed.rows.map((row) => toFinanceInsert(row, user.id)));
-    if (error) throw new Error(error.message);
+    if (error) {
+      return { errors: ["The valid rows could not be imported."], message: "" };
+    }
   }
 
   revalidatePath("/");
@@ -38,14 +44,33 @@ export async function importFinanceCsvAction(
   };
 }
 
-export async function clearFinanceDataAction() {
+export async function clearFinanceDataAction(): Promise<FinanceClearResult> {
   const { supabase, user } = await getAuthenticatedUser();
+  const archivedAt = new Date().toISOString();
   const { error } = await supabase
     .from("finance_transactions")
-    .delete()
-    .eq("user_id", user.id);
-  if (error) throw new Error(error.message);
+    .update({ archived_at: archivedAt })
+    .eq("user_id", user.id)
+    .is("archived_at", null);
+  if (error) return { ok: false, error: "Finance data could not be cleared." };
 
   revalidatePath("/");
   revalidatePath("/finance");
+  return { ok: true, archivedAt };
+}
+
+export async function restoreFinanceDataAction(
+  archivedAt: string,
+): Promise<FinanceClearResult> {
+  const { supabase, user } = await getAuthenticatedUser();
+  const { error } = await supabase
+    .from("finance_transactions")
+    .update({ archived_at: null })
+    .eq("user_id", user.id)
+    .eq("archived_at", archivedAt);
+  if (error) return { ok: false, error: "Finance data could not be restored." };
+
+  revalidatePath("/");
+  revalidatePath("/finance");
+  return { ok: true, archivedAt };
 }

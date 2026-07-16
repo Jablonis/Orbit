@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@/lib/auth";
 import {
-  SportType,
-  TrainingQuality,
-  WeekdayId,
+  type SportType,
+  type TrainingQuality,
+  type WeekdayId,
   defaultWeeklyPlan,
+  getDateForWeekday,
   weekdayOrder,
 } from "@/lib/fitness";
+import { getDateInTimeZone } from "@/lib/tasks";
 
 const sportTypes: SportType[] = ["gym", "tennis", "cardio", "mobility", "rest"];
 const trainingQualities: TrainingQuality[] = ["low", "medium", "high"];
@@ -29,6 +31,11 @@ function isQuality(value: string): value is TrainingQuality {
   return trainingQualities.includes(value as TrainingQuality);
 }
 
+function revalidateFitness() {
+  revalidatePath("/");
+  revalidatePath("/fitness");
+}
+
 export async function updateFitnessDayAction(
   formData: FormData,
 ): Promise<FitnessActionResult> {
@@ -40,19 +47,13 @@ export async function updateFitnessDayAction(
     return { ok: false, error: "Invalid training day." };
   }
 
-  const { error } = await supabase.from("fitness_weekly_plan").upsert(
-    {
-      ...(sport === "rest" ? { completed: false } : {}),
-      sport,
-      user_id: user.id,
-      weekday,
-    },
+  const { error } = await supabase.from("fitness_plan_days").upsert(
+    { sport, user_id: user.id, weekday },
     { onConflict: "user_id,weekday" },
   );
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: "The training plan could not be saved." };
 
-  revalidatePath("/");
-  revalidatePath("/fitness");
+  revalidateFitness();
   return { ok: true };
 }
 
@@ -65,75 +66,86 @@ export async function saveFitnessLogAction(
   const qualityValue = String(formData.get("quality") ?? "medium");
   const durationValue = Number(formData.get("durationMinutes") ?? 60);
 
-  if (!isWeekday(weekday) || !isSport(sport) || !isQuality(qualityValue)) {
+  if (
+    !isWeekday(weekday) ||
+    !isSport(sport) ||
+    sport === "rest" ||
+    !isQuality(qualityValue)
+  ) {
     return { ok: false, error: "Invalid training details." };
   }
 
   const durationMinutes = Number.isFinite(durationValue)
     ? Math.min(1440, Math.max(0, Math.round(durationValue)))
     : 60;
-
-  const { error } = await supabase.from("fitness_weekly_plan").upsert(
+  const performedOn = getDateForWeekday(getDateInTimeZone(), weekday);
+  const { error } = await supabase.from("fitness_sessions").upsert(
     {
-      completed:
-        sport !== "rest" && String(formData.get("completed") ?? "") === "on",
+      completed: String(formData.get("completed") ?? "") === "on",
       duration_minutes: durationMinutes,
-      notes: String(formData.get("notes") ?? "").trim(),
+      notes: String(formData.get("notes") ?? "").trim().slice(0, 2000),
+      performed_at: String(formData.get("time") ?? "").trim() || null,
+      performed_on: performedOn,
       quality: qualityValue,
       sport,
-      time: String(formData.get("time") ?? "").trim(),
       user_id: user.id,
-      weekday,
     },
-    { onConflict: "user_id,weekday" },
+    { onConflict: "user_id,performed_on" },
   );
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: "The training session could not be saved." };
 
-  revalidatePath("/");
-  revalidatePath("/fitness");
+  revalidateFitness();
   return { ok: true };
 }
 
-export async function toggleFitnessDoneAction(formData: FormData) {
+export async function toggleFitnessDoneAction(
+  formData: FormData,
+): Promise<FitnessActionResult> {
   const { supabase, user } = await getAuthenticatedUser();
-  const weekday = String(formData.get("weekday") ?? "") as WeekdayId;
-  const sport = String(formData.get("sport") ?? "gym") as SportType;
+  const weekday = String(formData.get("weekday") ?? "");
+  const sport = String(formData.get("sport") ?? "");
   const completed = String(formData.get("completed") ?? "") === "true";
 
-  if (!weekday) return;
+  if (!isWeekday(weekday) || !isSport(sport) || sport === "rest") {
+    return { ok: false, error: "Invalid training session." };
+  }
 
-  const { error } = await supabase.from("fitness_weekly_plan").upsert(
+  const { error } = await supabase.from("fitness_sessions").upsert(
     {
       completed,
+      duration_minutes: 60,
+      performed_on: getDateForWeekday(getDateInTimeZone(), weekday),
+      quality: "medium",
       sport,
       user_id: user.id,
-      weekday,
     },
-    { onConflict: "user_id,weekday" },
+    { onConflict: "user_id,performed_on" },
   );
-  if (error) throw new Error(error.message);
+  if (error) return { ok: false, error: "The training status could not be updated." };
 
-  revalidatePath("/");
-  revalidatePath("/fitness");
+  revalidateFitness();
+  return { ok: true };
 }
 
-export async function resetFitnessPlanAction() {
+export async function toggleFitnessDoneFormAction(formData: FormData) {
+  await toggleFitnessDoneAction(formData);
+}
+
+export async function resetFitnessPlanAction(): Promise<FitnessActionResult> {
   const { supabase, user } = await getAuthenticatedUser();
   const rows = defaultWeeklyPlan.map((day) => ({
-    completed: false,
-    duration_minutes: 60,
     notes: "",
-    quality: "medium",
+    planned_duration_minutes: 60,
+    planned_time: null,
     sport: day.sport,
-    time: "",
     user_id: user.id,
     weekday: day.id,
   }));
   const { error } = await supabase
-    .from("fitness_weekly_plan")
+    .from("fitness_plan_days")
     .upsert(rows, { onConflict: "user_id,weekday" });
-  if (error) throw new Error(error.message);
+  if (error) return { ok: false, error: "The training plan could not be reset." };
 
-  revalidatePath("/");
-  revalidatePath("/fitness");
+  revalidateFitness();
+  return { ok: true };
 }

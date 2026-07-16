@@ -22,12 +22,23 @@ export type Task = {
   dueDate: string;
   note: string;
   completed: boolean;
+  completedAt?: string;
   createdAt?: string;
   updatedAt?: string;
 };
 
-export type TaskInput = Omit<Task, "id" | "completed" | "createdAt" | "updatedAt"> & {
+export type TaskInput = Omit<
+  Task,
+  "id" | "completed" | "completedAt" | "createdAt" | "updatedAt"
+> & {
   completed?: boolean;
+};
+
+export type TaskCompletion = {
+  completedAt: string;
+  estimateMinutes: number;
+  plannedFor: string;
+  taskId: string;
 };
 
 export const taskTypeLabels: Record<TaskType, string> = {
@@ -70,8 +81,16 @@ type DbTask = {
   due_date: string | null;
   note: string | null;
   completed: boolean;
+  completed_at?: string | null;
   created_at?: string;
   updated_at?: string;
+};
+
+type DbTaskCompletion = {
+  completed_at: string;
+  estimate_minutes: number;
+  planned_for: string | null;
+  task_id: string;
 };
 
 export function getMinutesBetweenTimes(timeFrom: string, timeTo: string) {
@@ -169,7 +188,7 @@ export function isTaskVisibleToday(task: Task, today: string) {
     return true;
   }
 
-  return getDateInTimeZone(task.updatedAt ?? "") === today;
+  return getDateInTimeZone(task.completedAt ?? "") === today;
 }
 
 export function getVisibleTasks(tasks: Task[], today: string) {
@@ -233,6 +252,7 @@ export function mapDbTask(task: DbTask): Task {
     dueDate: task.due_date ?? "",
     note: task.note ?? "",
     completed: task.completed,
+    completedAt: task.completed_at ?? undefined,
     createdAt: task.created_at,
     updatedAt: task.updated_at,
   };
@@ -248,8 +268,8 @@ export function toTaskInsert(input: TaskInput, userId: string) {
     priority: input.priority,
     estimate_mode: input.estimateMode,
     estimate_minutes: input.estimateMinutes,
-    time_from: input.timeFrom,
-    time_to: input.timeTo,
+    time_from: input.timeFrom || null,
+    time_to: input.timeTo || null,
     due_date: input.dueDate || null,
     note: input.note,
     completed: Boolean(input.completed),
@@ -258,13 +278,16 @@ export function toTaskInsert(input: TaskInput, userId: string) {
 
 export async function getTasks(
   supabase: SupabaseClient,
+  userId: string,
   options: { includeHistory?: boolean; today?: string } = {},
 ) {
   const { data, error } = await supabase
     .from("tasks")
     .select(
-      "id,title,category,type,complexity,priority,estimate_mode,estimate_minutes,time_from,time_to,due_date,note,completed,created_at,updated_at",
+      "id,title,category,type,complexity,priority,estimate_mode,estimate_minutes,time_from,time_to,due_date,note,completed,completed_at,created_at,updated_at",
     )
+    .eq("user_id", userId)
+    .is("archived_at", null)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -278,6 +301,72 @@ export async function getTasks(
   }
 
   return getVisibleTasks(tasks, options.today ?? getDateInTimeZone());
+}
+
+export async function getTaskCompletions(
+  supabase: SupabaseClient,
+  userId: string,
+  from: string,
+  to: string,
+) {
+  const { data, error } = await supabase
+    .from("task_completions")
+    .select("task_id,completed_at,planned_for,estimate_minutes")
+    .eq("user_id", userId)
+    .gte("completed_at", `${from}T00:00:00`)
+    .lt("completed_at", `${to}T00:00:00`)
+    .order("completed_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((completion) => {
+    const row = completion as DbTaskCompletion;
+    return {
+      completedAt: row.completed_at,
+      estimateMinutes: row.estimate_minutes,
+      plannedFor: row.planned_for ?? "",
+      taskId: row.task_id,
+    } satisfies TaskCompletion;
+  });
+}
+
+export function sortDashboardTasks(tasks: Task[], today: string) {
+  const rank = (task: Task) => {
+    const status = getTaskDayStatus(task, today);
+    if (status === "overdue") return 0;
+    if (status === "today") return 1;
+    if (status === "scheduled") return 2;
+    return 3;
+  };
+  const priority = { high: 0, normal: 1, low: 2 } as const;
+
+  return [...tasks].sort(
+    (a, b) =>
+      rank(a) - rank(b) ||
+      priority[a.priority] - priority[b.priority] ||
+      (a.dueDate || "9999-12-31").localeCompare(b.dueDate || "9999-12-31") ||
+      (b.createdAt ?? "").localeCompare(a.createdAt ?? ""),
+  );
+}
+
+export function formatRelativeTaskDate(task: Task, today: string) {
+  const status = getTaskDayStatus(task, today);
+  if (status === "completed") return "Done today";
+  if (!task.dueDate) return status === "overdue" ? "Carried forward" : "Today";
+  if (task.dueDate === today) return "Today";
+
+  const difference = Math.round(
+    (Date.parse(`${task.dueDate}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) /
+      86_400_000,
+  );
+  if (difference === 1) return "Tomorrow";
+  if (difference < 0) {
+    const days = Math.abs(difference);
+    return `${days} day${days === 1 ? "" : "s"} overdue`;
+  }
+  return `In ${difference} days`;
 }
 
 export function getTaskStats(tasks: Task[]) {

@@ -6,8 +6,8 @@ import { FinanceClient } from "./FinanceClient";
 export const dynamic = "force-dynamic";
 
 export default async function FinancePage() {
-  const { supabase } = await getAuthenticatedUser();
-  const transactions = await getFinanceTransactions(supabase);
+  const { supabase, user } = await getAuthenticatedUser();
+  const transactions = await getFinanceTransactions(supabase, user.id);
   const summary = getFinanceSummary(transactions);
 
   return (

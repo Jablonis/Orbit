@@ -12,9 +12,9 @@ import { TasksClient } from "./TasksClient";
 export const dynamic = "force-dynamic";
 
 export default async function TasksPage() {
-  const { supabase } = await getAuthenticatedUser();
+  const { supabase, user } = await getAuthenticatedUser();
   const today = getDateInTimeZone();
-  const taskHistory = await getTasks(supabase, { includeHistory: true });
+  const taskHistory = await getTasks(supabase, user.id, { includeHistory: true });
   const tasks = getVisibleTasks(taskHistory, today);
   const stats = getTaskStats(tasks);
   const categorySuggestions = getMostUsedTaskCategories(taskHistory);

@@ -2,12 +2,14 @@
 
 import type { ReactNode } from "react";
 import { useState, useTransition } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   SportType,
   TrainingQuality,
   TodayTraining,
   WeekdayId,
   WeeklyPlanDay,
+  defaultWeeklyPlan,
   getTrainingForDay,
   qualityLabels,
   sportDescriptions,
@@ -41,16 +43,11 @@ export function FitnessClient({
   weeklyPlan: WeeklyPlanDay[];
 }) {
   const [localPlan, setLocalPlan] = useState(weeklyPlan);
-  const [lastServerPlan, setLastServerPlan] = useState(weeklyPlan);
   const [openDayId, setOpenDayId] = useState<WeekdayId | null>(null);
   const [pendingDayId, setPendingDayId] = useState<WeekdayId | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const [resetNotice, setResetNotice] = useState("");
   const [, startTransition] = useTransition();
-
-  if (weeklyPlan !== lastServerPlan) {
-    setLastServerPlan(weeklyPlan);
-    setLocalPlan(weeklyPlan);
-  }
 
   const todayDay =
     localPlan.find((day) => day.id === stats.todayTraining.day.id) ?? localPlan[0];
@@ -155,15 +152,30 @@ export function FitnessClient({
             {completedSessionsCount} of {trainingDaysCount} planned sessions complete
           </p>
         </div>
-        <form action={resetFitnessPlanAction}>
-          <button
-            className="rounded-[12px] border border-white/10 bg-[#201f1f] px-4 py-2.5 text-[13px] font-semibold text-[#c4c7c8] transition hover:border-white/20 hover:bg-[#2a2929] hover:text-white"
-            type="submit"
-          >
-            Reset week
-          </button>
-        </form>
+        <ConfirmDialog
+          confirmLabel="Reset plan"
+          description="This restores the default weekly sports and planned times. Completed training sessions stay safely in your history."
+          onConfirm={resetFitnessPlanAction}
+          onSuccess={() => {
+            setLocalPlan((current) =>
+              current.map((day, index) => ({
+                ...day,
+                sport: defaultWeeklyPlan[index].sport,
+              })),
+            );
+            setResetNotice("Plan reset. Session history was preserved.");
+          }}
+          title="Reset the weekly plan?"
+          triggerClassName="rounded-[12px] border border-white/10 bg-[#201f1f] px-4 py-2.5 text-[13px] font-semibold text-[#c4c7c8] transition hover:border-white/20 hover:bg-[#2a2929] hover:text-white"
+          triggerLabel="Reset plan"
+        />
       </header>
+
+      {resetNotice ? (
+        <p className="mb-5 text-[13px] font-semibold text-[#a3e635]" role="status">
+          {resetNotice}
+        </p>
+      ) : null}
 
       <section className="grid gap-5 xl:grid-cols-12">
         <article className="glass-panel relative overflow-hidden rounded-[24px] p-6 sm:p-8 xl:col-span-8">
@@ -214,7 +226,7 @@ export function FitnessClient({
         </aside>
       </section>
 
-      <section className="mt-8">
+      <section className="mt-8" id="training-calendar">
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
             <p className="label-caps text-[#9ea3a5]">Calendar</p>

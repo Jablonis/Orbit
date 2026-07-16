@@ -64,10 +64,15 @@ export function toFinanceInsert(input: FinanceInput, userId: string) {
   };
 }
 
-export async function getFinanceTransactions(supabase: SupabaseClient) {
+export async function getFinanceTransactions(
+  supabase: SupabaseClient,
+  userId: string,
+) {
   const { data, error } = await supabase
     .from("finance_transactions")
     .select("id,date,title,category,amount,status,created_at,updated_at")
+    .eq("user_id", userId)
+    .is("archived_at", null)
     .order("date", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -204,7 +209,7 @@ export function parseFinanceCsv(csv: string): ParsedFinanceCsv {
       return;
     }
 
-    if (!title || !category) {
+    if (!title || !category || title.length > 200 || category.length > 80) {
       errors.push(`Row ${rowNumber}: title and category are required.`);
       return;
     }
