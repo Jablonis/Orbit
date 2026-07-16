@@ -4,6 +4,9 @@ export type TaskType = "deep-work" | "admin" | "learning" | "personal";
 export type TaskComplexity = "easy" | "medium" | "hard";
 export type TaskPriority = "low" | "normal" | "high";
 export type TaskEstimateMode = "1hr" | "2hr" | "3hr" | "other";
+export type TaskDayStatus = "completed" | "overdue" | "scheduled" | "today";
+
+export const taskTimeZone = "Europe/Bratislava";
 
 export type Task = {
   id: string;
@@ -121,6 +124,82 @@ export function formatTaskTime(task: Task) {
   return taskEstimateLabels[task.estimateMode];
 }
 
+export function getDateInTimeZone(
+  date: Date | string = new Date(),
+  timeZone = taskTimeZone,
+) {
+  const value = typeof date === "string" ? new Date(date) : date;
+
+  if (Number.isNaN(value.getTime())) {
+    return "";
+  }
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone,
+    year: "numeric",
+  }).formatToParts(value);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((item) => item.type === type)?.value ?? "";
+
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
+export function getTaskDayStatus(task: Task, today: string): TaskDayStatus {
+  if (task.completed) {
+    return "completed";
+  }
+
+  const taskDate = task.dueDate || getDateInTimeZone(task.createdAt ?? "");
+
+  if (taskDate && taskDate < today) {
+    return "overdue";
+  }
+
+  if (task.dueDate && task.dueDate > today) {
+    return "scheduled";
+  }
+
+  return "today";
+}
+
+export function isTaskVisibleToday(task: Task, today: string) {
+  if (!task.completed) {
+    return true;
+  }
+
+  return getDateInTimeZone(task.updatedAt ?? "") === today;
+}
+
+export function getVisibleTasks(tasks: Task[], today: string) {
+  return tasks.filter((task) => isTaskVisibleToday(task, today));
+}
+
+export function getMostUsedTaskCategories(tasks: Task[], limit = 6) {
+  const categories = new Map<string, { count: number; label: string }>();
+
+  for (const task of tasks) {
+    const label = task.category.trim();
+
+    if (!label) {
+      continue;
+    }
+
+    const key = label.toLocaleLowerCase();
+    const category = categories.get(key);
+    categories.set(key, {
+      count: (category?.count ?? 0) + 1,
+      label: category?.label ?? label,
+    });
+  }
+
+  return [...categories.values()]
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+    .slice(0, limit)
+    .map((category) => category.label);
+}
+
 function toTaskType(value: string): TaskType {
   return value === "admin" || value === "learning" || value === "personal"
     ? value
@@ -177,7 +256,10 @@ export function toTaskInsert(input: TaskInput, userId: string) {
   };
 }
 
-export async function getTasks(supabase: SupabaseClient) {
+export async function getTasks(
+  supabase: SupabaseClient,
+  options: { includeHistory?: boolean; today?: string } = {},
+) {
   const { data, error } = await supabase
     .from("tasks")
     .select(
@@ -189,7 +271,13 @@ export async function getTasks(supabase: SupabaseClient) {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map((task) => mapDbTask(task as DbTask));
+  const tasks = (data ?? []).map((task) => mapDbTask(task as DbTask));
+
+  if (options.includeHistory) {
+    return tasks;
+  }
+
+  return getVisibleTasks(tasks, options.today ?? getDateInTimeZone());
 }
 
 export function getTaskStats(tasks: Task[]) {

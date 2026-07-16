@@ -29,6 +29,7 @@ export async function saveTaskAction(formData: FormData) {
       : presetEstimateMinutes[estimateMode] ?? 60;
   const input = {
     category: String(formData.get("category") ?? "Jadro").trim() || "Jadro",
+    completed: String(formData.get("completed") ?? "") === "true",
     complexity: String(formData.get("complexity") ?? "medium") as TaskComplexity,
     dueDate: String(formData.get("dueDate") ?? ""),
     estimateMinutes,

@@ -9,6 +9,7 @@ import {
   TaskPriority,
   TaskType,
   formatTaskTime,
+  getTaskDayStatus,
   taskComplexityLabels,
   taskPriorityLabels,
   taskTypeLabels,
@@ -21,11 +22,15 @@ const priorityOptions: TaskPriority[] = ["low", "normal", "high"];
 const estimateOptions: TaskEstimateMode[] = ["1hr", "2hr", "3hr", "other"];
 
 export function TasksClient({
+  categorySuggestions,
   stats,
   tasks,
+  today,
 }: {
+  categorySuggestions: string[];
   stats: ReturnType<typeof import("@/lib/tasks").getTaskStats>;
   tasks: Task[];
+  today: string;
 }) {
   const [editing, setEditing] = useState<Task | null>(null);
   const activeTasks = useMemo(() => tasks.filter((task) => !task.completed), [tasks]);
@@ -38,16 +43,17 @@ export function TasksClient({
           Task planning
         </h1>
         <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[#c4c7c8]">
-          Capture tasks with type, complexity, priority, estimates and notes. Every
-          row is synced to Supabase under your account.
+          Done tasks clear from this daily list tomorrow. Unfinished tasks roll over
+          in red, while tasks planned for a future date stay blue.
         </p>
       </header>
 
       <section className="grid gap-6 xl:grid-cols-[390px_1fr]">
         <aside className="glass-panel rounded-[24px] p-6">
           <p className="label-caps text-[#c4c7c8]">{editing ? "Edit task" : "New task"}</p>
-          <form action={saveTaskAction} className="mt-5 grid gap-3">
+          <form action={saveTaskAction} className="mt-5 grid gap-3" key={editing?.id ?? "new-task"}>
             <input name="id" type="hidden" value={editing?.id ?? ""} />
+            <input name="completed" type="hidden" value={String(editing?.completed ?? false)} />
             <Field label="Title">
               <input
                 className="field-input"
@@ -60,9 +66,20 @@ export function TasksClient({
               <input
                 className="field-input"
                 defaultValue={editing?.category ?? "Jadro"}
+                list="task-category-suggestions"
                 name="category"
                 required
               />
+              <datalist id="task-category-suggestions">
+                {categorySuggestions.map((category) => (
+                  <option key={category} value={category} />
+                ))}
+              </datalist>
+              {categorySuggestions.length > 0 ? (
+                <span className="text-[11px] leading-4 text-[#8d9092]">
+                  Type a new category or choose one of your most used suggestions.
+                </span>
+              ) : null}
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Type">
@@ -159,14 +176,18 @@ export function TasksClient({
               </span>
             </div>
             <div className="grid gap-3">
-              {tasks.map((task) => (
-                <article
-                  className="grid gap-4 rounded-[18px] border border-white/10 bg-[#201f1f]/55 p-4 lg:grid-cols-[1fr_auto]"
-                  key={task.id}
-                >
+              {tasks.map((task) => {
+                const dayStatus = getTaskDayStatus(task, today);
+                const tone = taskDayTones[dayStatus];
+
+                return (
+                  <article
+                    className={`grid gap-4 rounded-[18px] border p-4 lg:grid-cols-[1fr_auto] ${tone.card}`}
+                    key={task.id}
+                  >
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className={`text-[16px] font-semibold ${task.completed ? "text-[#8d9092] line-through" : "text-white"}`}>
+                      <h3 className={`text-[16px] font-semibold ${tone.title}`}>
                         {task.title}
                       </h3>
                       <span className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-[#c4c7c8]">
@@ -174,6 +195,9 @@ export function TasksClient({
                       </span>
                       <span className="rounded-full bg-[#60a5fa]/10 px-2.5 py-1 text-[11px] font-semibold text-[#bfdbfe]">
                         {task.priority}
+                      </span>
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${tone.badge}`}>
+                        {tone.label}
                       </span>
                     </div>
                     <p className="mt-2 text-[13px] text-[#c4c7c8]">
@@ -206,8 +230,9 @@ export function TasksClient({
                       </button>
                     </form>
                   </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
               {tasks.length === 0 ? (
                 <p className="rounded-[18px] border border-white/10 bg-[#201f1f]/55 p-5 text-[14px] text-[#c4c7c8]">
                   No tasks yet. Create your first task from the panel.
@@ -220,6 +245,33 @@ export function TasksClient({
     </section>
   );
 }
+
+const taskDayTones = {
+  completed: {
+    badge: "bg-[#a3e635]/12 text-[#d9f99d]",
+    card: "border-[#a3e635]/15 bg-[#a3e635]/[0.04]",
+    label: "Done today",
+    title: "text-[#8d9092] line-through",
+  },
+  overdue: {
+    badge: "bg-[#ff6b6b]/15 text-[#ffc9c9]",
+    card: "border-[#ff6b6b]/35 bg-[#ff6b6b]/[0.08]",
+    label: "Rolled over",
+    title: "text-[#ffb4ab]",
+  },
+  scheduled: {
+    badge: "bg-[#60a5fa]/15 text-[#bfdbfe]",
+    card: "border-[#60a5fa]/35 bg-[#60a5fa]/[0.08]",
+    label: "Scheduled",
+    title: "text-[#dbeafe]",
+  },
+  today: {
+    badge: "bg-white/[0.07] text-[#c4c7c8]",
+    card: "border-white/10 bg-[#201f1f]/55",
+    label: "Today",
+    title: "text-white",
+  },
+} as const;
 
 function Field({ children, label }: { children: ReactNode; label: string }) {
   return (
