@@ -1,13 +1,24 @@
 import Link from "next/link";
 import { AppNavigation } from "@/components/AppNavigation";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { ensureFitnessPlan, getFitnessStats, sportLabels } from "@/lib/fitness";
+import {
+  type WeeklyPlanDay,
+  ensureFitnessPlan,
+  getFitnessStats,
+  sportLabels,
+} from "@/lib/fitness";
 import {
   formatCurrency,
   getFinanceSummary,
   getFinanceTransactions,
 } from "@/lib/finance";
-import { getTaskStats, getTasks } from "@/lib/tasks";
+import {
+  type Task,
+  getDateInTimeZone,
+  getTaskStats,
+  getTasks,
+  getVisibleTasks,
+} from "@/lib/tasks";
 import { toggleFitnessDoneAction } from "./fitness/actions";
 import { toggleTaskAction } from "./tasks/actions";
 
@@ -15,14 +26,17 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const { supabase, user } = await getAuthenticatedUser();
-  const [tasks, weeklyPlan, transactions] = await Promise.all([
-    getTasks(supabase),
+  const [taskHistory, weeklyPlan, transactions] = await Promise.all([
+    getTasks(supabase, { includeHistory: true }),
     ensureFitnessPlan(supabase, user.id),
     getFinanceTransactions(supabase),
   ]);
+  const today = getDateInTimeZone();
+  const tasks = getVisibleTasks(taskHistory, today);
   const taskStats = getTaskStats(tasks);
   const fitnessStats = getFitnessStats(weeklyPlan);
   const finance = getFinanceSummary(transactions);
+  const productivityWeek = getProductivityWeek(taskHistory, weeklyPlan, today);
   const weeklyDone = weeklyPlan.filter((day) => day.log.completed).length;
   const fitnessPercent = Math.round((weeklyDone / 7) * 100);
   const financePercent =
@@ -56,8 +70,8 @@ export default async function Home() {
           </div>
         </header>
 
-        <section className="grid auto-rows-min gap-5 xl:grid-cols-12">
-          <article className="glass-panel relative overflow-hidden rounded-[28px] p-5 xl:col-span-6">
+        <section className="grid auto-rows-min gap-4 sm:grid-cols-2 xl:grid-cols-12 xl:gap-5">
+          <article className="glass-panel relative order-2 overflow-hidden rounded-[28px] p-5 sm:col-span-2 xl:order-1 xl:col-span-6">
             <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-[#a3e635]/10 blur-2xl" />
             <div className="relative grid gap-6 lg:grid-cols-[210px_1fr] lg:items-center">
               <div className="rounded-[34px] border border-white/10 bg-[#101011]/75 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -85,12 +99,12 @@ export default async function Home() {
             </div>
           </article>
 
-          <article className="glass-panel relative overflow-hidden rounded-[24px] p-5 xl:col-span-3">
+          <article className="glass-panel relative order-3 overflow-hidden rounded-[24px] p-4 xl:order-2 xl:col-span-3 xl:p-5">
             <div className="absolute right-0 top-0 h-40 w-40 rounded-bl-full bg-[#a3e635]/10" />
             <div className="relative flex items-start justify-between gap-3">
               <div>
                 <p className="label-caps text-[#a3e635]">Fitness today</p>
-                <h2 className="mt-4 text-[30px] font-semibold leading-[36px] text-white">
+                <h2 className="mt-3 text-[24px] font-semibold leading-[30px] text-white xl:mt-4 xl:text-[30px] xl:leading-[36px]">
                   {fitnessStats.todayTraining.title}
                 </h2>
               </div>
@@ -136,28 +150,28 @@ export default async function Home() {
                 ? "Marked done"
                 : "Click the circle when done"}
             </p>
-            <div className="relative mt-4 rounded-[18px] border border-white/10 bg-[#201f1f]/60 p-4">
-              <p className="text-[14px] leading-6 text-white">
+            <div className="relative mt-3 rounded-[16px] border border-white/10 bg-[#201f1f]/60 p-3 xl:mt-4 xl:rounded-[18px] xl:p-4">
+              <p className="text-[13px] leading-5 text-white xl:text-[14px] xl:leading-6">
                 {fitnessStats.todayTraining.focus}
               </p>
             </div>
           </article>
 
-          <article className="glass-panel rounded-[24px] p-5 xl:col-span-3">
+          <article className="glass-panel order-4 rounded-[24px] p-4 xl:order-3 xl:col-span-3 xl:p-5">
             <p className="label-caps text-[#60a5fa]">Finance</p>
-            <p className="mt-4 text-[34px] font-semibold text-white">
+            <p className="mt-3 text-[28px] font-semibold text-white xl:mt-4 xl:text-[34px]">
               {formatCurrency(finance.availableBalance)}
             </p>
             <p className="mt-2 text-[14px] leading-6 text-[#c4c7c8]">
               Balance from paid transactions.
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-2 xl:mt-5 xl:gap-3">
               <MiniPill label="Income" value={formatCurrency(finance.income)} />
               <MiniPill label="Expense" value={formatCurrency(finance.expenses)} />
             </div>
           </article>
 
-          <article className="glass-panel rounded-[24px] p-5 xl:col-span-5">
+          <article className="glass-panel order-1 rounded-[24px] p-5 sm:col-span-2 xl:order-4 xl:col-span-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="label-caps text-[#ff4fa3]">Quick tasks</p>
@@ -214,55 +228,174 @@ export default async function Home() {
             </div>
           </article>
 
-          <article className="glass-panel rounded-[24px] p-5 xl:col-span-7">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <p className="label-caps text-[#60a5fa]">Cashflow</p>
-                <h2 className="mt-2 text-[26px] font-semibold text-white">
-                  Monthly movement
-                </h2>
-              </div>
-              <Link className="text-[13px] font-semibold text-[#a3e635]" href="/finance">
-                Open finance
-              </Link>
-            </div>
-            <div className="flex h-56 items-end gap-4">
-              {finance.monthlyCashflow.map((month) => {
-                const max = Math.max(
-                  1,
-                  ...finance.monthlyCashflow.flatMap((item) => [
-                    item.income,
-                    item.expense,
-                  ]),
-                );
-                return (
-                  <div className="flex min-w-0 flex-1 flex-col items-center gap-3" key={month.month}>
-                    <div className="flex w-full flex-1 items-end justify-center gap-2 rounded-[18px] border border-white/10 bg-[#151516] px-2 pb-2">
-                      <div
-                        className="w-full max-w-9 rounded-t-[10px] bg-[#a3e635] shadow-[0_0_18px_rgba(163,230,53,0.18)]"
-                        style={{ height: `${(month.income / max) * 100}%` }}
-                      />
-                      <div
-                        className="w-full max-w-9 rounded-t-[10px] bg-[#60a5fa]/55"
-                        style={{ height: `${(month.expense / max) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-[12px] font-semibold text-[#c4c7c8]">
-                      {month.month.slice(5)}
-                    </span>
-                  </div>
-                );
-              })}
-              {finance.monthlyCashflow.length === 0 ? (
-                <div className="grid h-full w-full place-items-center rounded-[20px] border border-white/10 bg-[#201f1f]/55 text-[14px] text-[#c4c7c8]">
-                  Import finance CSV to see cashflow.
-                </div>
-              ) : null}
-            </div>
-          </article>
+          <section className="order-5 grid gap-4 sm:col-span-2 sm:grid-cols-2 xl:col-span-7 xl:gap-5">
+            <CashflowChart monthlyCashflow={finance.monthlyCashflow} />
+            <ProductivityChart points={productivityWeek} />
+          </section>
         </section>
       </section>
     </main>
+  );
+}
+
+function CashflowChart({
+  monthlyCashflow,
+}: {
+  monthlyCashflow: Array<{ expense: number; income: number; month: string }>;
+}) {
+  const max = Math.max(
+    1,
+    ...monthlyCashflow.flatMap((item) => [item.income, item.expense]),
+  );
+
+  return (
+    <article className="glass-panel rounded-[24px] p-4 sm:p-5">
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <p className="label-caps text-[#60a5fa]">Cashflow</p>
+          <h2 className="mt-2 text-[22px] font-semibold text-white">
+            Monthly movement
+          </h2>
+        </div>
+        <Link className="shrink-0 text-[12px] font-semibold text-[#a3e635]" href="/finance">
+          Open
+        </Link>
+      </div>
+      <div
+        aria-label="Monthly income and expense chart"
+        className="flex h-48 items-end gap-2"
+        role="img"
+      >
+        {monthlyCashflow.map((month) => (
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-2" key={month.month}>
+            <div className="flex w-full flex-1 items-end justify-center gap-1 rounded-[14px] border border-white/10 bg-[#151516] px-1.5 pb-2">
+              <div
+                className="w-full max-w-6 rounded-t-[8px] bg-[#a3e635] shadow-[0_0_18px_rgba(163,230,53,0.18)]"
+                style={{ height: `${(month.income / max) * 100}%` }}
+              />
+              <div
+                className="w-full max-w-6 rounded-t-[8px] bg-[#60a5fa]/55"
+                style={{ height: `${(month.expense / max) * 100}%` }}
+              />
+            </div>
+            <span className="text-[11px] font-semibold text-[#c4c7c8]">
+              {month.month.slice(5)}
+            </span>
+          </div>
+        ))}
+        {monthlyCashflow.length === 0 ? (
+          <div className="grid h-full w-full place-items-center rounded-[18px] border border-white/10 bg-[#201f1f]/55 px-4 text-center text-[13px] text-[#c4c7c8]">
+            Import finance CSV to see cashflow.
+          </div>
+        ) : null}
+      </div>
+      <div className="mt-4 flex gap-4 text-[11px] font-semibold text-[#c4c7c8]">
+        <ChartLegend color="#a3e635" label="Income" />
+        <ChartLegend color="#60a5fa" label="Expense" />
+      </div>
+    </article>
+  );
+}
+
+type ProductivityPoint = {
+  date: string;
+  fitness: number;
+  label: string;
+  tasks: number;
+};
+
+function ProductivityChart({ points }: { points: ProductivityPoint[] }) {
+  const max = Math.max(1, ...points.map((point) => point.tasks + point.fitness));
+  const completedActions = points.reduce(
+    (total, point) => total + point.tasks + point.fitness,
+    0,
+  );
+
+  return (
+    <article className="glass-panel rounded-[24px] p-4 sm:p-5">
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <p className="label-caps text-[#ff4fa3]">Productivity</p>
+          <h2 className="mt-2 text-[22px] font-semibold text-white">Weekly output</h2>
+        </div>
+        <span className="rounded-full bg-[#ff4fa3]/12 px-2.5 py-1 text-[11px] font-semibold text-[#ffd1e5]">
+          {completedActions} done
+        </span>
+      </div>
+      <div
+        aria-label="Weekly productivity chart with completed tasks and fitness sessions"
+        className="flex h-48 items-end gap-2"
+        role="img"
+      >
+        {points.map((point) => (
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-2" key={point.date}>
+            <div className="flex w-full flex-1 flex-col-reverse overflow-hidden rounded-t-[10px] border border-white/10 bg-[#151516]">
+              {point.tasks > 0 ? (
+                <div
+                  className="w-full bg-[#ff4fa3] shadow-[0_0_18px_rgba(255,79,163,0.2)]"
+                  style={{ height: `${(point.tasks / max) * 100}%` }}
+                />
+              ) : null}
+              {point.fitness > 0 ? (
+                <div
+                  className="w-full bg-[#a3e635]"
+                  style={{ height: `${(point.fitness / max) * 100}%` }}
+                />
+              ) : null}
+              <span className="sr-only">
+                {point.label}: {point.tasks} tasks and {point.fitness} fitness sessions
+              </span>
+            </div>
+            <span className="text-[11px] font-semibold text-[#c4c7c8]">
+              {point.label}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 flex gap-4 text-[11px] font-semibold text-[#c4c7c8]">
+        <ChartLegend color="#ff4fa3" label="Tasks" />
+        <ChartLegend color="#a3e635" label="Fitness" />
+      </div>
+    </article>
+  );
+}
+
+function getProductivityWeek(
+  tasks: Task[],
+  weeklyPlan: WeeklyPlanDay[],
+  today: string,
+): ProductivityPoint[] {
+  const currentDate = new Date(`${today}T12:00:00Z`);
+  const monday = new Date(currentDate);
+  monday.setUTCDate(currentDate.getUTCDate() - ((currentDate.getUTCDay() + 6) % 7));
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(monday);
+    date.setUTCDate(monday.getUTCDate() + index);
+    const dateKey = date.toISOString().slice(0, 10);
+    const taskCompletions = tasks.filter(
+      (task) =>
+        task.completed && getDateInTimeZone(task.updatedAt ?? "") === dateKey,
+    ).length;
+
+    return {
+      date: dateKey,
+      fitness: weeklyPlan[index]?.log.completed ? 1 : 0,
+      label: new Intl.DateTimeFormat("en", {
+        timeZone: "UTC",
+        weekday: "short",
+      }).format(date),
+      tasks: taskCompletions,
+    };
+  });
+}
+
+function ChartLegend({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+      {label}
+    </span>
   );
 }
 
