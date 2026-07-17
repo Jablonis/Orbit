@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { BankStatementImporter } from "@/components/BankStatementImporter";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -9,17 +9,13 @@ import {
   type FinanceStatementImport,
   type FinanceTransaction,
   formatCurrency,
-  sampleFinanceCsv,
   transactionsToCsv,
 } from "@/lib/finance";
 import {
-  ImportState,
   clearFinanceDataAction,
-  importFinanceCsvAction,
   restoreFinanceDataAction,
 } from "./actions";
 
-const initialImportState: ImportState = { errors: [], message: "" };
 const categoryColors = ["#60a5fa", "#a3e635", "#a78bfa", "#f59e0b", "#ff4fa3"];
 
 export function FinanceClient({
@@ -31,10 +27,6 @@ export function FinanceClient({
   summary: ReturnType<typeof import("@/lib/finance").getFinanceSummary>;
   transactions: FinanceTransaction[];
 }) {
-  const [importState, importAction, importPending] = useActionState(
-    importFinanceCsvAction,
-    initialImportState,
-  );
   const [archivedAt, setArchivedAt] = useState<string | null>(null);
   const currentMonth = summary.monthlyCashflow.at(-1);
   const previousMonth = summary.monthlyCashflow.at(-2);
@@ -65,13 +57,6 @@ export function FinanceClient({
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button
-            className="rounded-full border border-white/10 bg-[#201f1f] px-4 py-2 text-[13px] font-semibold text-[#c4c7c8]"
-            onClick={() => download("orbit-finance-sample.csv", sampleFinanceCsv)}
-            type="button"
-          >
-            Download sample CSV
-          </button>
           <button
             className="rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-[#202020]"
             onClick={() => download("orbit-finance-export.csv", transactionsToCsv(transactions))}
@@ -108,15 +93,10 @@ export function FinanceClient({
       </section>
       <section aria-labelledby="finance-utilities-title" className="mt-10">
         <p className="label-caps text-[var(--text-tertiary)]">Utilities</p>
-        <h2 className="mt-1 text-[22px] font-semibold text-white" id="finance-utilities-title">Import, export, and maintenance</h2>
+        <h2 className="mt-1 text-[22px] font-semibold text-white" id="finance-utilities-title">Statement import and maintenance</h2>
         <div className="mt-4 grid gap-6 xl:grid-cols-12">
           <BankStatementImporter initialMonth={summary.currentMonth} />
-          <ImportCard
-            importAction={importAction}
-            importPending={importPending}
-            importState={importState}
-            onCleared={setArchivedAt}
-          />
+          <MaintenanceCard onCleared={setArchivedAt} />
         </div>
       </section>
       {archivedAt ? (
@@ -136,49 +116,23 @@ export function FinanceClient({
           message="Finance data archived."
         />
       ) : null}
-      {!archivedAt && importState.message ? <ActionToast message={importState.message} /> : null}
     </section>
   );
 }
 
-function ImportCard({
-  importAction,
-  importPending,
-  importState,
+function MaintenanceCard({
   onCleared,
 }: {
-  importAction: (formData: FormData) => void;
-  importPending: boolean;
-  importState: ImportState;
   onCleared: (archivedAt: string) => void;
 }) {
   return (
-    <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-5" id="csv-tools">
-      <p className="label-caps text-[#c4c7c8]">CSV tools</p>
-      <form action={importAction} className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
-        <input
-          accept=".csv,text/csv"
-          className="field-input file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-[12px] file:font-semibold file:text-[#202020]"
-          name="csv"
-          required
-          type="file"
-        />
-        <button
-          className="rounded-[14px] bg-white px-4 py-3 text-[13px] font-semibold text-[#202020] disabled:opacity-60"
-          disabled={importPending}
-          type="submit"
-        >
-          {importPending ? "Importing..." : "Import CSV"}
-        </button>
-      </form>
-      {importState.errors.length > 0 ? (
-        <div className="mt-3 rounded-[14px] border border-[#ff8a80]/25 bg-[#ff8a80]/10 p-3 text-[13px] text-[#ffd7d3]">
-          {importState.errors.map((error) => (
-            <p key={error}>{error}</p>
-          ))}
-        </div>
-      ) : null}
-      <div className="mt-4">
+    <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-5">
+      <p className="label-caps text-[#c4c7c8]">Data maintenance</p>
+      <h3 className="mt-2 text-[22px] font-semibold text-white">Manage finance history</h3>
+      <p className="mt-2 text-[12px] leading-5 text-[var(--text-secondary)]">
+        Export remains available above. Clearing archives your imported statements and transactions so they can be restored immediately.
+      </p>
+      <div className="mt-5">
         <ConfirmDialog
           confirmationPhrase="CLEAR FINANCE"
           confirmLabel="Clear all data"
@@ -319,9 +273,9 @@ function CashflowCard({
         </div>
       ) : (
         <EmptyState
-          actionHref="/finance#csv-tools"
-          actionLabel="Import CSV"
-          description="Add transactions to compare income, expenses, and net cashflow over time."
+          actionHref="/finance#bank-statement-import"
+          actionLabel="Import bank PDF"
+          description="Import a monthly bank statement to compare income, expenses, and net cashflow over time."
           icon="↗"
           title="No cashflow history yet"
         />
@@ -367,9 +321,9 @@ function TransactionsCard({ transactions }: { transactions: FinanceTransaction[]
         ))}
         {transactions.length === 0 ? (
           <EmptyState
-            actionHref="/finance#csv-tools"
-            actionLabel="Import CSV"
-            description="Your latest income and expenses will appear here after an import."
+            actionHref="/finance#bank-statement-import"
+            actionLabel="Import bank PDF"
+            description="Your latest income and expenses will appear here after a statement import."
             icon="€"
             title="No transactions this period"
           />
@@ -408,9 +362,9 @@ function CategoryCard({
         ))}
         {summary.categorySpend.length === 0 ? (
           <EmptyState
-            actionHref="/finance#csv-tools"
-            actionLabel="Import expenses"
-            description="Expense categories appear after paid spending is added."
+            actionHref="/finance#bank-statement-import"
+            actionLabel="Import bank PDF"
+            description="Expense categories appear after a monthly statement is imported."
             icon="◎"
             title="No category spending yet"
           />

@@ -8,7 +8,7 @@ const actions = [
   { detail: "Review today and overdue work", group: "Tasks", href: "/tasks", keywords: "today overdue queue", label: "Open task queue" },
   { detail: "Open today’s training", group: "Fitness", href: "/fitness#training-calendar", keywords: "complete session exercise", label: "Log workout" },
   { detail: "Adjust the reusable week", group: "Fitness", href: "/fitness#weekly-plan", keywords: "edit schedule sport", label: "Edit fitness plan" },
-  { detail: "Import or manage cashflow", group: "Finance", href: "/finance#csv-tools", keywords: "csv transaction upload", label: "Add transactions" },
+  { detail: "Import a monthly bank statement", group: "Finance", href: "/finance#bank-statement-import", keywords: "pdf bank statement upload", label: "Add transactions" },
   { detail: "Review balance and spending", group: "Finance", href: "/finance", keywords: "money cashflow expense income", label: "Open finance" },
 ] as const;
 

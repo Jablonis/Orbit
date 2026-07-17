@@ -11,6 +11,11 @@ type StatementPreviewResponse = BankStatementPreview & {
   statementMonth: string;
 };
 
+type StatementResponse = Partial<StatementPreviewResponse> & {
+  error?: string;
+  message?: string;
+};
+
 export function BankStatementImporter({ initialMonth }: { initialMonth: string }) {
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -36,20 +41,20 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
     formData.set("statementMonth", month);
 
     try {
-      const response = await fetch("/finance/import-statement", {
+      const response = await fetch("/api/finance/import-statement", {
         body: formData,
         credentials: "same-origin",
         headers: { Accept: "application/json" },
         method: "POST",
       });
-      const payload = await response.json() as StatementPreviewResponse & {
-        error?: string;
-        message?: string;
-      };
+      const payload = await readStatementResponse(response);
       if (!response.ok) throw new Error(payload.error || "The statement could not be processed.");
 
       if (mode === "preview") {
-        setPreview(payload);
+        if (!Array.isArray(payload.rows) || typeof payload.pages !== "number") {
+          throw new Error("The statement preview was incomplete. Please try again.");
+        }
+        setPreview(payload as StatementPreviewResponse);
       } else {
         setMessage(payload.message || "Statement imported securely.");
         setPreview(null);
@@ -208,6 +213,25 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
       {message ? <ActionToast message={message} /> : null}
     </article>
   );
+}
+
+async function readStatementResponse(response: Response): Promise<StatementResponse> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.toLocaleLowerCase().includes("application/json")) {
+    try {
+      return await response.json() as StatementResponse;
+    } catch {
+      return { error: "The server returned an incomplete response. Please try again." };
+    }
+  }
+
+  if (response.redirected || response.url.endsWith("/login") || response.status === 401) {
+    return { error: "Your session expired. Sign in again, then upload the statement." };
+  }
+  if (response.status === 413) {
+    return { error: "The PDF is too large for the secure upload limit." };
+  }
+  return { error: "The upload service returned an unexpected response. Please try again." };
 }
 
 function PreviewMetric({ label, value }: { label: string; value: string }) {

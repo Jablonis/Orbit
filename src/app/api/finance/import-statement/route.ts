@@ -27,13 +27,15 @@ export async function POST(request: NextRequest) {
     return json({ error: "The PDF must be smaller than 4 MB." }, 413);
   }
 
+  // This is the authorization boundary. The API path deliberately avoids page
+  // redirects so expired sessions still receive JSON instead of login HTML.
   const supabase = await createClient();
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) {
-    return json({ error: "Sign in again before importing a statement." }, 401);
+    return json({ error: "Your session expired. Sign in again before importing a statement." }, 401);
   }
 
   let formData: FormData;
@@ -157,5 +159,5 @@ function safeErrorMessage(message: string) {
   ];
   return allowed.some((prefix) => message.startsWith(prefix))
     ? message
-    : "The bank statement could not be parsed safely. Try the CSV import or a text-based PDF.";
+    : "The bank statement could not be parsed safely. Export a text-based PDF from your bank app and try again.";
 }

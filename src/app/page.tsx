@@ -749,8 +749,8 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
       </div>
       ) : (
         <EmptyState
-          actionHref="/finance#csv-tools"
-          actionLabel="Import CSV"
+          actionHref="/finance#bank-statement-import"
+          actionLabel="Import bank PDF"
           description="Income and expense trends will appear after your first import."
           icon="↗"
           title="No cashflow trend yet"
