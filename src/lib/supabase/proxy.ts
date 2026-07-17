@@ -3,8 +3,14 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv } from "./env";
 
 const protectedRoutes = ["/", "/tasks", "/fitness", "/finance"];
+const jsonUploadRoutes = new Set([
+  "/api/finance/import-statement",
+  "/finance/import-statement",
+]);
 
 function isProtectedPath(pathname: string) {
+  if (jsonUploadRoutes.has(pathname)) return false;
+
   return protectedRoutes.some(
     (route) => pathname === route || (route !== "/" && pathname.startsWith(`${route}/`)),
   );

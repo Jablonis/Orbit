@@ -41,7 +41,7 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
     formData.set("statementMonth", month);
 
     try {
-      const response = await fetch("/api/finance/import-statement", {
+      const response = await fetch("/finance/import-statement", {
         body: formData,
         credentials: "same-origin",
         headers: { Accept: "application/json" },
@@ -231,7 +231,13 @@ async function readStatementResponse(response: Response): Promise<StatementRespo
   if (response.status === 413) {
     return { error: "The PDF is too large for the secure upload limit." };
   }
-  return { error: "The upload service returned an unexpected response. Please try again." };
+  if (response.status === 404) {
+    return { error: "The upload endpoint is not available on this deployment yet. Refresh the page and try again." };
+  }
+  if (response.status >= 500) {
+    return { error: "The secure upload service is temporarily unavailable. Please try again." };
+  }
+  return { error: `The upload service returned an invalid response (${response.status}). Please try again.` };
 }
 
 function PreviewMetric({ label, value }: { label: string; value: string }) {

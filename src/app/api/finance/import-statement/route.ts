@@ -14,6 +14,17 @@ const maxPdfBytes = 4 * 1024 * 1024;
 const maxRequestBytes = maxPdfBytes + 32 * 1024;
 
 export async function POST(request: NextRequest) {
+  try {
+    return await processStatementUpload(request);
+  } catch {
+    return json(
+      { error: "The secure upload service could not start. Refresh the page and try again." },
+      500,
+    );
+  }
+}
+
+async function processStatementUpload(request: NextRequest) {
   if (!hasTrustedOrigin(request)) {
     return json({ error: "Untrusted upload origin." }, 403);
   }
@@ -27,7 +38,7 @@ export async function POST(request: NextRequest) {
     return json({ error: "The PDF must be smaller than 4 MB." }, 413);
   }
 
-  // This is the authorization boundary. The API path deliberately avoids page
+  // This is the authorization boundary. Upload paths deliberately avoid page
   // redirects so expired sessions still receive JSON instead of login HTML.
   const supabase = await createClient();
   const {
