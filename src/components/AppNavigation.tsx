@@ -1,7 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 type NavKey = "dashboard" | "fitness" | "tasks" | "finance";
 
@@ -17,7 +15,14 @@ const navItems: Array<{
   { key: "finance", label: "Finance", href: "/finance", icon: <WalletIcon /> },
 ];
 
-export function AppNavigation({ active }: { active: NavKey }) {
+export function AppNavigation({
+  active,
+  userEmail,
+}: {
+  active: NavKey;
+  userEmail: string;
+}) {
+  const initial = userEmail.trim().slice(0, 1).toUpperCase() || "O";
   return (
     <>
       <nav className="fixed left-0 top-0 z-40 hidden h-screen w-[112px] border-r border-white/10 bg-[#111112]/86 backdrop-blur-2xl md:block">
@@ -55,14 +60,11 @@ export function AppNavigation({ active }: { active: NavKey }) {
               </button>
             </form>
             <div
-              aria-label="Profile"
-              className="relative grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-[#202123] text-[#c4c7c8] transition hover:bg-[#303133] hover:text-white"
+              aria-label={`Signed in as ${userEmail}`}
+              className="grid h-11 w-11 place-items-center overflow-hidden rounded-full border border-white/10 bg-[conic-gradient(from_140deg,#ff4fa3,#60a5fa,#a3e635,#ff4fa3)] text-[12px] font-bold text-[#101011]"
+              title={userEmail}
             >
-              <BellIcon />
-              <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-[#ff4fa3]" />
-            </div>
-            <div className="grid h-11 w-11 place-items-center overflow-hidden rounded-full border border-white/10 bg-[conic-gradient(from_140deg,#ff4fa3,#60a5fa,#a3e635,#ff4fa3)] text-[12px] font-bold text-[#101011]">
-              P
+              {initial}
             </div>
           </div>
         </div>
@@ -175,15 +177,6 @@ function WalletIcon() {
       <path d="M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
       <path d="M16 14h5v-4h-5a2 2 0 0 0 0 4Z" />
       <path d="M3 7c0-2 1-3 3-3h12" />
-    </Svg>
-  );
-}
-
-function BellIcon() {
-  return (
-    <Svg className="h-5 w-5">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </Svg>
   );
 }

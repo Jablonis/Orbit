@@ -12,7 +12,7 @@ export default async function FinancePage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#0d0d0e] pb-12 text-[#e5e2e1] md:pl-[112px]">
-      <AppNavigation active="finance" />
+      <AppNavigation active="finance" userEmail={user.email ?? "Orbit user"} />
       <FinanceClient summary={summary} transactions={transactions} />
     </main>
   );

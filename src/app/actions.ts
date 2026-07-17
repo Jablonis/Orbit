@@ -3,7 +3,47 @@
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { getWeekDateKeys } from "@/lib/fitness";
+import {
+  dashboardCardIds,
+  parseDashboardPreferences,
+} from "@/lib/preferences";
 import { getDateInTimeZone } from "@/lib/tasks";
+
+export type DashboardPreferencesActionState = {
+  message: string;
+  ok: boolean;
+};
+
+export async function saveDashboardPreferencesAction(
+  _state: DashboardPreferencesActionState,
+  formData: FormData,
+): Promise<DashboardPreferencesActionState> {
+  const { supabase, user } = await getAuthenticatedUser();
+  const preferences = parseDashboardPreferences({
+    cardOrder: formData.getAll("cardOrder"),
+    density: formData.get("density"),
+    hiddenCards: formData.getAll("hiddenCards"),
+    pinnedFinanceMetric: formData.get("pinnedFinanceMetric"),
+    pinnedTaskCategory: formData.get("pinnedTaskCategory"),
+    rangeDays: Number(formData.get("rangeDays")),
+  });
+
+  if (preferences.hiddenCards.length === dashboardCardIds.length) {
+    return { message: "Keep at least one dashboard card visible.", ok: false };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ dashboard_preferences: preferences })
+    .eq("id", user.id);
+
+  if (error) {
+    return { message: "Overview preferences could not be saved.", ok: false };
+  }
+
+  revalidatePath("/");
+  return { message: "Overview preferences saved.", ok: true };
+}
 
 export async function saveWeeklyReflectionAction(formData: FormData) {
   const { supabase, user } = await getAuthenticatedUser();

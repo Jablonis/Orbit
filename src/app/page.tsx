@@ -1,5 +1,8 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
+import { ActivityRings } from "@/components/ActivityRings";
 import { AppNavigation } from "@/components/AppNavigation";
+import { DashboardCustomizer } from "@/components/DashboardCustomizer";
 import { QuickAdd } from "@/components/QuickAdd";
 import { getAuthenticatedUser } from "@/lib/auth";
 import {
@@ -8,6 +11,7 @@ import {
   type WeeklyReflection,
   type WeeklyReview,
   getDailyRings,
+  getProductivityRange,
   getProductivityWeeks,
   getWeeklyReflection,
   getWeeklyReview,
@@ -27,9 +31,15 @@ import {
   getFinanceTransactions,
 } from "@/lib/finance";
 import {
+  type DashboardCardId,
+  type PinnedFinanceMetric,
+  getDashboardPreferences,
+} from "@/lib/preferences";
+import {
   type Task,
   formatRelativeTaskDate,
   getDateInTimeZone,
+  getMostUsedTaskCategories,
   getTaskCompletions,
   getTaskDayStatus,
   getTaskStats,
@@ -54,9 +64,17 @@ export default async function Home({
   const params = await searchParams;
   const today = getDateInTimeZone();
   const currentWeek = getWeekDateKeys(today);
-  const historyFrom = shiftDate(currentWeek[0], -7);
-  const historyTo = shiftDate(currentWeek[6], 1);
-  const [taskHistory, weeklyPlan, transactions, completions, sessions, reflection] =
+  const historyFrom = shiftDate(today, -59);
+  const historyTo = shiftDate(today, 1);
+  const [
+    taskHistory,
+    weeklyPlan,
+    transactions,
+    completions,
+    sessions,
+    reflection,
+    preferences,
+  ] =
     await Promise.all([
       getTasks(supabase, user.id, { includeHistory: true }),
       ensureFitnessPlan(supabase, user.id, today),
@@ -64,10 +82,10 @@ export default async function Home({
       getTaskCompletions(supabase, user.id, historyFrom, historyTo),
       getFitnessSessions(supabase, user.id, historyFrom, historyTo),
       getWeeklyReflection(supabase, user.id, currentWeek[0]),
+      getDashboardPreferences(supabase, user.id),
     ]);
   const visibleTasks = getVisibleTasks(taskHistory, today);
   const orderedTasks = sortDashboardTasks(visibleTasks, today);
-  const taskStats = getTaskStats(visibleTasks);
   const fitnessStats = getFitnessStats(weeklyPlan, today);
   const finance = getFinanceSummary(transactions);
   const dailyRings = getDailyRings(
@@ -76,30 +94,106 @@ export default async function Home({
     transactions,
     today,
   );
-  const productivity = rescoreProductivity(getProductivityWeeks(
-    taskHistory,
-    completions,
-    sessions,
-    weeklyPlan,
-    today,
-  ), getEnabledDomains(params.domains));
+  const enabledDomains = getEnabledDomains(params.domains);
+  const productivity = rescoreProductivity(
+    getProductivityRange(
+      taskHistory,
+      completions,
+      sessions,
+      weeklyPlan,
+      today,
+      preferences.rangeDays,
+    ),
+    enabledDomains,
+  );
+  const weeklyProductivity = rescoreProductivity(
+    getProductivityWeeks(
+      taskHistory,
+      completions,
+      sessions,
+      weeklyPlan,
+      today,
+    ),
+    enabledDomains,
+  );
   const review = getWeeklyReview(
     taskHistory,
     completions,
     sessions,
     transactions,
-    productivity,
+    weeklyProductivity,
     today,
   );
   const filter = getTaskFilter(params.tasks);
-  const quickTasks = filterTasks(orderedTasks, filter, today).slice(0, 6);
+  const categoryOptions = [
+    ...new Set([
+      preferences.pinnedTaskCategory,
+      ...getMostUsedTaskCategories(taskHistory, 20),
+    ]),
+  ].filter(Boolean);
+  const pinnedTasks = preferences.pinnedTaskCategory
+    ? orderedTasks.filter(
+        (task) =>
+          task.category.toLocaleLowerCase() ===
+          preferences.pinnedTaskCategory.toLocaleLowerCase(),
+      )
+    : orderedTasks;
+  const quickTasks = filterTasks(pinnedTasks, filter, today).slice(0, 6);
+  const pinnedTaskStats = getTaskStats(pinnedTasks);
   const nextTask = orderedTasks.find((task) => !task.completed);
   const pendingFinance = [...transactions]
     .filter((transaction) => transaction.status !== "paid")
     .sort((a, b) => a.date.localeCompare(b.date))[0];
+  const pinnedFinance = getPinnedFinanceMetric(
+    preferences.pinnedFinanceMetric,
+    finance,
+  );
+  const dashboardCards: Record<DashboardCardId, ReactNode> = {
+    analytics: (
+      <AnalyticsCards
+        enabledDomains={enabledDomains}
+        filter={filter}
+        key="analytics"
+        monthlyCashflow={finance.monthlyCashflow}
+        productivity={productivity}
+        rangeDays={preferences.rangeDays}
+        today={today}
+      />
+    ),
+    finance: (
+      <FinanceSummaryCard
+        finance={finance}
+        key="finance"
+        pinnedFinance={pinnedFinance}
+      />
+    ),
+    fitness: (
+      <FitnessTodayCard key="fitness" training={fitnessStats.todayTraining} />
+    ),
+    review: (
+      <WeeklyReviewCard key="review" reflection={reflection} review={review} />
+    ),
+    rings: <DailyRingsCard dailyRings={dailyRings} key="rings" />,
+    tasks: (
+      <QuickTasksCard
+        domainParam={params.domains}
+        filter={filter}
+        key="tasks"
+        pinnedCategory={preferences.pinnedTaskCategory}
+        quickTasks={quickTasks}
+        taskStats={pinnedTaskStats}
+        today={today}
+        total={pinnedTasks.length}
+      />
+    ),
+  };
+  const visibleCardOrder = preferences.cardOrder.filter(
+    (card) => !preferences.hiddenCards.includes(card),
+  );
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_14%_12%,rgba(167,139,250,0.2),transparent_26%),radial-gradient(circle_at_84%_18%,rgba(163,230,53,0.13),transparent_26%),radial-gradient(circle_at_62%_88%,rgba(96,165,250,0.12),transparent_28%),#0d0d0e] pb-24 text-[#e5e2e1] md:pb-10 md:pl-[112px]">
-      <AppNavigation active="dashboard" />
+      <AppNavigation active="dashboard" userEmail={user.email ?? "Orbit user"} />
       <section className="mx-auto w-full max-w-[1680px] px-4 py-6 md:px-8 xl:px-10">
         <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -120,88 +214,17 @@ export default async function Home({
           training={fitnessStats.todayTraining}
         />
 
-        <section className="mt-5 grid auto-rows-min gap-4 sm:grid-cols-2 xl:grid-cols-12 xl:gap-5">
-          <article className="glass-panel relative overflow-hidden rounded-[28px] p-5 sm:col-span-2 xl:col-span-6">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-[#a3e635]/10 blur-2xl" />
-            <div className="relative grid gap-6 lg:grid-cols-[210px_1fr] lg:items-center">
-              <div className="rounded-[34px] border border-white/10 bg-[#101011]/75 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                <ActivityRings
-                  finance={dailyRings.finance.percent}
-                  fitness={dailyRings.fitness.percent}
-                  tasks={dailyRings.tasks.percent}
-                />
-              </div>
-              <div>
-                <p className="label-caps text-[#c4c7c8]">Daily rings</p>
-                <h2 className="mt-3 text-[28px] font-semibold leading-[34px] text-white">
-                  Three signals, one view.
-                </h2>
-                <p className="mt-3 text-[14px] leading-6 text-[#c4c7c8]">
-                  All three signals use today&apos;s Bratislava calendar date and
-                  start fresh each morning.
-                </p>
-                <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                  <RingLegend
-                    color="#ff4fa3"
-                    label="Tasks"
-                    value={`${dailyRings.tasks.completed}/${dailyRings.tasks.total} today`}
-                  />
-                  <RingLegend
-                    color="#a3e635"
-                    label="Fitness"
-                    value={dailyRings.fitness.total
-                      ? `${dailyRings.fitness.completed}/${dailyRings.fitness.total} today`
-                      : "Rest day"}
-                  />
-                  <RingLegend
-                    color="#60a5fa"
-                    label="Finance"
-                    value={dailyRings.finance.total
-                      ? `${dailyRings.finance.completed}/${dailyRings.finance.total} cleared`
-                      : "No entries today"}
-                  />
-                </div>
-              </div>
-            </div>
-          </article>
+        <DashboardCustomizer
+          categories={categoryOptions}
+          preferences={preferences}
+        />
 
-          <FitnessTodayCard training={fitnessStats.todayTraining} />
-
-          <article className="glass-panel rounded-[24px] p-4 xl:col-span-3 xl:p-5">
-            <p className="label-caps text-[#60a5fa]">Finance</p>
-            <p className="mt-3 text-[28px] font-semibold text-white xl:mt-4 xl:text-[34px]">
-              {formatCurrency(finance.availableBalance)}
-            </p>
-            <p className="mt-2 text-[14px] leading-6 text-[#c4c7c8]">
-              Balance from paid transactions.
-            </p>
-            <div className="mt-4 grid grid-cols-2 gap-2 xl:mt-5 xl:gap-3">
-              <MiniPill label="Income" value={formatCurrency(finance.income)} />
-              <MiniPill label="Expense" value={formatCurrency(finance.expenses)} />
-            </div>
-          </article>
-
-          <QuickTasksCard
-            domainParam={params.domains}
-            filter={filter}
-            quickTasks={quickTasks}
-            taskStats={taskStats}
-            today={today}
-            total={visibleTasks.length}
-          />
-
-          <section className="grid gap-4 sm:col-span-2 sm:grid-cols-2 xl:col-span-7 xl:gap-5">
-            <CashflowChart monthlyCashflow={finance.monthlyCashflow} />
-            <ProductivityChart
-              current={productivity.current}
-              enabledDomains={getEnabledDomains(params.domains)}
-              filter={filter}
-              previous={productivity.previous}
-              today={today}
-            />
-          </section>
-
-          <WeeklyReviewCard reflection={reflection} review={review} />
+        <section
+          className={`mt-5 grid auto-rows-min gap-4 sm:grid-cols-2 xl:grid-cols-12 xl:gap-5 ${
+            preferences.density === "compact" ? "dashboard-density-compact" : ""
+          }`}
+        >
+          {visibleCardOrder.map((card) => dashboardCards[card])}
         </section>
       </section>
     </main>
@@ -269,6 +292,114 @@ function TodayStrip({
       </div>
     </section>
   );
+}
+
+function DailyRingsCard({
+  dailyRings,
+}: {
+  dailyRings: ReturnType<typeof getDailyRings>;
+}) {
+  return (
+    <article className="glass-panel relative overflow-hidden rounded-[28px] p-5 sm:col-span-2 xl:col-span-6">
+      <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-[#a3e635]/10 blur-2xl" />
+      <div className="relative grid gap-6 lg:grid-cols-[210px_1fr] lg:items-center">
+        <div className="rounded-[34px] border border-white/10 bg-[#101011]/75 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <ActivityRings
+            finance={dailyRings.finance.percent}
+            fitness={dailyRings.fitness.percent}
+            tasks={dailyRings.tasks.percent}
+          />
+        </div>
+        <div>
+          <p className="label-caps text-[#c4c7c8]">Daily rings</p>
+          <h2 className="mt-3 text-[28px] font-semibold leading-[34px] text-white">
+            Three signals, one view.
+          </h2>
+          <p className="mt-3 text-[14px] leading-6 text-[#c4c7c8]">
+            All three signals use today&apos;s Bratislava calendar date and start
+            fresh each morning.
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <RingLegend
+              color="#ff4fa3"
+              label="Tasks"
+              value={`${dailyRings.tasks.completed}/${dailyRings.tasks.total} today`}
+            />
+            <RingLegend
+              color="#a3e635"
+              label="Fitness"
+              value={dailyRings.fitness.total
+                ? `${dailyRings.fitness.completed}/${dailyRings.fitness.total} today`
+                : "Rest day"}
+            />
+            <RingLegend
+              color="#60a5fa"
+              label="Finance"
+              value={dailyRings.finance.total
+                ? `${dailyRings.finance.completed}/${dailyRings.finance.total} cleared`
+                : "No entries today"}
+            />
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function FinanceSummaryCard({
+  finance,
+  pinnedFinance,
+}: {
+  finance: ReturnType<typeof getFinanceSummary>;
+  pinnedFinance: ReturnType<typeof getPinnedFinanceMetric>;
+}) {
+  return (
+    <article className="glass-panel rounded-[24px] p-4 xl:col-span-3 xl:p-5">
+      <p className="label-caps text-[#60a5fa]">{pinnedFinance.label}</p>
+      <p className="mt-3 text-[28px] font-semibold text-white xl:mt-4 xl:text-[34px]">
+        {formatCurrency(pinnedFinance.value)}
+      </p>
+      <p className="mt-2 text-[14px] leading-6 text-[#c4c7c8]">
+        {pinnedFinance.detail}
+      </p>
+      <div className="mt-4 grid grid-cols-2 gap-2 xl:mt-5 xl:gap-3">
+        <MiniPill label="Income" value={formatCurrency(finance.income)} />
+        <MiniPill label="Expense" value={formatCurrency(finance.expenses)} />
+      </div>
+    </article>
+  );
+}
+
+function getPinnedFinanceMetric(
+  metric: PinnedFinanceMetric,
+  finance: ReturnType<typeof getFinanceSummary>,
+) {
+  if (metric === "income") {
+    return {
+      detail: "Paid income in the current summary period.",
+      label: "Pinned income",
+      value: finance.income,
+    };
+  }
+  if (metric === "expenses") {
+    return {
+      detail: "Paid expenses in the current summary period.",
+      label: "Pinned expenses",
+      value: finance.expenses,
+    };
+  }
+  if (metric === "net") {
+    return {
+      detail: "Income minus paid expenses.",
+      label: "Pinned net cashflow",
+      value: finance.netCashflow,
+    };
+  }
+  return {
+    detail: "Balance from paid transactions.",
+    label: "Finance",
+    value: finance.availableBalance,
+  };
 }
 
 function FitnessTodayCard({
@@ -341,6 +472,7 @@ function filterTasks(tasks: Task[], filter: TaskFilter, today: string) {
 function QuickTasksCard({
   domainParam,
   filter,
+  pinnedCategory,
   quickTasks,
   taskStats,
   today,
@@ -348,6 +480,7 @@ function QuickTasksCard({
 }: {
   domainParam?: string;
   filter: TaskFilter;
+  pinnedCategory: string;
   quickTasks: Task[];
   taskStats: ReturnType<typeof getTaskStats>;
   today: string;
@@ -359,6 +492,11 @@ function QuickTasksCard({
         <div>
           <p className="label-caps text-[#ff4fa3]">Quick tasks</p>
           <h2 className="mt-2 text-[26px] font-semibold text-white">What matters next</h2>
+          {pinnedCategory ? (
+            <p className="mt-1 text-[11px] font-semibold text-[#ffd1e5]">
+              Pinned · {pinnedCategory}
+            </p>
+          ) : null}
         </div>
         <Link className="text-[12px] font-bold text-[#a3e635]" href="/tasks">View all</Link>
       </div>
@@ -448,15 +586,46 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
   );
 }
 
-function ProductivityChart({ current, enabledDomains, filter, previous, today }: { current: ProductivityPoint[]; enabledDomains: ProductivityDomain[]; filter: TaskFilter; previous: ProductivityPoint[]; today: string }) {
-  const chartX = (index: number) => 40 + index * 86.6;
+function AnalyticsCards({
+  enabledDomains,
+  filter,
+  monthlyCashflow,
+  productivity,
+  rangeDays,
+  today,
+}: {
+  enabledDomains: ProductivityDomain[];
+  filter: TaskFilter;
+  monthlyCashflow: Array<{ expense: number; income: number; month: string }>;
+  productivity: ReturnType<typeof rescoreProductivity>;
+  rangeDays: 7 | 30;
+  today: string;
+}) {
+  return (
+    <section className="grid gap-4 sm:col-span-2 sm:grid-cols-2 xl:col-span-7 xl:gap-5">
+      <CashflowChart monthlyCashflow={monthlyCashflow} />
+      <ProductivityChart
+        current={productivity.current}
+        enabledDomains={enabledDomains}
+        filter={filter}
+        previous={productivity.previous}
+        rangeDays={rangeDays}
+        today={today}
+      />
+    </section>
+  );
+}
+
+function ProductivityChart({ current, enabledDomains, filter, previous, rangeDays, today }: { current: ProductivityPoint[]; enabledDomains: ProductivityDomain[]; filter: TaskFilter; previous: ProductivityPoint[]; rangeDays: 7 | 30; today: string }) {
+  const chartX = (index: number) =>
+    20 + (index / Math.max(1, current.length - 1)) * 560;
   const chartY = (score: number) => 112 - score;
   const previousPoints = previous.map((point, index) => `${chartX(index)},${chartY(point.score ?? 0)}`).join(" ");
   const currentPoints = current.flatMap((point, index) => point.score === null ? [] : [`${chartX(index)},${chartY(point.score)}`]).join(" ");
   return (
     <article className="glass-panel rounded-[24px] p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
-        <div><p className="label-caps text-[#ff4fa3]">Productivity</p><h2 className="mt-2 text-[22px] font-semibold text-white">Reliable weekly score</h2></div>
+        <div><p className="label-caps text-[#ff4fa3]">Productivity</p><h2 className="mt-2 text-[22px] font-semibold text-white">Reliable {rangeDays}-day score</h2></div>
         <span className="rounded-full bg-[#ff4fa3]/12 px-2.5 py-1 text-[11px] font-semibold text-[#ffd1e5]">60 · 25 · 15</span>
       </div>
       <p className="mt-3 text-[11px] leading-5 text-[#8d9092]">60% planned task completion · 25% planned training · 15% focus target (120 min). Enabled domains are normalized to 100%; future days stay empty.</p>
@@ -477,7 +646,7 @@ function ProductivityChart({ current, enabledDomains, filter, previous, today }:
           );
         })}
       </div>
-      <div className="relative mt-3 h-44" role="img" aria-label="Current and previous weekly productivity scores">
+      <div className="relative mt-3 h-44" role="img" aria-label={`Current and previous ${rangeDays}-day productivity scores`}>
         <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 600 130">
           {[12, 62, 112].map((y) => <line key={y} stroke="rgba(255,255,255,0.07)" x1="20" x2="580" y1={y} y2={y} />)}
           <polyline fill="none" points={previousPoints} stroke="rgba(196,199,200,0.28)" strokeDasharray="7 7" strokeWidth="3" />
@@ -488,11 +657,20 @@ function ProductivityChart({ current, enabledDomains, filter, previous, today }:
             </circle>
           ))}
         </svg>
-        <div className="absolute inset-x-0 bottom-0 grid grid-cols-7 text-center text-[10px] font-semibold text-[#c4c7c8]">
-          {current.map((point) => <span className={point.date === today ? "text-[#a3e635]" : ""} key={point.date}>{point.label}</span>)}
+        <div
+          className="absolute inset-x-0 bottom-0 grid text-center text-[10px] font-semibold text-[#c4c7c8]"
+          style={{ gridTemplateColumns: `repeat(${current.length}, minmax(0, 1fr))` }}
+        >
+          {current.map((point, index) => (
+            <span className={point.date === today ? "text-[#a3e635]" : ""} key={point.date}>
+              {rangeDays === 7 || index % 5 === 0 || index === current.length - 1
+                ? rangeDays === 7 ? point.label : point.date.slice(5)
+                : ""}
+            </span>
+          ))}
         </div>
       </div>
-      <div className="mt-2 flex gap-4 text-[11px] font-semibold text-[#c4c7c8]"><ChartLegend color="#ff4fa3" label="This week" /><ChartLegend color="rgba(196,199,200,0.45)" label="Previous week" /></div>
+      <div className="mt-2 flex gap-4 text-[11px] font-semibold text-[#c4c7c8]"><ChartLegend color="#ff4fa3" label={`Last ${rangeDays} days`} /><ChartLegend color="rgba(196,199,200,0.45)" label={`Previous ${rangeDays} days`} /></div>
       <details className="mt-4 border-t border-white/10 pt-3">
         <summary className="cursor-pointer text-[11px] font-semibold text-[#a3e635]">Accessible score summary</summary>
         <div className="mt-3 overflow-x-auto"><table className="w-full text-left text-[11px]"><thead className="text-[#8d9092]"><tr><th className="pb-2">Day</th><th>Score</th><th>Tasks</th><th>Training</th><th>Focus</th></tr></thead><tbody>{current.map((point) => <tr className="border-t border-white/[0.06]" key={point.date}><td className="py-2 text-white">{point.label}</td><td>{point.score === null ? "—" : `${point.score}%`}</td><td>{point.future ? "—" : `${point.completedTasks}/${point.plannedTasks}`}</td><td>{point.future ? "—" : `${point.completedFitness}/${point.plannedFitness}`}</td><td>{point.future ? "—" : `${point.focusMinutes} min`}</td></tr>)}</tbody></table></div>
@@ -535,7 +713,5 @@ function WeeklyReviewCard({ reflection, review }: { reflection: WeeklyReflection
 function ReviewMetric({ detail, label, value }: { detail: string; label: string; value: string }) { return <div className="rounded-[16px] border border-white/10 bg-white/[0.035] p-4"><p className="label-caps text-[#8d9092]">{label}</p><p className="mt-2 text-[20px] font-semibold text-white">{value}</p><p className="mt-1 text-[11px] text-[#8d9092]">{detail}</p></div>; }
 function ChartLegend({ color, label }: { color: string; label: string }) { return <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />{label}</span>; }
 
-function ActivityRings({ finance, fitness, tasks }: { finance: number; fitness: number; tasks: number }) { return <div className="relative grid aspect-square place-items-center"><Ring color="#ff4fa3" radius={90} stroke={16} value={tasks} /><Ring color="#a3e635" radius={68} stroke={16} value={fitness} /><Ring color="#60a5fa" radius={46} stroke={16} value={finance} /><div className="absolute grid h-20 w-20 place-items-center rounded-full bg-[#0d0d0e] text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"><span className="text-[24px] font-semibold text-white">{Math.round((tasks + fitness + finance) / 3)}</span></div></div>; }
-function Ring({ color, radius, stroke, value }: { color: string; radius: number; stroke: number; value: number }) { const circumference = 2 * Math.PI * radius; const offset = circumference - (Math.max(0, Math.min(value, 100)) / 100) * circumference; return <svg className="absolute h-full w-full -rotate-90" viewBox="0 0 220 220"><circle cx="110" cy="110" fill="none" r={radius} stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} /><circle cx="110" cy="110" fill="none" r={radius} stroke={color} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" strokeWidth={stroke} /></svg>; }
 function RingLegend({ color, label, value }: { color: string; label: string; value: string }) { return <div className="flex items-center justify-between rounded-[16px] border border-white/10 bg-[#201f1f]/55 p-3"><span className="inline-flex items-center gap-2 text-[13px] font-semibold text-white"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />{label}</span><span className="text-[13px] font-semibold text-[#c4c7c8]">{value}</span></div>; }
 function MiniPill({ label, value }: { label: string; value: string }) { return <div className="rounded-[16px] border border-white/10 bg-[#201f1f]/60 p-3"><p className="label-caps text-[#8d9092]">{label}</p><p className="mt-2 text-[15px] font-semibold text-white">{value}</p></div>; }

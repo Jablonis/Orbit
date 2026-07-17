@@ -216,7 +216,7 @@ Include:
 - comparison with the previous week
 - one editable reflection: “What worked?” / “What changes next week?”
 
-### 10. Make the dashboard customizable
+### 10. [x] Make the dashboard customizable
 
 **Impact:** Medium–high  
 **Effort:** Medium
@@ -231,7 +231,7 @@ Allow users to:
 
 Store layout preferences in the profile rather than browser-only storage so they follow the user between devices.
 
-### 11. Replace placeholder navigation affordances with real features
+### 11. [x] Replace placeholder navigation affordances with real features
 
 **Impact:** Medium  
 **Effort:** Small–medium

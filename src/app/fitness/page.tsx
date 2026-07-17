@@ -14,7 +14,7 @@ export default async function FitnessPage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#0d0d0e] pb-12 text-[#e5e2e1] md:pl-[112px]">
-      <AppNavigation active="fitness" />
+      <AppNavigation active="fitness" userEmail={user.email ?? "Orbit user"} />
       <FitnessClient
         key={weeklyPlan
           .map((day) => `${day.date}:${day.sport}:${day.log.completed}`)

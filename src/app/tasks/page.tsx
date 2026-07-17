@@ -21,7 +21,7 @@ export default async function TasksPage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#0d0d0e] pb-12 text-[#e5e2e1] md:pl-[112px]">
-      <AppNavigation active="tasks" />
+      <AppNavigation active="tasks" userEmail={user.email ?? "Orbit user"} />
       <TasksClient
         categorySuggestions={categorySuggestions}
         stats={stats}

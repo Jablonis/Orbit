@@ -178,6 +178,29 @@ export function getProductivityWeeks(
   };
 }
 
+export function getProductivityRange(
+  tasks: Task[],
+  completions: TaskCompletion[],
+  sessions: FitnessSession[],
+  plan: WeeklyPlanDay[],
+  today: string,
+  days: 7 | 30,
+) {
+  const currentDates = Array.from({ length: days }, (_, index) =>
+    shiftDate(today, index - days + 1),
+  );
+  const previousDates = currentDates.map((date) => shiftDate(date, -days));
+
+  return {
+    current: currentDates.map((date) =>
+      pointForDate(date, tasks, completions, sessions, plan, today, false),
+    ),
+    previous: previousDates.map((date) =>
+      pointForDate(date, tasks, completions, sessions, plan, today, false),
+    ),
+  };
+}
+
 export function rescoreProductivity(
   productivity: ReturnType<typeof getProductivityWeeks>,
   enabledDomains: ProductivityDomain[],
