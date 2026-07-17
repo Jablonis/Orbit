@@ -33,7 +33,7 @@ export function QuickAdd() {
   }, []);
 
   return (
-    <div className="relative" ref={container}>
+    <div className="relative z-50" ref={container}>
       <button
         aria-expanded={open}
         aria-haspopup="menu"
@@ -47,7 +47,7 @@ export function QuickAdd() {
       </button>
       {open ? (
         <div
-          className="glass-modal modal-animate absolute right-0 top-12 z-50 w-72 rounded-[18px] p-2"
+          className="glass-modal modal-animate absolute left-0 top-12 z-[100] w-[min(18rem,calc(100vw-2rem))] rounded-[18px] p-2"
           role="menu"
         >
           {actions.map((action) => (

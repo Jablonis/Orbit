@@ -1,9 +1,21 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { FitnessSession, WeeklyPlanDay } from "@/lib/fitness";
+import type { FitnessSession, TodayTraining, WeeklyPlanDay } from "@/lib/fitness";
 import { getWeekDateKeys, shiftDate } from "@/lib/fitness";
 import type { FinanceTransaction } from "@/lib/finance";
 import type { Task, TaskCompletion } from "@/lib/tasks";
-import { getDateInTimeZone } from "@/lib/tasks";
+import { getDateInTimeZone, getTaskDayStatus } from "@/lib/tasks";
+
+export type DailyRingMetric = {
+  completed: number;
+  percent: number;
+  total: number;
+};
+
+export type DailyRings = {
+  finance: DailyRingMetric;
+  fitness: DailyRingMetric;
+  tasks: DailyRingMetric;
+};
 
 export type ProductivityPoint = {
   completedFitness: number;
@@ -36,6 +48,45 @@ export type WeeklyReview = {
   sessionMinutes: number;
   sessions: number;
 };
+
+function toRingMetric(completed: number, total: number): DailyRingMetric {
+  return {
+    completed,
+    percent: total ? Math.round((completed / total) * 100) : 0,
+    total,
+  };
+}
+
+export function getDailyRings(
+  tasks: Task[],
+  training: TodayTraining,
+  transactions: FinanceTransaction[],
+  today: string,
+): DailyRings {
+  const dailyTasks = tasks.filter(
+    (task) => getTaskDayStatus(task, today) !== "scheduled",
+  );
+  const todayTransactions = transactions.filter(
+    (transaction) => transaction.date === today,
+  );
+  const fitnessTotal = training.day.sport === "rest" ? 0 : 1;
+
+  return {
+    finance: toRingMetric(
+      todayTransactions.filter((transaction) => transaction.status === "paid")
+        .length,
+      todayTransactions.length,
+    ),
+    fitness: toRingMetric(
+      fitnessTotal && training.day.log.completed ? 1 : 0,
+      fitnessTotal,
+    ),
+    tasks: toRingMetric(
+      dailyTasks.filter((task) => task.completed).length,
+      dailyTasks.length,
+    ),
+  };
+}
 
 function completionDate(completion: TaskCompletion) {
   return getDateInTimeZone(completion.completedAt);

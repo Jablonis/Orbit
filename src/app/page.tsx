@@ -7,6 +7,7 @@ import {
   type ProductivityDomain,
   type WeeklyReflection,
   type WeeklyReview,
+  getDailyRings,
   getProductivityWeeks,
   getWeeklyReflection,
   getWeeklyReview,
@@ -69,6 +70,12 @@ export default async function Home({
   const taskStats = getTaskStats(visibleTasks);
   const fitnessStats = getFitnessStats(weeklyPlan, today);
   const finance = getFinanceSummary(transactions);
+  const dailyRings = getDailyRings(
+    visibleTasks,
+    fitnessStats.todayTraining,
+    transactions,
+    today,
+  );
   const productivity = rescoreProductivity(getProductivityWeeks(
     taskHistory,
     completions,
@@ -90,21 +97,6 @@ export default async function Home({
   const pendingFinance = [...transactions]
     .filter((transaction) => transaction.status !== "paid")
     .sort((a, b) => a.date.localeCompare(b.date))[0];
-  const trainingDays = weeklyPlan.filter((day) => day.sport !== "rest");
-  const weeklyDone = trainingDays.filter((day) => day.log.completed).length;
-  const fitnessPercent = trainingDays.length
-    ? Math.round((weeklyDone / trainingDays.length) * 100)
-    : 0;
-  const financePercent =
-    finance.income <= 0
-      ? finance.netCashflow > 0
-        ? 100
-        : 0
-      : Math.max(
-          0,
-          Math.min(100, Math.round((finance.netCashflow / finance.income) * 100)),
-        );
-
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_14%_12%,rgba(167,139,250,0.2),transparent_26%),radial-gradient(circle_at_84%_18%,rgba(163,230,53,0.13),transparent_26%),radial-gradient(circle_at_62%_88%,rgba(96,165,250,0.12),transparent_28%),#0d0d0e] pb-24 text-[#e5e2e1] md:pb-10 md:pl-[112px]">
       <AppNavigation active="dashboard" />
@@ -134,9 +126,9 @@ export default async function Home({
             <div className="relative grid gap-6 lg:grid-cols-[210px_1fr] lg:items-center">
               <div className="rounded-[34px] border border-white/10 bg-[#101011]/75 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <ActivityRings
-                  finance={financePercent}
-                  fitness={fitnessPercent}
-                  tasks={taskStats.completionPercent}
+                  finance={dailyRings.finance.percent}
+                  fitness={dailyRings.fitness.percent}
+                  tasks={dailyRings.tasks.percent}
                 />
               </div>
               <div>
@@ -145,13 +137,29 @@ export default async function Home({
                   Three signals, one view.
                 </h2>
                 <p className="mt-3 text-[14px] leading-6 text-[#c4c7c8]">
-                  Tasks, dated training sessions, and paid monthly cashflow remain
-                  separate signals with a shared visual rhythm.
+                  All three signals use today&apos;s Bratislava calendar date and
+                  start fresh each morning.
                 </p>
                 <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                  <RingLegend color="#ff4fa3" label="Tasks" value={`${taskStats.completionPercent}%`} />
-                  <RingLegend color="#a3e635" label="Fitness" value={`${weeklyDone}/${trainingDays.length}`} />
-                  <RingLegend color="#60a5fa" label="Finance" value={formatCurrency(finance.netCashflow)} />
+                  <RingLegend
+                    color="#ff4fa3"
+                    label="Tasks"
+                    value={`${dailyRings.tasks.completed}/${dailyRings.tasks.total} today`}
+                  />
+                  <RingLegend
+                    color="#a3e635"
+                    label="Fitness"
+                    value={dailyRings.fitness.total
+                      ? `${dailyRings.fitness.completed}/${dailyRings.fitness.total} today`
+                      : "Rest day"}
+                  />
+                  <RingLegend
+                    color="#60a5fa"
+                    label="Finance"
+                    value={dailyRings.finance.total
+                      ? `${dailyRings.finance.completed}/${dailyRings.finance.total} cleared`
+                      : "No entries today"}
+                  />
                 </div>
               </div>
             </div>
@@ -219,7 +227,7 @@ function TodayStrip({
   }).format(new Date(`${today}T12:00:00Z`));
 
   return (
-    <section className="glass-panel relative overflow-hidden rounded-[24px] p-4 sm:p-5">
+    <section className="glass-panel relative z-30 overflow-visible rounded-[24px] p-4 sm:p-5">
       <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#a3e635] via-[#ff4fa3] to-[#60a5fa]" />
       <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr_1fr] lg:items-stretch">
         <div className="px-2">
