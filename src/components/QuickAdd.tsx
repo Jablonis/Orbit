@@ -37,13 +37,13 @@ export function QuickAdd() {
       <button
         aria-expanded={open}
         aria-haspopup="menu"
-        className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-[13px] font-bold text-[#202020]"
+        className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-white/[0.045] px-4 py-2.5 text-[13px] font-semibold text-white transition duration-150 hover:bg-white/[0.08]"
         onClick={() => setOpen((current) => !current)}
         type="button"
       >
         <span aria-hidden="true">＋</span>
         Quick add
-        <kbd className="hidden rounded-md bg-black/10 px-1.5 py-0.5 text-[10px] sm:inline">⌘K</kbd>
+        <kbd className="hidden rounded-md bg-white/[0.07] px-1.5 py-0.5 text-[10px] text-[var(--text-secondary)] sm:inline">⌘K</kbd>
       </button>
       {open ? (
         <>

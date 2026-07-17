@@ -55,6 +55,16 @@ daily progress, productivity history, and weekly reflection.
   retryable route error boundaries.
 - On phones, Quick Add is a bottom sheet above the safe-area-aware navigation;
   on larger screens it remains a compact anchored menu.
+- Overview follows a fixed information hierarchy: a time-aware Now hero, Today
+  action/progress cards, then Trends. User visibility and ordering preferences
+  still apply within the Today and Trends groups.
+- The Now hero uses Bratislava local time for morning, midday, and evening copy,
+  summarizes active daily-ring areas, and exposes one primary next action.
+- Overview content uses semantic design tokens and calmer opaque content panels;
+  blur-heavy glass is reserved for floating navigation, Quick Add, and dialogs.
+- Mobile navigation contains four destinations. Account, Logout, and Overview
+  customization live in an accessible profile/settings dialog opened from the
+  avatar/settings control.
 - Frequent task and fitness submissions expose pending labels and disable their
   submit control through `useFormStatus`. Confirmation dialogs manage their own
   pending and error state.
@@ -112,6 +122,9 @@ daily progress, productivity history, and weekly reflection.
 - Preserve unrelated working-tree changes. Use `apply_patch` for source edits.
 - Never put secrets, tokens, passwords, private finance data, or personal records
   in source, logs, tests, or this memory file.
+- Read `design.md` before a substantial interface redesign. It contains the
+  maintained visual direction, route-specific UX recommendations, inspiration
+  references, and design review checklist.
 - `IDEAS.md` is a local-only roadmap: it is ignored and intentionally removed
   from Git tracking. Keep it locally, mark verified work with `[x]`, and do not
   re-add it to Git.
@@ -143,3 +156,10 @@ result and run Supabase security and performance advisors.
   local-only, and completed the first P2 polish batch: route loading/error UI,
   mutation pending feedback, mobile Quick Add sheet, keyboard focus treatment,
   reduced-motion coverage, safe-area spacing, and accessible chart tables.
+- 2026-07-17 — Added `design.md` as the maintained design direction and online
+  inspiration library for future Orbit UI/UX work.
+- 2026-07-17 — Implemented the first design sprint: semantic tokens, time-aware
+  Now hero, Now/Today/Trends hierarchy, calmer Overview surfaces, restrained
+  active navigation, and consolidated profile/settings UI. Static contrast,
+  lint, type, build, and route checks passed; authenticated visual width and
+  200% zoom checks remain pending until a browser is attached.

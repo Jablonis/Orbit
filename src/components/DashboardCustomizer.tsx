@@ -44,12 +44,11 @@ export function DashboardCustomizer({
   }
 
   return (
-    <details className="glass-panel relative z-20 mb-5 rounded-[20px]">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-[13px] font-semibold text-white sm:px-5">
-        Customize overview
-        <span className="text-[11px] text-[#a3e635]">Layout · density · defaults</span>
-      </summary>
-      <form action={action} className="border-t border-white/10 p-4 sm:p-5">
+    <form action={action} className="content-panel rounded-[var(--radius-row)] p-4 sm:p-5">
+      <p className="mb-4 text-[13px] leading-5 text-[var(--text-secondary)]">
+        Choose what appears in Today and Trends. Ordering stays within those two
+        sections so the dashboard remains easy to scan.
+      </p>
         {order.map((card) => (
           <input key={card} name="cardOrder" type="hidden" value={card} />
         ))}
@@ -58,21 +57,21 @@ export function DashboardCustomizer({
         ))}
         <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
           <div>
-            <p className="label-caps text-[#c4c7c8]">Cards</p>
+            <p className="label-caps text-[var(--text-secondary)]">Cards</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
               {order.map((card, index) => {
                 const visible = !hidden.includes(card);
                 return (
                   <div
-                    className="flex items-center gap-2 rounded-[14px] border border-white/10 bg-white/[0.035] p-2"
+                    className="flex items-center gap-2 rounded-[14px] border border-[var(--border-subtle)] bg-white/[0.025] p-2"
                     key={card}
                   >
                     <button
                       aria-label={`${visible ? "Hide" : "Show"} ${dashboardCardLabels[card]}`}
                       className={`grid h-8 w-8 shrink-0 place-items-center rounded-[10px] text-[12px] font-bold ${
                         visible
-                          ? "bg-[#a3e635] text-[#111112]"
-                          : "bg-white/5 text-[#8d9092]"
+                          ? "bg-[var(--accent-primary)] text-[#111112]"
+                          : "bg-white/5 text-[var(--text-tertiary)]"
                       }`}
                       onClick={() => toggle(card)}
                       type="button"
@@ -85,7 +84,7 @@ export function DashboardCustomizer({
                     <div className="flex">
                       <button
                         aria-label={`Move ${dashboardCardLabels[card]} up`}
-                        className="grid h-8 w-7 place-items-center text-[#c4c7c8] disabled:opacity-25"
+                        className="grid h-8 w-7 place-items-center text-[var(--text-secondary)] disabled:opacity-25"
                         disabled={index === 0}
                         onClick={() => move(card, -1)}
                         type="button"
@@ -94,7 +93,7 @@ export function DashboardCustomizer({
                       </button>
                       <button
                         aria-label={`Move ${dashboardCardLabels[card]} down`}
-                        className="grid h-8 w-7 place-items-center text-[#c4c7c8] disabled:opacity-25"
+                        className="grid h-8 w-7 place-items-center text-[var(--text-secondary)] disabled:opacity-25"
                         disabled={index === order.length - 1}
                         onClick={() => move(card, 1)}
                         type="button"
@@ -154,20 +153,19 @@ export function DashboardCustomizer({
             </PreferenceField>
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
-          <p aria-live="polite" className={`text-[12px] ${state.ok ? "text-[#a3e635]" : "text-[#ffb4ab]"}`}>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4">
+          <p aria-live="polite" className={`text-[12px] ${state.ok ? "text-[var(--accent-primary)]" : "text-[var(--danger)]"}`}>
             {state.message}
           </p>
           <button
-            className="rounded-full bg-white px-5 py-2.5 text-[13px] font-bold text-[#202020] disabled:opacity-55"
+            className="min-h-11 rounded-[var(--radius-control)] bg-white px-5 py-2.5 text-[13px] font-bold text-[#202020] disabled:opacity-55"
             disabled={pending}
             type="submit"
           >
             {pending ? "Saving…" : "Save overview"}
           </button>
         </div>
-      </form>
-    </details>
+    </form>
   );
 }
 
@@ -180,7 +178,7 @@ function PreferenceField({
 }) {
   return (
     <label className="grid gap-2">
-      <span className="label-caps text-[#c4c7c8]">{label}</span>
+      <span className="label-caps text-[var(--text-secondary)]">{label}</span>
       {children}
     </label>
   );

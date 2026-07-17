@@ -2,7 +2,26 @@
 
 :root {
   --background: #0d0d0e;
-  --foreground: #e5e2e1;
+  --foreground: #f7f7f5;
+  --canvas: #0d0d0e;
+  --surface-1: #151516;
+  --surface-2: #1c1c1e;
+  --surface-hover: #242426;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --text-primary: #f7f7f5;
+  --text-secondary: #c4c7c8;
+  --text-tertiary: #9ea2a4;
+  --accent-primary: #a3e635;
+  --accent-info: #60a5fa;
+  --accent-highlight: #ff4fa3;
+  --accent-focus: #a78bfa;
+  --danger: #ff8a80;
+  --radius-control: 12px;
+  --radius-row: 18px;
+  --radius-panel: 24px;
+  --space-card: clamp(1.25rem, 2vw, 1.5rem);
+  --ease-orbit: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes ring-score-enter {
@@ -29,6 +48,7 @@
 }
 
 .dashboard-density-compact > .glass-panel,
+.dashboard-density-compact > .content-panel,
 .dashboard-density-compact > section > .glass-panel {
   border-radius: 20px;
   padding: 1rem;
@@ -98,6 +118,33 @@ body {
   box-shadow: 0 25px 60px -24px rgba(0, 0, 0, 0.85);
 }
 
+.content-panel {
+  background: color-mix(in srgb, var(--surface-1) 94%, transparent);
+  border: 1px solid var(--border-subtle);
+  border-top-color: var(--border-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 20px 45px -34px rgba(0, 0, 0, 0.9);
+}
+
+.hero-panel {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 44%),
+    color-mix(in srgb, var(--surface-1) 96%, transparent);
+  border: 1px solid var(--border-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 30px 70px -42px rgba(0, 0, 0, 0.95);
+}
+
+.floating-panel {
+  background: rgba(20, 20, 22, 0.88);
+  -webkit-backdrop-filter: blur(32px);
+  backdrop-filter: blur(32px);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 28px 64px -28px rgba(0, 0, 0, 0.92);
+}
+
 .glass-modal {
   background: rgba(20, 19, 19, 0.88);
   backdrop-filter: blur(40px);
@@ -119,7 +166,7 @@ body {
   width: 100%;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(42, 42, 42, 0.5);
+  background: var(--surface-2);
   padding: 0 12px;
   color: #ffffff;
   font-size: 13px;
@@ -127,11 +174,11 @@ body {
 }
 
 .field-input:focus {
-  border-color: rgba(255, 255, 255, 0.35);
+  border-color: color-mix(in srgb, var(--accent-primary) 60%, transparent);
 }
 
 :where(a, button, input, select, textarea, summary):focus-visible {
-  outline: 2px solid #a3e635;
+  outline: 2px solid var(--accent-primary);
   outline-offset: 3px;
 }
 

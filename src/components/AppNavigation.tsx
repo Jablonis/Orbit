@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ProfileMenu } from "@/components/ProfileMenu";
 
 type NavKey = "dashboard" | "fitness" | "tasks" | "finance";
 
@@ -17,85 +18,68 @@ const navItems: Array<{
 
 export function AppNavigation({
   active,
+  settings,
   userEmail,
 }: {
   active: NavKey;
+  settings?: ReactNode;
   userEmail: string;
 }) {
-  const initial = userEmail.trim().slice(0, 1).toUpperCase() || "O";
   return (
     <>
-      <nav className="fixed left-0 top-0 z-40 hidden h-screen w-[112px] border-r border-white/10 bg-[#111112]/86 backdrop-blur-2xl md:block">
+      <nav className="fixed left-0 top-0 z-40 hidden h-screen w-[112px] border-r border-[var(--border-subtle)] bg-[#111112]/90 backdrop-blur-2xl md:block">
         <div className="flex h-full flex-col items-center justify-between px-4 py-6">
           <Link className="flex flex-col items-center gap-2" href="/">
             <LogoMark />
             <span className="text-[13px] font-semibold text-white">Orbit</span>
           </Link>
 
-          <div className="flex w-full flex-col items-stretch gap-2 rounded-[24px] border border-white/10 bg-[#1b1b1c] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_18px_42px_rgba(0,0,0,0.28)]">
+          <div className="flex w-full flex-col items-stretch gap-2 rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-1)] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.035),0_18px_42px_rgba(0,0,0,0.28)]">
             {navItems.map((item) => (
               <Link
-                className={`flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-[18px] px-2 py-2 text-[11px] font-semibold transition ${
+                aria-current={active === item.key ? "page" : undefined}
+                className={`relative flex min-h-[64px] flex-col items-center justify-center gap-1 overflow-hidden rounded-[18px] px-2 py-2 text-[11px] font-semibold transition duration-150 ${
                   active === item.key
-                    ? "bg-white text-[#161616] shadow-[0_0_22px_rgba(255,255,255,0.12)]"
-                    : "text-[#c4c7c8] hover:bg-[#2f3031] hover:text-white"
+                    ? "bg-white/[0.08] text-white"
+                    : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-white"
                 }`}
                 href={item.href}
                 key={item.key}
               >
+                {active === item.key ? (
+                  <span aria-hidden="true" className="absolute inset-y-3 left-0 w-0.5 rounded-full bg-[var(--accent-primary)]" />
+                ) : null}
                 {item.icon}
                 {item.label}
               </Link>
             ))}
           </div>
 
-          <div className="flex flex-col items-center gap-3">
-            <form action="/auth/logout" method="post">
-              <button
-                aria-label="Logout"
-                className="relative grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-[#202123] text-[#c4c7c8] transition hover:bg-[#303133] hover:text-white"
-                type="submit"
-              >
-                <LogoutIcon />
-              </button>
-            </form>
-            <div
-              aria-label={`Signed in as ${userEmail}`}
-              className="grid h-11 w-11 place-items-center overflow-hidden rounded-full border border-white/10 bg-[conic-gradient(from_140deg,#ff4fa3,#60a5fa,#a3e635,#ff4fa3)] text-[12px] font-bold text-[#101011]"
-              title={userEmail}
-            >
-              {initial}
-            </div>
-          </div>
+          <div aria-hidden="true" className="h-11" />
         </div>
       </nav>
 
-      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-white/10 bg-[#181819]/88 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl md:hidden">
+      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-4 border-t border-[var(--border-subtle)] bg-[#181819]/92 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl md:hidden">
         {navItems.map((item) => (
           <Link
-            className={`flex min-w-[70px] flex-col items-center justify-center rounded-[16px] p-2 text-[11px] font-semibold transition ${
+            aria-current={active === item.key ? "page" : undefined}
+            className={`relative flex min-w-0 flex-col items-center justify-center rounded-[16px] p-2 text-[11px] font-semibold transition duration-150 ${
               active === item.key
-                ? "bg-white text-[#161616]"
-                : "text-[#c4c7c8] hover:bg-white/10 hover:text-white"
+                ? "bg-white/[0.08] text-white"
+                : "text-[var(--text-secondary)] hover:bg-white/10 hover:text-white"
             }`}
             href={item.href}
             key={item.key}
           >
+            {active === item.key ? (
+              <span aria-hidden="true" className="absolute inset-x-6 -top-2 h-0.5 rounded-full bg-[var(--accent-primary)]" />
+            ) : null}
             {item.icon}
             <span className="mt-1">{item.label}</span>
           </Link>
         ))}
-        <form action="/auth/logout" method="post">
-          <button
-            aria-label="Logout"
-            className="flex min-w-[54px] flex-col items-center justify-center rounded-[16px] p-2 text-[#c4c7c8] transition hover:bg-white/10 hover:text-white"
-            type="submit"
-          >
-            <LogoutIcon />
-            <span className="mt-1 text-[11px] font-semibold">Logout</span>
-          </button>
-        </form>
       </nav>
+      <ProfileMenu userEmail={userEmail}>{settings}</ProfileMenu>
     </>
   );
 }
@@ -177,16 +161,6 @@ function WalletIcon() {
       <path d="M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
       <path d="M16 14h5v-4h-5a2 2 0 0 0 0 4Z" />
       <path d="M3 7c0-2 1-3 3-3h12" />
-    </Svg>
-  );
-}
-
-function LogoutIcon() {
-  return (
-    <Svg className="h-5 w-5">
-      <path d="M10 17 15 12 10 7" />
-      <path d="M15 12H3" />
-      <path d="M21 3v18" />
     </Svg>
   );
 }

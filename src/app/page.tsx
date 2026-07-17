@@ -191,53 +191,94 @@ export default async function Home({
   const visibleCardOrder = preferences.cardOrder.filter(
     (card) => !preferences.hiddenCards.includes(card),
   );
+  const todayCardOrder = visibleCardOrder.filter(
+    (card) => card !== "analytics" && card !== "review",
+  );
+  const trendCardOrder = visibleCardOrder.filter(
+    (card) => card === "analytics" || card === "review",
+  );
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_14%_12%,rgba(167,139,250,0.2),transparent_26%),radial-gradient(circle_at_84%_18%,rgba(163,230,53,0.13),transparent_26%),radial-gradient(circle_at_62%_88%,rgba(96,165,250,0.12),transparent_28%),#0d0d0e] pb-24 text-[#e5e2e1] md:pb-10 md:pl-[112px]">
-      <AppNavigation active="dashboard" userEmail={user.email ?? "Orbit user"} />
-      <section className="mx-auto w-full max-w-[1680px] px-4 py-6 md:px-8 xl:px-10">
-        <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_12%_8%,rgba(167,139,250,0.14),transparent_24%),radial-gradient(circle_at_88%_16%,rgba(163,230,53,0.09),transparent_24%),var(--canvas)] pb-28 text-[var(--text-primary)] md:pb-12 md:pl-[112px]">
+      <AppNavigation
+        active="dashboard"
+        settings={(
+          <DashboardCustomizer
+            categories={categoryOptions}
+            preferences={preferences}
+          />
+        )}
+        userEmail={user.email ?? "Orbit user"}
+      />
+      <section className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 md:px-8 md:py-8 xl:px-10">
+        <header className="mb-6 pr-14 md:pr-0">
           <div>
-            <p className="label-caps text-[#a3e635]">Overview</p>
-            <h1 className="mt-2 text-[32px] font-semibold leading-[38px] text-white sm:text-[40px] sm:leading-[46px]">
-              Orbit command center
+            <p className="label-caps text-[var(--accent-primary)]">Overview</p>
+            <h1 className="mt-2 text-[32px] font-semibold leading-[38px] text-white sm:text-[40px] sm:leading-[44px]">
+              Your day, clearly.
             </h1>
-            <p className="mt-3 text-[14px] leading-6 text-[#c4c7c8]">
-              {user.email} · your daily plan and weekly trajectory in one place.
+            <p className="mt-2 max-w-2xl text-[14px] leading-6 text-[var(--text-secondary)]">
+              What matters now, today&apos;s progress, and the trends worth keeping.
             </p>
           </div>
         </header>
 
-        <TodayStrip
+        <NowHero
+          dailyRings={dailyRings}
           nextTask={nextTask}
           pendingFinance={pendingFinance}
           today={today}
           training={fitnessStats.todayTraining}
         />
 
-        <DashboardCustomizer
-          categories={categoryOptions}
-          preferences={preferences}
-        />
+        {todayCardOrder.length > 0 ? (
+          <section aria-labelledby="today-section-title" className="mt-9">
+            <SectionHeading
+              detail="Daily progress and the next actions you can complete."
+              eyebrow="Today"
+              id="today-section-title"
+              title="Keep the day moving"
+            />
+            <div
+              className={`mt-4 grid auto-rows-min gap-4 sm:grid-cols-2 xl:grid-cols-12 xl:gap-5 ${
+                preferences.density === "compact" ? "dashboard-density-compact" : ""
+              }`}
+            >
+              {todayCardOrder.map((card) => dashboardCards[card])}
+            </div>
+          </section>
+        ) : null}
 
-        <section
-          className={`mt-5 grid auto-rows-min gap-4 sm:grid-cols-2 xl:grid-cols-12 xl:gap-5 ${
-            preferences.density === "compact" ? "dashboard-density-compact" : ""
-          }`}
-        >
-          {visibleCardOrder.map((card) => dashboardCards[card])}
-        </section>
+        {trendCardOrder.length > 0 ? (
+          <section aria-labelledby="trends-section-title" className="mt-10">
+            <SectionHeading
+              detail="Step back only when you need context or a course correction."
+              eyebrow="Trends"
+              id="trends-section-title"
+              title="See the wider pattern"
+            />
+            <div
+              className={`mt-4 grid auto-rows-min gap-4 sm:grid-cols-2 xl:grid-cols-12 xl:gap-5 ${
+                preferences.density === "compact" ? "dashboard-density-compact" : ""
+              }`}
+            >
+              {trendCardOrder.map((card) => dashboardCards[card])}
+            </div>
+          </section>
+        ) : null}
       </section>
     </main>
   );
 }
 
-function TodayStrip({
+function NowHero({
+  dailyRings,
   nextTask,
   pendingFinance,
   today,
   training,
 }: {
+  dailyRings: ReturnType<typeof getDailyRings>;
   nextTask?: Task;
   pendingFinance?: import("@/lib/finance").FinanceTransaction;
   today: string;
@@ -249,49 +290,142 @@ function TodayStrip({
     timeZone: "UTC",
     weekday: "long",
   }).format(new Date(`${today}T12:00:00Z`));
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      hourCycle: "h23",
+      timeZone: "Europe/Bratislava",
+    }).format(new Date()),
+  );
+  const phase = hour < 12
+    ? { eyebrow: "Morning check-in", greeting: "Good morning", prompt: "Set the tone for today." }
+    : hour < 18
+      ? { eyebrow: "Midday check-in", greeting: "Good afternoon", prompt: "Keep the useful momentum." }
+      : { eyebrow: "Evening check-in", greeting: "Good evening", prompt: "Close the day with intention." };
+  const activeAreas = Object.values(dailyRings).filter((area) => area.total > 0);
+  const areasOnTrack = activeAreas.filter((area) => area.percent >= 100).length;
+  const progressSummary = activeAreas.length
+    ? `${areasOnTrack} of ${activeAreas.length} active areas complete today.`
+    : "Nothing is demanding attention yet today.";
+  const primaryAction = nextTask
+    ? { href: "/tasks", label: "Open next task" }
+    : training.day.sport !== "rest" && !training.day.log.completed
+      ? { href: "/fitness#training-calendar", label: "Log workout" }
+      : { href: "/tasks#new-task", label: "Plan the next move" };
 
   return (
-    <section className="glass-panel relative z-30 overflow-visible rounded-[24px] p-4 sm:p-5">
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#a3e635] via-[#ff4fa3] to-[#60a5fa]" />
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr_1fr] lg:items-stretch">
-        <div className="px-2">
-          <p className="label-caps text-[#a3e635]">Today · {dateLabel}</p>
-          <h2 className="mt-2 text-[22px] font-semibold text-white">
-            {nextTask ? "Your next move is clear." : "Your task queue is clear."}
-          </h2>
-          <p className="mt-2 text-[13px] text-[#c4c7c8]">
-            {nextTask
-              ? `${nextTask.title} · ${formatRelativeTaskDate(nextTask, today)}`
-              : "Use Quick Add when something new appears."}
-          </p>
-          <div className="mt-4"><QuickAdd /></div>
+    <section aria-labelledby="now-title" className="hero-panel relative z-30 overflow-visible rounded-[var(--radius-panel)] p-5 sm:p-6 lg:p-7">
+      <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)]/70 to-transparent" />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)] xl:items-stretch">
+        <div className="flex min-w-0 flex-col justify-between">
+          <div>
+            <p className="label-caps text-[var(--accent-primary)]">
+              {phase.eyebrow} · {dateLabel}
+            </p>
+            <h2 className="mt-3 max-w-3xl text-[28px] font-semibold leading-[34px] text-white sm:text-[34px] sm:leading-[40px]" id="now-title">
+              {phase.greeting}. {phase.prompt}
+            </h2>
+            <p className="mt-3 text-[14px] leading-6 text-[var(--text-secondary)]">
+              {progressSummary}
+            </p>
+          </div>
+
+          <div className="mt-6 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-black/20 p-4 sm:p-5">
+            <p className="label-caps text-[var(--text-tertiary)]">Next clear move</p>
+            <p className="mt-2 text-[18px] font-semibold leading-6 text-white sm:text-[20px]">
+              {nextTask?.title ?? (training.day.sport !== "rest" ? training.title : "Your schedule is clear")}
+            </p>
+            <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
+              {nextTask
+                ? `${nextTask.category} · ${formatRelativeTaskDate(nextTask, today)}`
+                : training.day.sport !== "rest"
+                  ? `${training.day.log.durationMinutes} min planned · ${training.focus}`
+                  : "Add something only if it deserves your attention."}
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Link
+                className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] bg-[var(--accent-primary)] px-5 text-[13px] font-bold text-[#111112] transition duration-150 hover:brightness-105"
+                href={primaryAction.href}
+              >
+                {primaryAction.label}
+              </Link>
+              <QuickAdd />
+            </div>
+          </div>
         </div>
-        <Link
-          className="rounded-[16px] border border-white/10 bg-white/[0.04] p-4 transition hover:border-[#a3e635]/35"
-          href="/fitness#training-calendar"
-        >
-          <p className="label-caps text-[#a3e635]">Workout</p>
-          <p className="mt-2 text-[15px] font-semibold text-white">{training.title}</p>
-          <p className="mt-1 text-[12px] text-[#8d9092]">
-            {training.day.log.completed ? "Session complete" : `${training.day.log.durationMinutes} min planned`}
-          </p>
-        </Link>
-        <Link
-          className="rounded-[16px] border border-white/10 bg-white/[0.04] p-4 transition hover:border-[#60a5fa]/35"
-          href="/finance"
-        >
-          <p className="label-caps text-[#60a5fa]">Finance due</p>
-          <p className="mt-2 truncate text-[15px] font-semibold text-white">
-            {pendingFinance?.title ?? "No pending items"}
-          </p>
-          <p className="mt-1 text-[12px] text-[#8d9092]">
-            {pendingFinance
-              ? `${pendingFinance.date} · ${formatCurrency(pendingFinance.amount)}`
-              : "Cashflow is up to date"}
-          </p>
-        </Link>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+          <HeroSignal
+            detail={training.day.log.completed ? "Session complete" : training.day.sport === "rest" ? "Recovery day" : `${training.day.log.durationMinutes} min planned`}
+            href="/fitness#training-calendar"
+            label="Workout"
+            tone="lime"
+            value={training.title}
+          />
+          <HeroSignal
+            detail={pendingFinance ? `${pendingFinance.date} · ${formatCurrency(pendingFinance.amount)}` : "Cashflow is up to date"}
+            href="/finance"
+            label="Finance"
+            tone="blue"
+            value={pendingFinance?.title ?? "No pending items"}
+          />
+        </div>
       </div>
     </section>
+  );
+}
+
+function HeroSignal({
+  detail,
+  href,
+  label,
+  tone,
+  value,
+}: {
+  detail: string;
+  href: string;
+  label: string;
+  tone: "blue" | "lime";
+  value: string;
+}) {
+  return (
+    <Link
+      className="group flex min-h-32 flex-col justify-between rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-4 transition duration-150 hover:border-[var(--border-strong)] hover:bg-white/[0.045]"
+      href={href}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className={`label-caps ${tone === "lime" ? "text-[var(--accent-primary)]" : "text-[var(--accent-info)]"}`}>
+          {label}
+        </p>
+        <span aria-hidden="true" className="text-[var(--text-tertiary)] transition group-hover:translate-x-0.5 group-hover:text-white">↗</span>
+      </div>
+      <div>
+        <p className="truncate text-[15px] font-semibold text-white">{value}</p>
+        <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">{detail}</p>
+      </div>
+    </Link>
+  );
+}
+
+function SectionHeading({
+  detail,
+  eyebrow,
+  id,
+  title,
+}: {
+  detail: string;
+  eyebrow: string;
+  id: string;
+  title: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-5">
+      <div>
+        <p className="label-caps text-[var(--text-tertiary)]">{eyebrow}</p>
+        <h2 className="mt-1 text-[22px] font-semibold text-white" id={id}>{title}</h2>
+      </div>
+      <p className="max-w-xl text-[13px] leading-5 text-[var(--text-secondary)]">{detail}</p>
+    </div>
   );
 }
 
@@ -301,7 +435,7 @@ function DailyRingsCard({
   dailyRings: ReturnType<typeof getDailyRings>;
 }) {
   return (
-    <article className="glass-panel relative overflow-hidden rounded-[28px] p-5 sm:col-span-2 xl:col-span-6">
+    <article className="content-panel relative overflow-hidden rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-7">
       <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-[#a3e635]/10 blur-2xl" />
       <div className="relative grid gap-6 lg:grid-cols-[210px_1fr] lg:items-center">
         <div className="rounded-[34px] border border-white/10 bg-[#101011]/75 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -355,7 +489,7 @@ function FinanceSummaryCard({
   pinnedFinance: ReturnType<typeof getPinnedFinanceMetric>;
 }) {
   return (
-    <article className="glass-panel rounded-[24px] p-4 xl:col-span-3 xl:p-5">
+    <article className="content-panel rounded-[var(--radius-panel)] p-4 xl:col-span-5 xl:p-5">
       <p className="label-caps text-[#60a5fa]">{pinnedFinance.label}</p>
       <p className="mt-3 text-[28px] font-semibold text-white xl:mt-4 xl:text-[34px]">
         {formatCurrency(pinnedFinance.value)}
@@ -410,7 +544,7 @@ function FitnessTodayCard({
 }) {
   const canComplete = training.day.sport !== "rest";
   return (
-    <article className="glass-panel relative overflow-hidden rounded-[24px] p-4 xl:col-span-3 xl:p-5">
+    <article className="content-panel relative overflow-hidden rounded-[var(--radius-panel)] p-4 xl:col-span-5 xl:p-5">
       <div className="absolute right-0 top-0 h-40 w-40 rounded-bl-full bg-[#a3e635]/10" />
       <div className="relative flex items-start justify-between gap-3">
         <div>
@@ -488,7 +622,7 @@ function QuickTasksCard({
   total: number;
 }) {
   return (
-    <article className="glass-panel rounded-[24px] p-5 sm:col-span-2 xl:col-span-5">
+    <article className="content-panel rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-7">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="label-caps text-[#ff4fa3]">Quick tasks</p>
@@ -565,7 +699,7 @@ function QuickTasksCard({
 function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: number; income: number; month: string }> }) {
   const max = Math.max(1, ...monthlyCashflow.flatMap((item) => [item.income, item.expense]));
   return (
-    <article className="glass-panel rounded-[24px] p-4 sm:p-5">
+    <article className="content-panel rounded-[var(--radius-panel)] p-4 sm:p-5">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div><p className="label-caps text-[#60a5fa]">Cashflow</p><h2 className="mt-2 text-[22px] font-semibold text-white">Monthly movement</h2></div>
         <Link className="shrink-0 text-[12px] font-semibold text-[#a3e635]" href="/finance">Open</Link>
@@ -616,7 +750,7 @@ function AnalyticsCards({
   today: string;
 }) {
   return (
-    <section className="grid gap-4 sm:col-span-2 sm:grid-cols-2 xl:col-span-7 xl:gap-5">
+    <section className="grid gap-4 sm:col-span-2 sm:grid-cols-2 xl:col-span-12 xl:gap-5">
       <CashflowChart monthlyCashflow={monthlyCashflow} />
       <ProductivityChart
         current={productivity.current}
@@ -637,7 +771,7 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
   const previousPoints = previous.map((point, index) => `${chartX(index)},${chartY(point.score ?? 0)}`).join(" ");
   const currentPoints = current.flatMap((point, index) => point.score === null ? [] : [`${chartX(index)},${chartY(point.score)}`]).join(" ");
   return (
-    <article className="glass-panel rounded-[24px] p-4 sm:p-5">
+    <article className="content-panel rounded-[var(--radius-panel)] p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div><p className="label-caps text-[#ff4fa3]">Productivity</p><h2 className="mt-2 text-[22px] font-semibold text-white">Reliable {rangeDays}-day score</h2></div>
         <span className="rounded-full bg-[#ff4fa3]/12 px-2.5 py-1 text-[11px] font-semibold text-[#ffd1e5]">60 · 25 · 15</span>
@@ -703,7 +837,7 @@ function getEnabledDomains(value: string | undefined): ProductivityDomain[] {
 function WeeklyReviewCard({ reflection, review }: { reflection: WeeklyReflection; review: WeeklyReview }) {
   const scoreChange = review.score - review.previousScore;
   return (
-    <article className="glass-panel rounded-[24px] p-5 sm:col-span-2 xl:col-span-12 xl:p-6">
+    <article className="content-panel rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-12 xl:p-6">
       <div className="flex flex-col gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div><p className="label-caps text-[#a78bfa]">Weekly review</p><h2 className="mt-2 text-[26px] font-semibold text-white">Close the loop</h2></div>
         <p className={`text-[13px] font-semibold ${scoreChange >= 0 ? "text-[#a3e635]" : "text-[#ff9f9f]"}`}>{scoreChange >= 0 ? "+" : ""}{scoreChange} points vs last week</p>
