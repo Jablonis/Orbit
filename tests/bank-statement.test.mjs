@@ -35,6 +35,23 @@ test("infers the year, masks account numbers, and collapses repeated rows", () =
   assert.match(preview.warnings.join(" "), /collapsed/i);
 });
 
+test("distinguishes Slovak incoming and outgoing bank transfers", () => {
+  const preview = parseBankStatementText(`
+01.07.2026 Platba 0900/1234567890 300,00
+Prijatá platba: SK3112000000198742637541
+Suma: 300,00 EUR Valuta: 01.07.2026
+02.07.2026 Platba 1100/1234567890 75,50-
+Odoslaná platba: SK3112000000198742637541
+Suma: 75,50 EUR Valuta: 02.07.2026
+`, "2026-07");
+
+  assert.deepEqual(preview.rows.map((row) => row.amount), [300, -75.5]);
+  assert.deepEqual(preview.rows.map((row) => row.category), ["Income", "Other"]);
+  assert.equal(preview.income, 300);
+  assert.equal(preview.expenses, 75.5);
+  assert.equal(preview.net, 224.5);
+});
+
 test("uses a deterministic normalized payload for duplicate protection", () => {
   const rows = parseBankStatementText(
     "01.07.2026 COFFEE SHOP -3,20 EUR\n",

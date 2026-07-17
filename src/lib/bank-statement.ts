@@ -19,10 +19,13 @@ const incomeWords = [
   "incoming",
   "mzda",
   "plat salary",
+  "prijata platba",
+  "pripis",
   "prijem",
   "príjem",
   "refund",
   "salary",
+  "vklad",
   "vratka",
 ];
 
@@ -34,6 +37,7 @@ const expenseWords = [
   "inkaso",
   "odchadzajuci",
   "odchádzajúci",
+  "odoslana platba",
   "payment",
   "platba",
   "poplatok",
@@ -248,8 +252,14 @@ function parseStatementAmount(token: string, context: string) {
 
   if (inferred) {
     const normalizedContext = normalizeForMatching(context);
-    if (incomeWords.some((word) => normalizedContext.includes(word))) sign = 1;
-    if (expenseWords.some((word) => normalizedContext.includes(word))) sign = -1;
+    const isIncome = incomeWords.some((word) => normalizedContext.includes(word));
+    const isExpense = expenseWords.some((word) => normalizedContext.includes(word));
+
+    // Bank rows can contain both a generic word such as "platba" and a more
+    // specific direction such as "prijata platba". The specific income marker
+    // must win when the PDF does not print an explicit plus sign.
+    if (isIncome) sign = 1;
+    else if (isExpense) sign = -1;
   }
 
   return { amount: roundMoney(numeric * sign), inferred };
