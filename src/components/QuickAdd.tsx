@@ -46,23 +46,34 @@ export function QuickAdd() {
         <kbd className="hidden rounded-md bg-black/10 px-1.5 py-0.5 text-[10px] sm:inline">⌘K</kbd>
       </button>
       {open ? (
-        <div
-          className="glass-modal modal-animate absolute left-0 top-12 z-[100] w-[min(18rem,calc(100vw-2rem))] rounded-[18px] p-2"
-          role="menu"
-        >
-          {actions.map((action) => (
-            <Link
-              className="block rounded-[13px] px-3 py-3 transition hover:bg-white/[0.07]"
-              href={action.href}
-              key={action.href}
-              onClick={() => setOpen(false)}
-              role="menuitem"
-            >
-              <span className="block text-[13px] font-semibold text-white">{action.label}</span>
-              <span className="mt-1 block text-[11px] text-[#8d9092]">{action.detail}</span>
-            </Link>
-          ))}
-        </div>
+        <>
+          <button
+            aria-label="Close Quick Add"
+            className="fixed inset-0 z-40 bg-black/55 backdrop-blur-[2px] sm:hidden"
+            onClick={() => setOpen(false)}
+            type="button"
+          />
+          <div
+            className="glass-modal modal-animate fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[100] w-auto rounded-[22px] p-2 sm:absolute sm:bottom-auto sm:left-0 sm:right-auto sm:top-12 sm:w-72 sm:rounded-[18px]"
+            role="menu"
+          >
+            <p className="label-caps px-3 pb-2 pt-2 text-[#a3e635] sm:hidden">
+              Quick add
+            </p>
+            {actions.map((action) => (
+              <Link
+                className="block rounded-[13px] px-3 py-3 transition hover:bg-white/[0.07]"
+                href={action.href}
+                key={action.href}
+                onClick={() => setOpen(false)}
+                role="menuitem"
+              >
+                <span className="block text-[13px] font-semibold text-white">{action.label}</span>
+                <span className="mt-1 block text-[11px] text-[#aeb2b4]">{action.detail}</span>
+              </Link>
+            ))}
+          </div>
+        </>
       ) : null}
     </div>
   );

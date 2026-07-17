@@ -214,6 +214,19 @@ function CashflowCard({
           </div>
         ))}
       </div>
+      {summary.monthlyCashflow.length > 0 ? (
+        <details className="mt-5 border-t border-white/10 pt-4">
+          <summary className="cursor-pointer text-[12px] font-semibold text-[#a3e635]">
+            Accessible cashflow summary
+          </summary>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-left text-[12px]">
+              <thead className="text-[#aeb2b4]"><tr><th className="pb-2">Month</th><th>Income</th><th>Expense</th></tr></thead>
+              <tbody>{summary.monthlyCashflow.map((item) => <tr className="border-t border-white/[0.06]" key={item.month}><td className="py-2 text-white">{item.month}</td><td>{formatCurrency(item.income)}</td><td>{formatCurrency(item.expense)}</td></tr>)}</tbody>
+            </table>
+          </div>
+        </details>
+      ) : null}
     </article>
   );
 }

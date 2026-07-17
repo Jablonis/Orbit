@@ -70,7 +70,7 @@ export function AppNavigation({
         </div>
       </nav>
 
-      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-white/10 bg-[#181819]/88 px-3 py-2 backdrop-blur-2xl md:hidden">
+      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-white/10 bg-[#181819]/88 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl md:hidden">
         {navItems.map((item) => (
           <Link
             className={`flex min-w-[70px] flex-col items-center justify-center rounded-[16px] p-2 text-[11px] font-semibold transition ${

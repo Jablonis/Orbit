@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { ActivityRings } from "@/components/ActivityRings";
 import { AppNavigation } from "@/components/AppNavigation";
 import { DashboardCustomizer } from "@/components/DashboardCustomizer";
+import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { QuickAdd } from "@/components/QuickAdd";
 import { getAuthenticatedUser } from "@/lib/auth";
 import {
@@ -423,17 +424,17 @@ function FitnessTodayCard({
             <input name="weekday" type="hidden" value={training.day.id} />
             <input name="sport" type="hidden" value={training.day.sport} />
             <input name="completed" type="hidden" value={String(!training.day.log.completed)} />
-            <button
-              aria-label={training.day.log.completed ? "Reopen today's fitness" : "Complete today's fitness"}
+            <PendingSubmitButton
+              ariaLabel={training.day.log.completed ? "Reopen today's fitness" : "Complete today's fitness"}
               className={`grid h-12 w-12 place-items-center rounded-full border text-[18px] font-bold transition ${
                 training.day.log.completed
                   ? "border-[#a3e635]/45 bg-[#a3e635] text-[#111112]"
                   : "border-white/15 bg-[#111112] text-transparent hover:border-[#a3e635]/60 hover:text-[#a3e635]"
               }`}
-              type="submit"
+              pendingLabel="…"
             >
               ✓
-            </button>
+            </PendingSubmitButton>
           </form>
         ) : null}
       </div>
@@ -527,17 +528,17 @@ function QuickTasksCard({
           >
             <input name="id" type="hidden" value={task.id} />
             <input name="completed" type="hidden" value={String(!task.completed)} />
-            <button
-              aria-label={task.completed ? "Reopen task" : "Complete task"}
+            <PendingSubmitButton
+              ariaLabel={task.completed ? "Reopen task" : "Complete task"}
               className={`grid h-8 w-8 place-items-center rounded-full border text-[14px] font-bold transition ${
                 task.completed
                   ? "border-[#a3e635]/45 bg-[#a3e635] text-[#111112]"
                   : "border-white/15 bg-[#111112] text-transparent hover:border-[#a3e635]/60 hover:text-[#a3e635]"
               }`}
-              type="submit"
+              pendingLabel="…"
             >
               ✓
-            </button>
+            </PendingSubmitButton>
             <div className="min-w-0">
               <p className={`truncate text-[14px] font-semibold ${task.completed ? "text-[#8d9092] line-through" : "text-white"}`}>
                 {task.title}
@@ -582,6 +583,19 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
         {monthlyCashflow.length === 0 ? <div className="grid h-full w-full place-items-center rounded-[18px] border border-white/10 bg-[#201f1f]/55 px-4 text-center text-[13px] text-[#c4c7c8]">Import finance CSV to see cashflow.</div> : null}
       </div>
       <div className="mt-4 flex gap-4 text-[11px] font-semibold text-[#c4c7c8]"><ChartLegend color="#a3e635" label="Income" /><ChartLegend color="#60a5fa" label="Expense" /></div>
+      {monthlyCashflow.length > 0 ? (
+        <details className="mt-4 border-t border-white/10 pt-3">
+          <summary className="cursor-pointer text-[11px] font-semibold text-[#a3e635]">
+            Accessible cashflow summary
+          </summary>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-left text-[11px]">
+              <thead className="text-[#aeb2b4]"><tr><th className="pb-2">Month</th><th>Income</th><th>Expense</th></tr></thead>
+              <tbody>{monthlyCashflow.map((month) => <tr className="border-t border-white/[0.06]" key={month.month}><td className="py-2 text-white">{month.month}</td><td>{formatCurrency(month.income)}</td><td>{formatCurrency(month.expense)}</td></tr>)}</tbody>
+            </table>
+          </div>
+        </details>
+      ) : null}
     </article>
   );
 }
@@ -704,7 +718,12 @@ function WeeklyReviewCard({ reflection, review }: { reflection: WeeklyReflection
       <form action={saveWeeklyReflectionAction} className="mt-5 grid gap-3 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
         <label className="grid gap-2"><span className="label-caps text-[#c4c7c8]">What worked?</span><textarea className="field-input min-h-20 py-3" defaultValue={reflection.whatWorked} name="whatWorked" placeholder="One thing worth repeating…" /></label>
         <label className="grid gap-2"><span className="label-caps text-[#c4c7c8]">What changes next week?</span><textarea className="field-input min-h-20 py-3" defaultValue={reflection.changeNextWeek} name="changeNextWeek" placeholder="One deliberate adjustment…" /></label>
-        <button className="h-11 rounded-[12px] bg-white px-5 text-[13px] font-bold text-[#202020]" type="submit">Save review</button>
+        <PendingSubmitButton
+          className="h-11 rounded-[12px] bg-white px-5 text-[13px] font-bold text-[#202020]"
+          pendingLabel="Saving…"
+        >
+          Save review
+        </PendingSubmitButton>
       </form>
     </article>
   );

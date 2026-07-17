@@ -35,6 +35,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .ring-score-enter {
     animation: none;
   }
@@ -119,6 +128,11 @@ body {
 
 .field-input:focus {
   border-color: rgba(255, 255, 255, 0.35);
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid #a3e635;
+  outline-offset: 3px;
 }
 
 .ring-circle {

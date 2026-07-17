@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import {
   Task,
   TaskComplexity,
@@ -148,9 +149,12 @@ export function TasksClient({
               />
             </Field>
             <div className="flex gap-3">
-              <button className="flex-1 rounded-[14px] bg-white px-4 py-3 text-[13px] font-semibold text-[#202020]" type="submit">
+              <PendingSubmitButton
+                className="flex-1 rounded-[14px] bg-white px-4 py-3 text-[13px] font-semibold text-[#202020]"
+                pendingLabel={editing ? "Saving…" : "Creating…"}
+              >
                 {editing ? "Save changes" : "Create task"}
-              </button>
+              </PendingSubmitButton>
               {editing ? (
                 <button
                   className="rounded-[14px] border border-white/10 bg-[#201f1f] px-4 py-3 text-[13px] font-semibold text-[#c4c7c8]"
@@ -220,9 +224,13 @@ export function TasksClient({
                     <form action={toggleTaskAction}>
                       <input name="id" type="hidden" value={task.id} />
                       <input name="completed" type="hidden" value={String(!task.completed)} />
-                      <button className="rounded-[12px] border border-white/10 bg-[#2a2a2a] px-3 py-2 text-[12px] font-semibold text-white" type="submit">
+                      <PendingSubmitButton
+                        ariaLabel={task.completed ? "Reopen task" : "Complete task"}
+                        className="rounded-[12px] border border-white/10 bg-[#2a2a2a] px-3 py-2 text-[12px] font-semibold text-white"
+                        pendingLabel="Saving…"
+                      >
                         {task.completed ? "Reopen" : "Done"}
-                      </button>
+                      </PendingSubmitButton>
                     </form>
                     <button
                       className="rounded-[12px] border border-white/10 bg-[#2a2a2a] px-3 py-2 text-[12px] font-semibold text-[#c4c7c8]"
