@@ -59,15 +59,18 @@ export function parseBankStatementText(
     .split(/\r?\n/)
     .map((line) => line.replace(/\s+/g, " ").trim())
     .filter(Boolean);
-  const blocks: string[] = [];
-  let current = "";
+  const usesFinalAmountColumn = lines.some((line) =>
+    /Dátum sprac\.\s+Popis\s+Dátum zúčt\.\s+Suma/iu.test(line),
+  );
+  const blocks: Array<{ firstLine: string; text: string }> = [];
+  let current: { firstLine: string; text: string } | null = null;
 
   for (const line of lines) {
     if (startDatePattern.test(line)) {
       if (current) blocks.push(current);
-      current = line;
-    } else if (current && current.length < 1200) {
-      current = `${current} ${line}`;
+      current = { firstLine: line, text: line };
+    } else if (current && current.text.length < 1200) {
+      current.text = `${current.text} ${line}`;
     }
   }
   if (current) blocks.push(current);
@@ -78,7 +81,8 @@ export function parseBankStatementText(
   let skippedDatedRows = 0;
   let outsideMonth = 0;
 
-  for (const block of blocks.slice(0, 750)) {
+  for (const statementBlock of blocks.slice(0, 750)) {
+    const block = statementBlock.text;
     const dateMatch = block.match(startDatePattern);
     if (!dateMatch) continue;
     const date = parseStatementDate(dateMatch[1], statementMonth);
@@ -91,14 +95,24 @@ export function parseBankStatementText(
       .slice(dateMatch[0].length)
       .replace(secondDatePattern, "")
       .trim();
+    const firstLineRemainder = statementBlock.firstLine
+      .slice(dateMatch[0].length)
+      .replace(secondDatePattern, "")
+      .trim();
     const amountMatches = [...remainder.matchAll(amountPattern)];
-    if (amountMatches.length === 0) {
+    const rowAmountMatches = [...firstLineRemainder.matchAll(amountPattern)];
+    if (amountMatches.length === 0 || rowAmountMatches.length === 0) {
       skippedDatedRows += 1;
       continue;
     }
-    if (amountMatches.length > 1) ambiguousAmounts += 1;
+    if (rowAmountMatches.length > 1) ambiguousAmounts += 1;
 
-    const selectedAmount = amountMatches[0];
+    // Tatra-style statements explicitly label a final Suma column. Other bank
+    // layouts can put a running balance last, so retain first-amount behavior
+    // unless the PDF itself confirms this column layout.
+    const selectedAmount = usesFinalAmountColumn
+      ? rowAmountMatches.at(-1) ?? amountMatches[0]
+      : amountMatches[0];
     const parsedAmount = parseStatementAmount(selectedAmount[0], remainder);
     if (!parsedAmount || parsedAmount.amount === 0) {
       skippedDatedRows += 1;
@@ -107,7 +121,9 @@ export function parseBankStatementText(
     if (parsedAmount.inferred) inferredSigns += 1;
 
     const titleBeforeAmount = sanitizeDescription(
-      remainder.slice(0, selectedAmount.index ?? remainder.length),
+      remainder
+        .slice(0, selectedAmount.index ?? remainder.length)
+        .replace(amountPattern, ""),
     );
     const titleAfterAmount = sanitizeDescription(
       remainder
@@ -123,30 +139,28 @@ export function parseBankStatementText(
     if (!date.startsWith(statementMonth)) outsideMonth += 1;
     rows.push({
       amount: parsedAmount.amount,
-      category: categorizeTransaction(title, parsedAmount.amount),
+      category: categorizeTransaction(remainder, parsedAmount.amount),
       date,
       status: "paid",
       title,
     });
   }
 
-  const uniqueRows = [...new Map(
-    rows.map((row) => [`${row.date}|${row.title.toLocaleLowerCase()}|${row.amount.toFixed(2)}`, row]),
-  ).values()].slice(0, 500);
+  const normalizedRows = rows.slice(0, 500);
 
-  if (uniqueRows.length === 0) {
+  if (normalizedRows.length === 0) {
     throw new Error(
       "No transactions were detected. Use a text-based bank statement or export CSV instead.",
     );
   }
 
   const income = roundMoney(
-    uniqueRows
+    normalizedRows
       .filter((row) => row.amount > 0)
       .reduce((total, row) => total + row.amount, 0),
   );
   const expenses = roundMoney(Math.abs(
-    uniqueRows
+    normalizedRows
       .filter((row) => row.amount < 0)
       .reduce((total, row) => total + row.amount, 0),
   ));
@@ -154,7 +168,7 @@ export function parseBankStatementText(
 
   if (ambiguousAmounts > 0) {
     warnings.push(
-      `${ambiguousAmounts} row${ambiguousAmounts === 1 ? " has" : "s have"} multiple amounts. Orbit used the first amount and ignored likely running balances.`,
+      `${ambiguousAmounts} row${ambiguousAmounts === 1 ? " has" : "s have"} multiple amount-like values. Orbit used the final Suma column.`,
     );
   }
   if (inferredSigns > 0) {
@@ -172,15 +186,11 @@ export function parseBankStatementText(
       `${skippedDatedRows} dated line${skippedDatedRows === 1 ? " was" : "s were"} ignored because no valid transaction amount was found.`,
     );
   }
-  if (rows.length > uniqueRows.length) {
-    warnings.push("Repeated transaction rows in the PDF were collapsed in the preview.");
-  }
-
   return {
     expenses,
     income,
     net: roundMoney(income - expenses),
-    rows: uniqueRows,
+    rows: normalizedRows,
     warnings,
   };
 }
@@ -282,15 +292,20 @@ function categorizeTransaction(title: string, amount: number) {
   const value = normalizeForMatching(title);
   const matches = (words: string[]) => words.some((word) => value.includes(word));
 
+  if (matches(["fee", "poplatok"])) return "Bank fees";
+  if (matches(["bankomat", "cash withdrawal", "vyber", "výber"])) return "Cash";
+  if (matches(["odoslana platba", "transfer", "prevod"])) return "Transfers";
+  if (matches(["direct debit", "inkaso", "poist", "insurance"])) return "Bills";
   if (matches(["gym", "fitness", "tennis", "sport"])) return "Fitness";
   if (matches(["billa", "fresh", "kaufland", "lidl", "potrav", "tesco", "grocery"])) return "Groceries";
   if (matches(["bolt", "bus", "omv", "shell", "slovnaft", "train", "uber", "zelezn", "železn"])) return "Transport";
   if (matches(["cafe", "coffee", "food", "pizza", "restaurant", "restaur", "wolt"])) return "Dining";
   if (matches(["electric", "energy", "gas", "internet", "mortgage", "najom", "nájom", "rent", "telekom", "voda"])) return "Housing";
   if (matches(["apple.com/bill", "google", "netflix", "spotify", "subscription"])) return "Subscriptions";
-  if (matches(["fee", "poplatok"])) return "Bank fees";
-  if (matches(["transfer", "prevod"])) return "Transfers";
   if (matches(["amazon", "mall", "shop", "store", "zalando"])) return "Shopping";
+  if (matches(["ap nakup pos", "card", "karta", "kartou", "payment", "platba", "pos purchase"])) {
+    return "Card purchases";
+  }
   return "Other";
 }
 

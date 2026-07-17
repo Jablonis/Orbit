@@ -19,37 +19,50 @@ Account statement July 2026
   assert.equal(preview.income, 2450);
   assert.equal(preview.expenses, 47.7);
   assert.equal(preview.net, 2402.3);
-  assert.match(preview.warnings.join(" "), /multiple amounts/i);
+  assert.match(preview.warnings.join(" "), /multiple amount/i);
 });
 
-test("infers the year, masks account numbers, and collapses repeated rows", () => {
+test("infers the year, masks account numbers, and preserves repeated payments", () => {
   const preview = parseBankStatementText(`
 01.07. CARD PAYMENT SK3112000000198742637541 -10,00 EUR
 01.07. CARD PAYMENT SK3112000000198742637541 -10,00 EUR
 `, "2026-07");
 
-  assert.equal(preview.rows.length, 1);
+  assert.equal(preview.rows.length, 2);
   assert.equal(preview.rows[0].date, "2026-07-01");
   assert.doesNotMatch(preview.rows[0].title, /SK3112/);
   assert.match(preview.rows[0].title, /Account/);
-  assert.match(preview.warnings.join(" "), /collapsed/i);
 });
 
 test("distinguishes Slovak incoming and outgoing bank transfers", () => {
   const preview = parseBankStatementText(`
+Dátum sprac. Popis Dátum zúčt. Suma
 01.07.2026 Platba 0900/1234567890 300,00
 Prijatá platba: SK3112000000198742637541
 Suma: 300,00 EUR Valuta: 01.07.2026
-02.07.2026 Platba 1100/1234567890 75,50-
+02.07.2026 Platba 1100/1234567890 30,06 75,50-
 Odoslaná platba: SK3112000000198742637541
 Suma: 75,50 EUR Valuta: 02.07.2026
 `, "2026-07");
 
   assert.deepEqual(preview.rows.map((row) => row.amount), [300, -75.5]);
-  assert.deepEqual(preview.rows.map((row) => row.category), ["Income", "Other"]);
+  assert.deepEqual(preview.rows.map((row) => row.category), ["Income", "Transfers"]);
   assert.equal(preview.income, 300);
   assert.equal(preview.expenses, 75.5);
   assert.equal(preview.net, 224.5);
+});
+
+test("uses reliable transaction-type categories as a fallback", () => {
+  const preview = parseBankStatementText(`
+01.07.2026 PLATBA KARTOU LOCAL MERCHANT 12,00-
+02.07.2026 VYBER BANKOMAT 40,00-
+03.07.2026 POPLATOK ZA UCET 3,00
+`, "2026-07");
+
+  assert.deepEqual(
+    preview.rows.map((row) => row.category),
+    ["Card purchases", "Cash", "Bank fees"],
+  );
 });
 
 test("uses a deterministic normalized payload for duplicate protection", () => {
