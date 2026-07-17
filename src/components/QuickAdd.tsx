@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 
 const actions = [
   { detail: "Create and schedule work", group: "Tasks", href: "/tasks#new-task", keywords: "new create todo", label: "Add task" },
@@ -71,8 +72,6 @@ export function QuickAdd() {
   function choose(href: string) {
     window.localStorage.setItem(recentStorageKey, href);
     setRecentHref(href);
-    setOpen(false);
-    setQuery("");
   }
 
   function togglePalette() {
@@ -179,6 +178,7 @@ export function QuickAdd() {
                         <span className="text-[10px] font-semibold text-[var(--text-tertiary)]">{action.group}</span>
                       </span>
                       <span className="mt-1 block text-[11px] text-[#aeb2b4]">{action.detail}</span>
+                      <LinkPendingIndicator label={`Opening ${action.label}`} />
                     </Link>
                   </div>
                 );

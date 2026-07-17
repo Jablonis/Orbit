@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { ProfileMenu } from "@/components/ProfileMenu";
 
 type NavKey = "dashboard" | "fitness" | "tasks" | "finance";
@@ -32,6 +33,7 @@ export function AppNavigation({
           <Link className="flex flex-col items-center gap-2" href="/">
             <LogoMark />
             <span className="text-[13px] font-semibold text-white">Orbit</span>
+            <LinkPendingIndicator label="Loading Overview" />
           </Link>
 
           <div className="flex w-full flex-col items-stretch gap-2 rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-1)] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.035),0_18px_42px_rgba(0,0,0,0.28)]">
@@ -51,6 +53,7 @@ export function AppNavigation({
                 ) : null}
                 {item.icon}
                 {item.label}
+                <LinkPendingIndicator label={`Loading ${item.label}`} />
               </Link>
             ))}
           </div>
@@ -76,6 +79,7 @@ export function AppNavigation({
             ) : null}
             {item.icon}
             <span className="mt-1">{item.label}</span>
+            <LinkPendingIndicator label={`Loading ${item.label}`} />
           </Link>
         ))}
       </nav>

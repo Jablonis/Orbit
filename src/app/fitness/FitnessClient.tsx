@@ -259,7 +259,7 @@ export function FitnessClient({
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+        <div className="content-panel grid overflow-hidden rounded-[var(--radius-panel)] sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           {localPlan.map((day) => {
             const isOpen = day.id === openDayId;
             return (
@@ -285,6 +285,18 @@ export function FitnessClient({
                       ? "Recovery"
                       : day.log.time || `${day.log.durationMinutes} min planned`}
                   </p>
+                  {day.sport !== "rest" ? (
+                    <div
+                      aria-label={`${day.log.durationMinutes} minutes planned`}
+                      className="mt-3 h-1 overflow-hidden bg-white/10"
+                      role="img"
+                    >
+                      <span
+                        className="block h-full bg-[var(--accent-primary)]"
+                        style={{ width: `${Math.min(100, Math.max(8, (day.log.durationMinutes / 90) * 100))}%` }}
+                      />
+                    </div>
+                  ) : null}
                 </div>
 
                 <select
@@ -427,21 +439,21 @@ export function FitnessClient({
 
 function getDayCardClass(day: WeeklyPlanDay, open: boolean) {
   const base =
-    "relative overflow-hidden rounded-[18px] border p-4 transition before:absolute before:inset-x-0 before:top-0 before:h-1";
+    "relative overflow-hidden border-b border-r border-[var(--border-subtle)] p-4 transition before:absolute before:inset-x-0 before:top-0 before:h-[2px] last:border-r-0";
 
   if (day.sport === "rest") {
     return `${base} before:bg-[#7d838a] ${
       open
-        ? "border-[#aeb3b5]/45 bg-[#252728]"
-        : "border-white/10 bg-[#191a1b] hover:border-white/20"
+        ? "bg-[#252728]"
+        : "bg-[#191a1b] hover:bg-[#202122]"
     }`;
   }
 
   if (day.log.completed) {
     return `${base} before:bg-[#a3e635] ${
       open
-        ? "border-[#a3e635]/70 bg-[#1b3117] shadow-[0_18px_44px_-24px_rgba(163,230,53,0.65)]"
-        : "border-[#a3e635]/35 bg-[#152614] hover:border-[#a3e635]/60"
+        ? "bg-[#1b3117]"
+        : "bg-[#152614] hover:bg-[#1a2d18]"
     }`;
   }
 
@@ -454,8 +466,8 @@ function getDayCardClass(day: WeeklyPlanDay, open: boolean) {
 
   return `${base} ${sportAccent[day.sport]} ${
     open
-      ? "border-white/30 bg-[#252424] shadow-[0_18px_44px_-28px_rgba(255,255,255,0.35)]"
-      : "border-white/10 bg-[#1b1a1a] hover:-translate-y-0.5 hover:border-white/20"
+      ? "bg-[#252424]"
+      : "bg-[#1b1a1a] hover:bg-[#222121]"
   }`;
 }
 

@@ -18,9 +18,10 @@ export function PendingSubmitButton({
 
   return (
     <button
+      aria-busy={pending}
       aria-disabled={pending}
       aria-label={ariaLabel}
-      className={`${className} disabled:cursor-wait disabled:opacity-55`}
+      className={`${className} ${pending ? "pending-button-state" : ""} disabled:cursor-wait disabled:opacity-70`}
       disabled={pending}
       type="submit"
     >

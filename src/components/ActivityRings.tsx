@@ -14,7 +14,9 @@ export function ActivityRings({ finance, fitness, tasks }: RingValues) {
     fitness: 0,
     tasks: 0,
   });
-  const score = Math.round((finance + fitness + tasks) / 3);
+  const score = Math.round(
+    (displayed.finance + displayed.fitness + displayed.tasks) / 3,
+  );
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {

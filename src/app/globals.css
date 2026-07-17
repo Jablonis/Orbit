@@ -113,6 +113,284 @@
   line-height: 1.125rem;
 }
 
+.editorial-display {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, ui-serif, serif;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.orbit-datum {
+  align-items: center;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.orbit-datum__label {
+  color: var(--text-tertiary);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 9px;
+}
+
+.orbit-datum__track {
+  background: var(--border-subtle);
+  height: 1px;
+  position: relative;
+}
+
+.orbit-datum__progress {
+  animation: orbit-progress-reveal 700ms var(--ease-orbit) 120ms both;
+  background: linear-gradient(90deg, var(--accent-focus), var(--accent-primary));
+  height: 1px;
+  inset: 0 auto auto 0;
+  position: absolute;
+  transform-origin: left;
+  width: var(--orbit-progress);
+}
+
+.orbit-datum__node {
+  animation: orbit-node-arrive 700ms var(--ease-orbit) 120ms both;
+  background: var(--surface-1);
+  border: 2px solid var(--accent-primary);
+  border-radius: 999px;
+  height: 11px;
+  left: var(--orbit-progress);
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: left 500ms cubic-bezier(0.16, 1, 0.3, 1);
+  width: 11px;
+}
+
+@keyframes orbit-progress-reveal {
+  from { opacity: 0.25; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes orbit-node-arrive {
+  from { left: 0; opacity: 0.35; }
+  to { left: var(--orbit-progress); opacity: 1; }
+}
+
+@keyframes overview-settle {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.overview-intro-enter {
+  animation: overview-settle 420ms var(--ease-orbit) backwards;
+}
+
+.overview-brief-enter {
+  animation: overview-settle 560ms var(--ease-orbit) 55ms backwards;
+}
+
+.overview-heading-enter {
+  animation: overview-settle 460ms var(--ease-orbit) 110ms backwards;
+}
+
+.overview-card-enter,
+.overview-row-enter {
+  animation: overview-settle 520ms var(--ease-orbit) backwards;
+}
+
+.overview-delay-1 { animation-delay: 130ms; }
+.overview-delay-2 { animation-delay: 180ms; }
+.overview-delay-3 { animation-delay: 230ms; }
+.overview-delay-4 { animation-delay: 280ms; }
+.overview-delay-5 { animation-delay: 160ms; }
+.overview-delay-6 { animation-delay: 220ms; }
+.overview-delay-7 { animation-delay: 280ms; }
+
+.overview-interactive-card {
+  transition-duration: 180ms;
+  transition-property: background-color, border-color, box-shadow, transform;
+  transition-timing-function: var(--ease-orbit);
+}
+
+@media (hover: hover) {
+  .overview-interactive-card:hover {
+    box-shadow: 0 18px 32px -28px rgba(0, 0, 0, 0.95);
+    transform: translateY(-2px);
+  }
+}
+
+.overview-interactive-card:active {
+  transform: translateY(0) scale(0.99);
+}
+
+@keyframes overview-bar-grow {
+  from { opacity: 0.2; transform: scaleY(0); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+.overview-bar-enter {
+  animation: overview-bar-grow 620ms var(--ease-orbit) both;
+  transform-origin: bottom;
+}
+
+@keyframes overview-line-draw {
+  from { opacity: 0.35; stroke-dashoffset: 1; }
+  to { opacity: 1; stroke-dashoffset: 0; }
+}
+
+.overview-line-draw {
+  animation: overview-line-draw 760ms var(--ease-orbit) 180ms both;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.link-pending-indicator {
+  background: linear-gradient(90deg, transparent, var(--accent-primary), var(--accent-info));
+  height: 2px;
+  inset: 0 0 auto;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  transform: scaleX(0);
+  transform-origin: left;
+  visibility: hidden;
+  z-index: 120;
+}
+
+@keyframes link-pending-progress {
+  0% { opacity: 1; transform: scaleX(0.08); }
+  65% { opacity: 1; transform: scaleX(0.72); }
+  100% { opacity: 0.72; transform: scaleX(0.9); }
+}
+
+.link-pending-indicator.is-pending {
+  animation: link-pending-progress 1.15s var(--ease-orbit) 90ms both;
+  visibility: visible;
+}
+
+.skeleton-shimmer {
+  overflow: hidden;
+  position: relative;
+}
+
+.skeleton-shimmer::after {
+  animation: skeleton-shimmer 1.35s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+  content: "";
+  inset: 0;
+  position: absolute;
+  transform: translateX(-100%);
+}
+
+@keyframes skeleton-shimmer {
+  to { transform: translateX(100%); }
+}
+
+.route-loading-progress {
+  animation: link-pending-progress 1.15s var(--ease-orbit) both;
+  background: linear-gradient(90deg, var(--accent-focus), var(--accent-primary), var(--accent-info));
+  height: 2px;
+  inset: 0 0 auto;
+  position: fixed;
+  transform-origin: left;
+  z-index: 120;
+}
+
+.pending-button-state {
+  overflow: hidden;
+  position: relative;
+}
+
+.pending-button-state::after {
+  animation: pending-button-sweep 900ms ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.24), transparent);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-100%);
+}
+
+@keyframes pending-button-sweep {
+  to { transform: translateX(100%); }
+}
+
+.section-datum::before {
+  background: var(--accent-focus);
+  border-radius: 999px;
+  box-shadow: 0 0 0 4px var(--canvas);
+  content: "";
+  height: 7px;
+  left: 1.25rem;
+  position: absolute;
+  top: -4px;
+  width: 7px;
+}
+
+.section-datum {
+  position: relative;
+}
+
+.overview-today-composition,
+.overview-trend-composition {
+  display: grid;
+  gap: 1rem;
+  grid-auto-rows: min-content;
+}
+
+.task-queue-axis {
+  position: relative;
+}
+
+.task-queue-axis::before {
+  background: var(--border-subtle);
+  bottom: 0.5rem;
+  content: "";
+  left: 0.25rem;
+  position: absolute;
+  top: 0.5rem;
+  width: 1px;
+}
+
+.task-queue-axis > section::before {
+  background: var(--surface-1);
+  border: 2px solid var(--accent-info);
+  border-radius: 999px;
+  content: "";
+  height: 9px;
+  left: 0;
+  position: absolute;
+  top: 0.25rem;
+  transform: translateX(-0.2rem);
+  width: 9px;
+}
+
+@media (min-width: 640px) {
+  .overview-today-composition,
+  .overview-trend-composition {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .overview-today-composition,
+  .overview-trend-composition {
+    gap: 1.25rem;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .overview-today-composition {
+    padding-right: clamp(0rem, 3vw, 3rem);
+  }
+
+  .overview-trend-composition {
+    padding-left: clamp(0rem, 3vw, 3rem);
+  }
+}
+
 .dashboard-density-compact {
   gap: 0.75rem;
 }

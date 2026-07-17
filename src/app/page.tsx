@@ -1,9 +1,10 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { ActivityRings } from "@/components/ActivityRings";
 import { AppNavigation } from "@/components/AppNavigation";
 import { DashboardCustomizer } from "@/components/DashboardCustomizer";
 import { EmptyState } from "@/components/EmptyState";
+import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { QuickAdd } from "@/components/QuickAdd";
 import { getAuthenticatedUser } from "@/lib/auth";
@@ -60,7 +61,7 @@ type TaskFilter = "today" | "overdue" | "upcoming";
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ domains?: string; tasks?: string }>;
+  searchParams: Promise<{ brief?: string; domains?: string; tasks?: string }>;
 }) {
   const { supabase, user } = await getAuthenticatedUser();
   const params = await searchParams;
@@ -126,6 +127,7 @@ export default async function Home({
     weeklyProductivity,
     today,
   );
+  const briefMode = params.brief === "weekly" ? "weekly" : "daily";
   const filter = getTaskFilter(params.tasks);
   const categoryOptions = [
     ...new Set([
@@ -200,7 +202,7 @@ export default async function Home({
   );
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_12%_8%,rgba(167,139,250,0.14),transparent_24%),radial-gradient(circle_at_88%_16%,rgba(163,230,53,0.09),transparent_24%),var(--canvas)] pb-28 text-[var(--text-primary)] md:pb-12 md:pl-[112px]">
+    <main className="min-h-screen overflow-x-hidden bg-[var(--canvas)] pb-28 text-[var(--text-primary)] md:pb-12 md:pl-[112px]">
       <AppNavigation
         active="dashboard"
         settings={(
@@ -212,7 +214,7 @@ export default async function Home({
         userEmail={user.email ?? "Orbit user"}
       />
       <section className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 md:px-8 md:py-8 xl:px-10">
-        <header className="mb-6 pr-14 md:pr-0">
+        <header className="overview-intro-enter mb-6 pr-14 md:pr-0">
           <div>
             <p className="label-caps text-[var(--accent-primary)]">Overview</p>
             <h1 className="page-title mt-2 text-white">
@@ -224,12 +226,16 @@ export default async function Home({
           </div>
         </header>
 
-        <NowHero
+        <BriefHero
+          dailyHref={getBriefHref("daily", params)}
           dailyRings={dailyRings}
+          mode={briefMode}
           nextTask={nextTask}
           pendingFinance={pendingFinance}
+          review={review}
           today={today}
           training={fitnessStats.todayTraining}
+          weeklyHref={getBriefHref("weekly", params)}
         />
 
         {todayCardOrder.length > 0 ? (
@@ -241,7 +247,7 @@ export default async function Home({
               title="Keep the day moving"
             />
             <div
-              className={`mt-4 grid auto-rows-min gap-4 sm:grid-cols-2 xl:grid-cols-12 xl:gap-5 ${
+              className={`overview-today-composition mt-4 ${
                 preferences.density === "compact" ? "dashboard-density-compact" : ""
               }`}
             >
@@ -259,7 +265,7 @@ export default async function Home({
               title="See the wider pattern"
             />
             <div
-              className={`mt-4 grid auto-rows-min gap-4 sm:grid-cols-2 xl:grid-cols-12 xl:gap-5 ${
+              className={`overview-trend-composition mt-4 ${
                 preferences.density === "compact" ? "dashboard-density-compact" : ""
               }`}
             >
@@ -272,18 +278,36 @@ export default async function Home({
   );
 }
 
-function NowHero({
+function getBriefHref(
+  mode: "daily" | "weekly",
+  params: { domains?: string; tasks?: string },
+) {
+  const query = new URLSearchParams({ brief: mode });
+  if (params.domains) query.set("domains", params.domains);
+  if (params.tasks) query.set("tasks", params.tasks);
+  return `/?${query.toString()}`;
+}
+
+function BriefHero({
+  dailyHref,
   dailyRings,
+  mode,
   nextTask,
   pendingFinance,
+  review,
   today,
   training,
+  weeklyHref,
 }: {
+  dailyHref: string;
   dailyRings: ReturnType<typeof getDailyRings>;
+  mode: "daily" | "weekly";
   nextTask?: Task;
   pendingFinance?: import("@/lib/finance").FinanceTransaction;
+  review: WeeklyReview;
   today: string;
   training: import("@/lib/fitness").TodayTraining;
+  weeklyHref: string;
 }) {
   const dateLabel = new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
@@ -313,17 +337,34 @@ function NowHero({
     : training.day.sport !== "rest" && !training.day.log.completed
       ? { href: "/fitness#training-calendar", label: "Log workout" }
       : { href: "/tasks#new-task", label: "Plan the next move" };
+  const dailyProgress = activeAreas.length
+    ? Math.round(activeAreas.reduce((total, area) => total + Math.min(area.percent, 100), 0) / activeAreas.length)
+    : 0;
+  const briefProgress = mode === "daily" ? dailyProgress : review.score;
 
   return (
-    <section aria-labelledby="now-title" className="hero-panel relative z-30 overflow-visible rounded-[var(--radius-panel)] p-5 sm:p-6 lg:p-7">
-      <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)]/70 to-transparent" />
+    <section aria-labelledby="brief-title" className="hero-panel overview-brief-enter relative z-30 overflow-visible rounded-[var(--radius-panel)] p-5 sm:p-6 lg:p-7">
+      <div className="mb-6 flex flex-col gap-4 border-b border-[var(--border-subtle)] pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="label-caps text-[var(--text-tertiary)]">Orbit brief</p>
+          <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
+            {mode === "daily" ? "The immediate decisions." : "The pattern behind the week."}
+          </p>
+        </div>
+        <nav aria-label="Brief period" className="inline-flex w-fit rounded-full border border-[var(--border-subtle)] bg-black/25 p-1">
+          <BriefPeriodLink active={mode === "daily"} href={dailyHref} label="Daily" />
+          <BriefPeriodLink active={mode === "weekly"} href={weeklyHref} label="Weekly" />
+        </nav>
+      </div>
+      <OrbitDatum value={briefProgress} />
+      {mode === "daily" ? (
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)] xl:items-stretch">
         <div className="flex min-w-0 flex-col justify-between">
           <div>
             <p className="label-caps text-[var(--accent-primary)]">
               {phase.eyebrow} · {dateLabel}
             </p>
-            <h2 className="mt-3 max-w-3xl text-[28px] font-semibold leading-[34px] text-white sm:text-[34px] sm:leading-[40px]" id="now-title">
+            <h2 className="editorial-display mt-3 max-w-3xl text-[32px] leading-[37px] text-white sm:text-[42px] sm:leading-[47px]" id="brief-title">
               {phase.greeting}. {phase.prompt}
             </h2>
             <p className="mt-3 text-[14px] leading-6 text-[var(--text-secondary)]">
@@ -349,6 +390,7 @@ function NowHero({
                 href={primaryAction.href}
               >
                 {primaryAction.label}
+                <LinkPendingIndicator label={`Opening ${primaryAction.label}`} />
               </Link>
               <QuickAdd />
             </div>
@@ -372,7 +414,92 @@ function NowHero({
           />
         </div>
       </div>
+      ) : (
+        <WeeklyBriefBody review={review} today={today} />
+      )}
     </section>
+  );
+}
+
+function BriefPeriodLink({ active, href, label }: { active: boolean; href: string; label: string }) {
+  return (
+    <Link
+      aria-current={active ? "page" : undefined}
+      className={`inline-flex min-h-9 items-center justify-center rounded-full px-4 text-[12px] font-semibold transition ${
+        active
+          ? "bg-white text-[#171718] shadow-sm"
+          : "text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-white"
+      }`}
+      href={href}
+      scroll={false}
+    >
+      {label}
+      <LinkPendingIndicator label={`Loading ${label} Brief`} />
+    </Link>
+  );
+}
+
+function WeeklyBriefBody({ review, today }: { review: WeeklyReview; today: string }) {
+  const scoreChange = review.score - review.previousScore;
+  const dateLabel = new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(new Date(`${today}T12:00:00Z`));
+  const weeklyDirection = scoreChange > 0
+    ? `The week is ${scoreChange} points ahead of last week.`
+    : scoreChange < 0
+      ? `The week is ${Math.abs(scoreChange)} points behind last week.`
+      : "The week is holding level with last week.";
+  const leverage = review.overdueCarried > 0
+    ? `Resolve or reschedule ${review.overdueCarried} overdue task${review.overdueCarried === 1 ? "" : "s"}.`
+    : "Protect what is already working and close the week cleanly.";
+
+  return (
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)] xl:items-stretch">
+      <div className="flex min-w-0 flex-col justify-between">
+        <div>
+          <p className="label-caps text-[var(--accent-focus)]">Week through {dateLabel}</p>
+          <h2 className="editorial-display mt-3 max-w-3xl text-[32px] leading-[37px] text-white sm:text-[42px] sm:leading-[47px]" id="brief-title">
+            {review.score}% weekly rhythm. {weeklyDirection}
+          </h2>
+          <p className="mt-3 text-[14px] leading-6 text-[var(--text-secondary)]">
+            A compact read on execution, training, and cashflow—not another dashboard report.
+          </p>
+        </div>
+
+        <div className="mt-6 rounded-[var(--radius-row)] border border-[var(--accent-focus)]/20 bg-[var(--accent-focus)]/[0.07] p-4 sm:p-5">
+          <p className="label-caps text-[var(--accent-focus)]">Best weekly leverage</p>
+          <p className="mt-2 text-[18px] font-semibold leading-6 text-white sm:text-[20px]">{leverage}</p>
+          <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
+            Net cashflow {formatCurrency(review.income - review.expenses)} · {review.savingsRate}% savings rate
+          </p>
+          <Link
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] bg-white px-5 text-[13px] font-bold text-[#171718] transition hover:brightness-105"
+            href="#weekly-review"
+          >
+            Open weekly review
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+        <HeroSignal
+          detail={`${review.overdueCarried} overdue carried`}
+          href="/tasks"
+          label="Task closure"
+          tone="violet"
+          value={`${review.completedTasks}/${review.plannedTasks} completed`}
+        />
+        <HeroSignal
+          detail={`${review.sessionMinutes} total minutes`}
+          href="/fitness#training-calendar"
+          label="Training volume"
+          tone="lime"
+          value={`${review.sessions} session${review.sessions === 1 ? "" : "s"}`}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -386,25 +513,49 @@ function HeroSignal({
   detail: string;
   href: string;
   label: string;
-  tone: "blue" | "lime";
+  tone: "blue" | "lime" | "violet";
   value: string;
 }) {
   return (
     <Link
-      className="group flex min-h-32 flex-col justify-between rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-4 transition duration-150 hover:border-[var(--border-strong)] hover:bg-white/[0.045]"
+      className="overview-interactive-card group flex min-h-32 flex-col justify-between rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-4 transition duration-150 hover:border-[var(--border-strong)] hover:bg-white/[0.045]"
       href={href}
     >
-      <div className="flex items-center justify-between gap-3">
-        <p className={`label-caps ${tone === "lime" ? "text-[var(--accent-primary)]" : "text-[var(--accent-info)]"}`}>
+      <div>
+        <p className={`label-caps ${
+          tone === "lime"
+            ? "text-[var(--accent-primary)]"
+            : tone === "violet"
+              ? "text-[var(--accent-focus)]"
+              : "text-[var(--accent-info)]"
+        }`}>
           {label}
         </p>
-        <span aria-hidden="true" className="text-[var(--text-tertiary)] transition group-hover:translate-x-0.5 group-hover:text-white">↗</span>
+        <LinkPendingIndicator label={`Opening ${label}`} />
       </div>
       <div>
         <p className="truncate text-[15px] font-semibold text-white">{value}</p>
         <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">{detail}</p>
       </div>
     </Link>
+  );
+}
+
+function OrbitDatum({ value }: { value: number }) {
+  const progress = Math.max(0, Math.min(100, value));
+  return (
+    <div
+      aria-hidden="true"
+      className="orbit-datum mb-6"
+      style={{ "--orbit-progress": `${progress}%` } as CSSProperties}
+    >
+      <span className="orbit-datum__label">0</span>
+      <span className="orbit-datum__track">
+        <span className="orbit-datum__progress" />
+        <span className="orbit-datum__node" />
+      </span>
+      <span className="orbit-datum__label">100</span>
+    </div>
   );
 }
 
@@ -420,7 +571,7 @@ function SectionHeading({
   title: string;
 }) {
   return (
-    <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-5">
+    <div className="overview-heading-enter section-datum flex flex-col gap-2 border-t border-[var(--border-subtle)] pt-4 sm:flex-row sm:items-end sm:justify-between sm:gap-5">
       <div>
         <p className="label-caps text-[var(--text-tertiary)]">{eyebrow}</p>
         <h2 className="mt-1 text-[22px] font-semibold text-white" id={id}>{title}</h2>
@@ -438,8 +589,7 @@ function DailyRingsCard({
   const activeAreas = Object.values(dailyRings).filter((area) => area.total > 0);
   const completeAreas = activeAreas.filter((area) => area.percent >= 100).length;
   return (
-    <article className="content-panel relative overflow-hidden rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-7">
-      <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-[#a3e635]/10 blur-2xl" />
+    <article className="content-panel overview-card-enter overview-delay-1 relative overflow-hidden rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-7">
       <div className="relative grid gap-6 lg:grid-cols-[210px_1fr] lg:items-center">
         <div className="rounded-[34px] border border-white/10 bg-[#101011]/75 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
           <ActivityRings
@@ -497,7 +647,7 @@ function FinanceSummaryCard({
   pinnedFinance: ReturnType<typeof getPinnedFinanceMetric>;
 }) {
   return (
-    <article className="content-panel rounded-[var(--radius-panel)] p-4 xl:col-span-5 xl:p-5">
+    <article className="content-panel overview-card-enter overview-delay-2 rounded-[var(--radius-panel)] p-4 xl:col-span-5 xl:p-5">
       <p className="label-caps text-[#60a5fa]">{pinnedFinance.label}</p>
       <p className="metric-value mt-3 text-[28px] font-semibold text-white xl:mt-4 xl:text-[34px]">
         {formatCurrency(pinnedFinance.value)}
@@ -552,7 +702,7 @@ function FitnessTodayCard({
 }) {
   const canComplete = training.day.sport !== "rest";
   return (
-    <article className="content-panel relative overflow-hidden rounded-[var(--radius-panel)] p-4 xl:col-span-5 xl:p-5">
+    <article className="content-panel overview-card-enter overview-delay-3 relative overflow-hidden rounded-[var(--radius-panel)] p-4 xl:col-span-5 xl:p-5">
       <div className="absolute right-0 top-0 h-40 w-40 rounded-bl-full bg-[#a3e635]/10" />
       <div className="relative flex items-start justify-between gap-3">
         <div>
@@ -630,7 +780,7 @@ function QuickTasksCard({
   total: number;
 }) {
   return (
-    <article className="content-panel rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-7">
+    <article className="content-panel overview-card-enter overview-delay-4 rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-7">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="label-caps text-[#ff4fa3]">Quick tasks</p>
@@ -641,7 +791,7 @@ function QuickTasksCard({
             </p>
           ) : null}
         </div>
-        <Link className="text-[12px] font-bold text-[#a3e635]" href="/tasks">View all</Link>
+        <Link className="text-[12px] font-bold text-[#a3e635]" href="/tasks">View all<LinkPendingIndicator label="Opening Tasks" /></Link>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         {(["today", "overdue", "upcoming"] as const).map((value) => (
@@ -655,6 +805,7 @@ function QuickTasksCard({
             key={value}
           >
             {value}
+            <LinkPendingIndicator label={`Loading ${value} tasks`} />
           </Link>
         ))}
         <span className="ml-auto rounded-full bg-[#ff4fa3]/12 px-3 py-1.5 text-[11px] font-semibold text-[#ffd1e5]">
@@ -662,11 +813,12 @@ function QuickTasksCard({
         </span>
       </div>
       <div className="mt-4 grid gap-2">
-        {quickTasks.map((task) => (
+        {quickTasks.map((task, index) => (
           <form
             action={toggleTaskAction}
-            className="grid grid-cols-[34px_1fr_auto] items-center gap-3 rounded-[16px] border border-white/10 bg-[#201f1f]/55 p-3 transition hover:border-white/20 hover:bg-[#262626]/70"
+            className="overview-row-enter grid grid-cols-[34px_1fr_auto] items-center gap-3 rounded-[16px] border border-white/10 bg-[#201f1f]/55 p-3 transition hover:border-white/20 hover:bg-[#262626]/70"
             key={task.id}
+            style={{ animationDelay: `${240 + index * 55}ms` }}
           >
             <input name="id" type="hidden" value={task.id} />
             <input name="completed" type="hidden" value={String(!task.completed)} />
@@ -716,10 +868,10 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
     ? latest.income - latest.expense - (previous.income - previous.expense)
     : 0;
   return (
-    <article className="content-panel rounded-[var(--radius-panel)] p-4 sm:p-5">
+    <article className="content-panel overview-card-enter overview-delay-5 rounded-[var(--radius-panel)] p-4 sm:p-5">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div><p className="label-caps text-[#60a5fa]">Cashflow</p><h2 className="mt-2 text-[22px] font-semibold text-white">Monthly movement</h2></div>
-        <Link className="shrink-0 text-[12px] font-semibold text-[#a3e635]" href="/finance">Open</Link>
+        <Link className="shrink-0 text-[12px] font-semibold text-[#a3e635]" href="/finance">Open<LinkPendingIndicator label="Opening Finance" /></Link>
       </div>
       <p className="mb-4 text-[12px] leading-[18px] text-[var(--text-secondary)]">
         {latest && previous
@@ -730,7 +882,7 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
       </p>
       {monthlyCashflow.length > 0 ? (
       <div aria-label="Monthly income and expense chart" className="flex h-48 items-end gap-2">
-        {monthlyCashflow.map((month) => (
+        {monthlyCashflow.map((month, index) => (
           <div
             aria-label={`${month.month}: income ${formatCurrency(month.income)}, expenses ${formatCurrency(month.expense)}, net ${formatCurrency(month.income - month.expense)}`}
             className="flex min-w-0 flex-1 flex-col items-center gap-2 rounded-[10px] focus-visible:bg-white/[0.04]"
@@ -740,8 +892,8 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
             title={`${month.month}: ${formatCurrency(month.income - month.expense)} net`}
           >
             <div className="flex w-full flex-1 items-end justify-center gap-1 rounded-[14px] border border-white/10 bg-[#151516] px-1.5 pb-2">
-              <div className="w-full max-w-6 rounded-t-[8px] bg-[#a3e635]" style={{ height: `${(month.income / max) * 100}%` }} />
-              <div className="w-full max-w-6 rounded-t-[8px] bg-[#60a5fa]/55" style={{ height: `${(month.expense / max) * 100}%` }} />
+              <div className="overview-bar-enter w-full max-w-6 rounded-t-[8px] bg-[#a3e635]" style={{ animationDelay: `${180 + index * 55}ms`, height: `${(month.income / max) * 100}%` }} />
+              <div className="overview-bar-enter w-full max-w-6 rounded-t-[8px] bg-[#60a5fa]/55" style={{ animationDelay: `${230 + index * 55}ms`, height: `${(month.expense / max) * 100}%` }} />
             </div>
             <span className="text-[11px] font-semibold text-[#c4c7c8]">{month.month.slice(5)}</span>
           </div>
@@ -752,7 +904,7 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
           actionHref="/finance#bank-statement-import"
           actionLabel="Import bank PDF"
           description="Income and expense trends will appear after your first import."
-          icon="↗"
+          icon="€"
           title="No cashflow trend yet"
         />
       )}
@@ -819,11 +971,8 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
     (point) => point.plannedTasks > 0 || point.plannedFitness > 0 || point.focusMinutes > 0,
   );
   return (
-    <article className="content-panel rounded-[var(--radius-panel)] p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div><p className="label-caps text-[#ff4fa3]">Productivity</p><h2 className="mt-2 text-[22px] font-semibold text-white">Reliable {rangeDays}-day score</h2></div>
-        <span className="rounded-full bg-[#ff4fa3]/12 px-2.5 py-1 text-[11px] font-semibold text-[#ffd1e5]">60 · 25 · 15</span>
-      </div>
+    <article className="content-panel overview-card-enter overview-delay-6 rounded-[var(--radius-panel)] p-4 sm:p-5">
+      <div><p className="label-caps text-[#ff4fa3]">Productivity</p><h2 className="mt-2 text-[22px] font-semibold text-white">Reliable {rangeDays}-day score</h2></div>
       <p className="mt-3 text-[12px] font-semibold text-[var(--text-secondary)]">
         {hasActivity
           ? `Productivity is ${scoreChange >= 0 ? `${scoreChange} points above` : `${Math.abs(scoreChange)} points below`} the previous ${rangeDays} days.`
@@ -843,6 +992,7 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
               key={domain}
             >
               {enabled ? "✓ " : ""}{domain}
+              <LinkPendingIndicator label={`Updating ${domain}`} />
             </Link>
           );
         })}
@@ -851,7 +1001,7 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
         <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 600 130">
           {[12, 62, 112].map((y) => <line key={y} stroke="rgba(255,255,255,0.07)" x1="20" x2="580" y1={y} y2={y} />)}
           <polyline fill="none" points={previousPoints} stroke="rgba(196,199,200,0.28)" strokeDasharray="7 7" strokeWidth="3" />
-          <polyline fill="none" points={currentPoints} stroke="#ff4fa3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
+          <polyline className="overview-line-draw" fill="none" pathLength="1" points={currentPoints} stroke="#ff4fa3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
           {current.map((point, index) => point.score === null ? null : (
             <circle cx={chartX(index)} cy={chartY(point.score)} fill={point.date === today ? "#a3e635" : "#ff4fa3"} key={point.date} r={point.date === today ? 7 : 5}>
               <title>{`${point.label}: ${point.score}% — ${point.completedTasks}/${point.plannedTasks} tasks, ${point.completedFitness}/${point.plannedFitness} training, ${point.focusMinutes} focus min`}</title>
@@ -903,18 +1053,18 @@ function getEnabledDomains(value: string | undefined): ProductivityDomain[] {
 function WeeklyReviewCard({ reflection, review }: { reflection: WeeklyReflection; review: WeeklyReview }) {
   const scoreChange = review.score - review.previousScore;
   return (
-    <article className="content-panel rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-12 xl:p-6">
+    <article className="content-panel overview-card-enter overview-delay-7 scroll-mt-6 rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-12 xl:p-6" id="weekly-review">
       <div className="flex flex-col gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div><p className="label-caps text-[#a78bfa]">Weekly review</p><h2 className="mt-2 text-[26px] font-semibold text-white">Close the loop</h2></div>
+        <div><p className="label-caps text-[#a78bfa]">Weekly review</p><h2 className="editorial-display mt-2 text-[32px] leading-tight text-white">Close the loop</h2></div>
         <p className={`text-[13px] font-semibold ${scoreChange >= 0 ? "text-[#a3e635]" : "text-[#ff9f9f]"}`}>{scoreChange >= 0 ? "+" : ""}{scoreChange} points vs last week</p>
       </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <dl className="mt-5 grid overflow-hidden border-y border-[var(--border-subtle)] sm:grid-cols-2 xl:grid-cols-5">
         <ReviewMetric label="Tasks" value={`${review.completedTasks}/${review.plannedTasks}`} detail={`${review.overdueCarried} overdue carried`} />
         <ReviewMetric label="Training" value={`${review.sessions} sessions`} detail={`${review.sessionMinutes} total minutes`} />
         <ReviewMetric label="Income" value={formatCurrency(review.income)} detail="Paid this week" />
         <ReviewMetric label="Expenses" value={formatCurrency(review.expenses)} detail="Paid this week" />
         <ReviewMetric label="Savings rate" value={`${review.savingsRate}%`} detail={`${review.score}% weekly score`} />
-      </div>
+      </dl>
       <form action={saveWeeklyReflectionAction} className="mt-5 grid gap-3 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
         <label className="grid gap-2"><span className="label-caps text-[#c4c7c8]">What worked?</span><textarea className="field-input min-h-20 py-3" defaultValue={reflection.whatWorked} name="whatWorked" placeholder="One thing worth repeating…" /></label>
         <label className="grid gap-2"><span className="label-caps text-[#c4c7c8]">What changes next week?</span><textarea className="field-input min-h-20 py-3" defaultValue={reflection.changeNextWeek} name="changeNextWeek" placeholder="One deliberate adjustment…" /></label>
@@ -929,8 +1079,8 @@ function WeeklyReviewCard({ reflection, review }: { reflection: WeeklyReflection
   );
 }
 
-function ReviewMetric({ detail, label, value }: { detail: string; label: string; value: string }) { return <div className="rounded-[16px] border border-white/10 bg-white/[0.035] p-4"><p className="label-caps text-[#8d9092]">{label}</p><p className="metric-value mt-2 text-[20px] font-semibold text-white">{value}</p><p className="mt-1 text-[11px] text-[#8d9092]">{detail}</p></div>; }
+function ReviewMetric({ detail, label, value }: { detail: string; label: string; value: string }) { return <div className="border-b border-[var(--border-subtle)] p-4 last:border-b-0 sm:border-r xl:border-b-0 xl:last:border-r-0"><dt className="label-caps text-[#8d9092]">{label}</dt><dd className="metric-value mt-2 text-[20px] font-semibold text-white">{value}</dd><p className="mt-1 text-[11px] text-[#8d9092]">{detail}</p></div>; }
 function ChartLegend({ color, label }: { color: string; label: string }) { return <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />{label}</span>; }
 
-function RingLegend({ color, href, label, value }: { color: string; href: string; label: string; value: string }) { return <Link className="flex min-h-11 items-center justify-between rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-3 transition hover:bg-white/[0.05]" href={href}><span className="inline-flex items-center gap-2 text-[13px] font-semibold text-white"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />{label}</span><span className="text-[13px] font-semibold text-[var(--text-secondary)]">{value} ↗</span></Link>; }
+function RingLegend({ color, href, label, value }: { color: string; href: string; label: string; value: string }) { return <Link className="overview-interactive-card flex min-h-11 items-center justify-between rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-3 transition hover:bg-white/[0.05]" href={href}><span className="inline-flex items-center gap-2 text-[13px] font-semibold text-white"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />{label}</span><span className="text-[13px] font-semibold text-[var(--text-secondary)]">{value}</span><LinkPendingIndicator label={`Opening ${label}`} /></Link>; }
 function MiniPill({ label, value }: { label: string; value: string }) { return <div className="rounded-[16px] border border-white/10 bg-[#201f1f]/60 p-3"><p className="label-caps text-[#8d9092]">{label}</p><p className="metric-value mt-2 text-[15px] font-semibold text-white">{value}</p></div>; }

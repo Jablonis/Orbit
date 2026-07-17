@@ -231,12 +231,12 @@ export function TasksClient({
         </aside>
 
         <section className="space-y-6">
-          <div className="grid gap-3 sm:grid-cols-4">
+          <dl className="content-panel grid overflow-hidden rounded-[var(--radius-panel)] sm:grid-cols-4">
             <Metric label="Active" value={stats.activeTasksCount} tone="text-white" />
             <Metric label="Done" value={stats.completedTasksCount} tone="text-[#a3e635]" />
             <Metric label="Hard" value={stats.hardTasksCount} tone="text-[#f59e0b]" />
             <Metric label="Focus min" value={stats.totalEstimateMinutes} tone="text-[#60a5fa]" />
-          </div>
+          </dl>
           <div className="content-panel rounded-[var(--radius-panel)] p-5">
             <div className="mb-5 flex items-center justify-between">
               <div>
@@ -245,13 +245,13 @@ export function TasksClient({
                   {activeTasks.length} open tasks
                 </h2>
               </div>
-              <span className="rounded-full bg-[#a3e635]/12 px-3 py-1 text-[12px] font-semibold text-[#d9f99d]">
+              <span className="metric-value text-[12px] font-semibold text-[#d9f99d]">
                 {stats.completionPercent}% done
               </span>
             </div>
-            <div className="grid gap-6">
+            <div className="task-queue-axis grid gap-6">
               {taskGroups.map((group) => group.tasks.length > 0 ? (
-                <section aria-labelledby={`task-group-${group.key}`} key={group.key}>
+                <section aria-labelledby={`task-group-${group.key}`} className="relative pl-7" key={group.key}>
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-[13px] font-semibold text-white" id={`task-group-${group.key}`}>{group.label}</h3>
                     <span className="metric-value text-[11px] text-[var(--text-tertiary)]">{group.tasks.length}</span>
@@ -449,9 +449,9 @@ function Field({ children, label }: { children: ReactNode; label: string }) {
 
 function Metric({ label, tone, value }: { label: string; tone: string; value: number }) {
   return (
-    <article className="content-panel rounded-[var(--radius-row)] p-4">
-      <p className="label-caps text-[var(--text-secondary)]">{label}</p>
-      <p className={`metric-value mt-3 text-[28px] font-semibold ${tone}`}>{value}</p>
-    </article>
+    <div className="border-b border-[var(--border-subtle)] p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+      <dt className="label-caps text-[var(--text-secondary)]">{label}</dt>
+      <dd className={`metric-value mt-3 text-[28px] font-semibold ${tone}`}>{value}</dd>
+    </div>
   );
 }

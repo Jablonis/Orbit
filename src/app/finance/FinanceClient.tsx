@@ -69,7 +69,6 @@ export function FinanceClient({
 
       <section className="grid gap-6 xl:grid-cols-12">
         <article className="content-panel relative min-h-[300px] overflow-hidden rounded-[var(--radius-panel)] p-6 xl:col-span-12">
-          <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-bl-full bg-gradient-to-bl from-[#a3e635]/15 to-transparent" />
           <p className="label-caps text-[#c4c7c8]">Available balance</p>
           <p className="metric-value relative mt-4 text-[46px] font-bold leading-[54px] text-white sm:text-[58px] sm:leading-[64px]">
             {formatCurrency(summary.availableBalance)}
@@ -79,11 +78,11 @@ export function FinanceClient({
               ? `${netChange >= 0 ? "+" : ""}${formatCurrency(netChange)} net change versus ${previousMonth.month}`
               : "Add another month of data to unlock period comparison."}
           </p>
-          <div className="relative mt-8 grid gap-4 sm:grid-cols-3">
+          <dl className="relative mt-8 grid border-y border-[var(--border-subtle)] sm:grid-cols-3">
             <MiniStat label="Income" value={formatCurrency(summary.income)} />
             <MiniStat label="Expenses" value={formatCurrency(summary.expenses)} />
             <MiniStat label="Net" value={formatCurrency(summary.netCashflow)} />
-          </div>
+          </dl>
         </article>
 
         <CashflowCard summary={summary} />
@@ -163,15 +162,15 @@ function StatementHistoryCard({
           <p className="label-caps text-[var(--text-secondary)]">Monthly statements</p>
           <h2 className="mt-2 text-[24px] font-semibold text-white">Import history</h2>
         </div>
-        <span className="metric-value rounded-full border border-[var(--border-subtle)] bg-white/[0.025] px-3 py-1.5 text-[11px] font-semibold text-[var(--text-secondary)]">
+        <span className="metric-value text-[11px] font-semibold text-[var(--text-secondary)]">
           {statementImports.length} saved
         </span>
       </div>
       {statementImports.length > 0 ? (
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="mt-5 border-y border-[var(--border-subtle)]">
           {statementImports.slice(0, 6).map((statement) => (
-            <div className="rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-4" key={statement.id}>
-              <div className="flex items-start justify-between gap-3">
+            <div className="grid gap-4 border-b border-[var(--border-subtle)] py-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center" key={statement.id}>
+              <div className="flex items-start justify-between gap-3 sm:block">
                 <div>
                   <p className="text-[14px] font-semibold text-white">
                     {formatStatementMonth(statement.statementMonth)}
@@ -180,14 +179,12 @@ function StatementHistoryCard({
                     {statement.transactionCount} transactions · {statement.currency}
                   </p>
                 </div>
-                <span className={`metric-value text-[13px] font-semibold ${statement.net >= 0 ? "text-[var(--accent-primary)]" : "text-[#ffd7d3]"}`}>
-                  {formatCurrency(statement.net)}
-                </span>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[var(--border-subtle)] pt-3 text-[11px]">
-                <p className="text-[var(--text-tertiary)]">Income <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.income)}</span></p>
-                <p className="text-[var(--text-tertiary)]">Expenses <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.expenses)}</span></p>
-              </div>
+              <p className="text-[11px] text-[var(--text-tertiary)]">Income <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.income)}</span></p>
+              <p className="text-[11px] text-[var(--text-tertiary)]">Expenses <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.expenses)}</span></p>
+              <p className={`metric-value text-[13px] font-semibold ${statement.net >= 0 ? "text-[var(--accent-primary)]" : "text-[#ffd7d3]"}`}>
+                {formatCurrency(statement.net)}
+              </p>
             </div>
           ))}
         </div>
@@ -238,7 +235,7 @@ function CashflowCard({
             Income vs expenses
           </h2>
         </div>
-        <span className="rounded-full border border-white/10 bg-[#201f1f] px-3 py-1.5 text-[12px] font-semibold text-[#c4c7c8]">
+        <span className="metric-value text-[12px] font-semibold text-[#c4c7c8]">
           6 months
         </span>
       </div>
@@ -276,7 +273,7 @@ function CashflowCard({
           actionHref="/finance#bank-statement-import"
           actionLabel="Import bank PDF"
           description="Import a monthly bank statement to compare income, expenses, and net cashflow over time."
-          icon="↗"
+          icon="€"
           title="No cashflow history yet"
         />
       )}
@@ -376,9 +373,9 @@ function CategoryCard({
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[18px] border border-white/10 bg-[#201f1f]/60 p-4">
-      <p className="label-caps text-[#c4c7c8]">{label}</p>
-      <p className="metric-value mt-2 text-[20px] font-semibold text-white">{value}</p>
+    <div className="border-b border-[var(--border-subtle)] py-4 last:border-b-0 sm:border-b-0 sm:border-r sm:px-4 sm:first:pl-0 sm:last:border-r-0">
+      <dt className="label-caps text-[#c4c7c8]">{label}</dt>
+      <dd className="metric-value mt-2 text-[20px] font-semibold text-white">{value}</dd>
     </div>
   );
 }
