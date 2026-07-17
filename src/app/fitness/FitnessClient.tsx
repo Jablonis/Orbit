@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useState, useTransition } from "react";
+import { ActionToast } from "@/components/ActionToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   SportType,
@@ -142,11 +143,11 @@ export function FitnessClient({
 
   return (
     <section className="mx-auto w-full max-w-[1600px] px-4 py-8 md:px-10">
-      <header className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <header className="mb-7 flex flex-col gap-5 pr-14 md:pr-0 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="label-caps text-[#a3e635]">Fitness plan</p>
-          <h1 className="mt-2 text-[34px] font-semibold leading-[40px] text-white sm:text-[44px] sm:leading-[52px]">
-            Weekly training calendar
+          <h1 className="page-title mt-2 text-white">
+            Today&apos;s training
           </h1>
           <p className="mt-3 text-[14px] text-[#9ea3a5]">
             {completedSessionsCount} of {trainingDaysCount} planned sessions complete
@@ -171,14 +172,8 @@ export function FitnessClient({
         />
       </header>
 
-      {resetNotice ? (
-        <p className="mb-5 text-[13px] font-semibold text-[#a3e635]" role="status">
-          {resetNotice}
-        </p>
-      ) : null}
-
       <section className="grid gap-5 xl:grid-cols-12">
-        <article className="glass-panel relative overflow-hidden rounded-[24px] p-6 sm:p-8 xl:col-span-8">
+        <article className={`content-panel relative overflow-hidden rounded-[var(--radius-panel)] p-6 sm:p-8 xl:col-span-8 ${todayDay.log.completed ? "completion-celebrate" : ""}`}>
           <div className="absolute inset-y-0 left-0 w-1 bg-[#a3e635]" />
           <div className="grid gap-7 md:grid-cols-[1.35fr_1fr] md:items-end">
             <div>
@@ -192,6 +187,30 @@ export function FitnessClient({
               <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[#c4c7c8]">
                 {todayTraining.focus}
               </p>
+              <p className="mt-2 text-[13px] font-semibold text-[var(--accent-primary)]">
+                {todayDay.sport === "rest"
+                  ? "Recovery day — protect the space."
+                  : todayDay.log.completed
+                    ? "Workout logged — today’s training is complete."
+                    : `${todayDay.log.durationMinutes} minutes planned today.`}
+              </p>
+              {todayDay.sport !== "rest" ? (
+                <button
+                  className="mt-5 min-h-11 rounded-[var(--radius-control)] bg-[var(--accent-primary)] px-5 text-[13px] font-bold text-[#14200a]"
+                  onClick={() => setOpenDayId(todayDay.id)}
+                  type="button"
+                >
+                  {todayDay.log.completed ? "Review session" : "Log today’s session"}
+                </button>
+              ) : (
+                <button
+                  className="mt-5 min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-white/[0.04] px-5 text-[13px] font-semibold text-white"
+                  onClick={() => document.getElementById("weekly-plan")?.scrollIntoView({ behavior: "smooth" })}
+                  type="button"
+                >
+                  Plan the week
+                </button>
+              )}
             </div>
             <div className="border-t border-white/10 pt-5 md:border-l md:border-t-0 md:pl-7 md:pt-0">
               <p className="label-caps text-[#ff82bc]">Main focus</p>
@@ -205,11 +224,11 @@ export function FitnessClient({
           </div>
         </article>
 
-        <aside className="glass-panel rounded-[24px] p-6 sm:p-8 xl:col-span-4">
+        <aside className="content-panel rounded-[var(--radius-panel)] p-6 sm:p-8 xl:col-span-4">
           <div className="flex items-center justify-between gap-6">
             <div>
               <p className="label-caps text-[#60a5fa]">Week progress</p>
-              <p className="mt-3 text-[26px] font-semibold text-white">
+              <p className="metric-value mt-3 text-[26px] font-semibold text-white">
                 {completedSessionsCount} sessions done
               </p>
               <p className="mt-2 text-[13px] text-[#9ea3a5]">
@@ -227,6 +246,7 @@ export function FitnessClient({
       </section>
 
       <section className="mt-8" id="training-calendar">
+        <span className="block scroll-mt-6" id="weekly-plan" />
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
             <p className="label-caps text-[#9ea3a5]">Calendar</p>
@@ -305,7 +325,7 @@ export function FitnessClient({
       </section>
 
       {openDay ? (
-        <article className="glass-panel modal-animate mt-5 rounded-[24px] p-5 sm:p-7">
+        <article className="content-panel modal-animate mt-5 rounded-[var(--radius-panel)] p-5 sm:p-7">
           <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
@@ -387,16 +407,6 @@ export function FitnessClient({
             </div>
           </form>
 
-          {notice?.dayId === openDay.id ? (
-            <p
-              className={`mt-4 text-[13px] font-semibold ${
-                notice.tone === "success" ? "text-[#a3e635]" : "text-[#fb7185]"
-              }`}
-              role="status"
-            >
-              {notice.text}
-            </p>
-          ) : null}
         </article>
       ) : null}
 
@@ -406,6 +416,11 @@ export function FitnessClient({
         <TrainingInfoCard label="Finish" value={guidance.finish} tone="pink" />
         <TrainingInfoCard label="Recovery" value={guidance.recovery} tone="amber" />
       </section>
+      {notice ? (
+        <ActionToast message={notice.text} tone={notice.tone} />
+      ) : resetNotice ? (
+        <ActionToast message={resetNotice} />
+      ) : null}
     </section>
   );
 }

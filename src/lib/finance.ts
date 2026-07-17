@@ -13,6 +13,17 @@ export type FinanceTransaction = {
   updatedAt?: string;
 };
 
+export type FinanceStatementImport = {
+  createdAt: string;
+  currency: string;
+  expenses: number;
+  id: string;
+  income: number;
+  net: number;
+  statementMonth: string;
+  transactionCount: number;
+};
+
 export type FinanceInput = Omit<FinanceTransaction, "id" | "createdAt" | "updatedAt">;
 
 type DbFinanceTransaction = {
@@ -24,6 +35,17 @@ type DbFinanceTransaction = {
   status: string;
   created_at?: string;
   updated_at?: string;
+};
+
+type DbFinanceStatementImport = {
+  created_at: string;
+  currency: string;
+  expenses: number | string;
+  id: string;
+  income: number | string;
+  net: number | string;
+  statement_month: string;
+  transaction_count: number;
 };
 
 export type ParsedFinanceCsv = {
@@ -83,6 +105,36 @@ export async function getFinanceTransactions(
   return (data ?? []).map((transaction) =>
     mapDbFinanceTransaction(transaction as DbFinanceTransaction),
   );
+}
+
+export async function getFinanceStatementImports(
+  supabase: SupabaseClient,
+  userId: string,
+) {
+  const { data, error } = await supabase
+    .from("finance_statement_imports")
+    .select("id,statement_month,currency,transaction_count,income,expenses,net,created_at")
+    .eq("user_id", userId)
+    .is("archived_at", null)
+    .order("statement_month", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(12);
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((item) => {
+    const statement = item as DbFinanceStatementImport;
+    return {
+      createdAt: statement.created_at,
+      currency: statement.currency,
+      expenses: Number(statement.expenses),
+      id: statement.id,
+      income: Number(statement.income),
+      net: Number(statement.net),
+      statementMonth: statement.statement_month.slice(0, 7),
+      transactionCount: statement.transaction_count,
+    } satisfies FinanceStatementImport;
+  });
 }
 
 export function getFinanceSummary(transactions: FinanceTransaction[]) {
@@ -194,7 +246,7 @@ export function parseFinanceCsv(csv: string): ParsedFinanceCsv {
     return { rows, errors };
   }
 
-  records.forEach((record, index) => {
+  records.slice(0, 1000).forEach((record, index) => {
     const rowNumber = index + 2;
     const value = (column: string) =>
       (record[normalizedHeader.indexOf(column)] ?? "").trim();
@@ -214,13 +266,17 @@ export function parseFinanceCsv(csv: string): ParsedFinanceCsv {
       return;
     }
 
-    if (!Number.isFinite(amount)) {
+    if (!Number.isFinite(amount) || amount === 0 || Math.abs(amount) > 1_000_000_000) {
       errors.push(`Row ${rowNumber}: amount must be a number.`);
       return;
     }
 
     rows.push({ amount, category, date, status, title });
   });
+
+  if (records.length > 1000) {
+    errors.push("CSV imports are limited to 1,000 transaction rows.");
+  }
 
   return { rows, errors };
 }
@@ -297,7 +353,8 @@ export function transactionsToCsv(transactions: FinanceTransaction[]) {
 export function formatCurrency(value: number) {
   return new Intl.NumberFormat("sk-SK", {
     currency: "EUR",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
     style: "currency",
   }).format(value);
 }

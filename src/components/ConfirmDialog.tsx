@@ -93,7 +93,7 @@ export function ConfirmDialog({
               </label>
             ) : null}
             {error ? (
-              <p className="mt-4 text-[13px] font-semibold text-[#fb7185]" role="alert">
+              <p className="mt-4 text-[13px] font-semibold text-[var(--danger)]" role="alert">
                 {error}
               </p>
             ) : null}
@@ -107,7 +107,7 @@ export function ConfirmDialog({
                 Cancel
               </button>
               <button
-                className="rounded-[12px] bg-[#ffb4ab] px-4 py-2.5 text-[13px] font-bold text-[#3b0908] disabled:cursor-not-allowed disabled:opacity-45"
+                className="rounded-[12px] bg-[var(--danger)] px-4 py-2.5 text-[13px] font-bold text-[#3b0908] disabled:cursor-not-allowed disabled:opacity-45"
                 disabled={
                   pending ||
                   Boolean(confirmationPhrase && phrase !== confirmationPhrase)

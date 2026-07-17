@@ -27,7 +27,7 @@ export function LoginForm() {
           {loginPending ? "Signing in..." : "Log in"}
         </button>
         {loginState.message ? (
-          <p className="rounded-[12px] border border-[#ffb4ab]/30 bg-[#ffb4ab]/10 p-3 text-[13px] text-[#ffdad6]">
+          <p className="rounded-[12px] border border-[#ff8a80]/30 bg-[#ff8a80]/10 p-3 text-[13px] text-[#ffd7d3]">
             {loginState.message}
           </p>
         ) : null}

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { saveDashboardPreferencesAction } from "@/app/actions";
+import { ActionToast } from "@/components/ActionToast";
 import {
   type DashboardCardId,
   type DashboardPreferences,
@@ -44,11 +45,12 @@ export function DashboardCustomizer({
   }
 
   return (
-    <form action={action} className="content-panel rounded-[var(--radius-row)] p-4 sm:p-5">
-      <p className="mb-4 text-[13px] leading-5 text-[var(--text-secondary)]">
-        Choose what appears in Today and Trends. Ordering stays within those two
-        sections so the dashboard remains easy to scan.
-      </p>
+    <>
+      <form action={action} className="content-panel rounded-[var(--radius-row)] p-4 sm:p-5">
+        <p className="mb-4 text-[13px] leading-5 text-[var(--text-secondary)]">
+          Choose what appears in Today and Trends. Ordering stays within those two
+          sections so the dashboard remains easy to scan.
+        </p>
         {order.map((card) => (
           <input key={card} name="cardOrder" type="hidden" value={card} />
         ))}
@@ -154,9 +156,7 @@ export function DashboardCustomizer({
           </div>
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4">
-          <p aria-live="polite" className={`text-[12px] ${state.ok ? "text-[var(--accent-primary)]" : "text-[var(--danger)]"}`}>
-            {state.message}
-          </p>
+          <span />
           <button
             className="min-h-11 rounded-[var(--radius-control)] bg-white px-5 py-2.5 text-[13px] font-bold text-[#202020] disabled:opacity-55"
             disabled={pending}
@@ -165,7 +165,11 @@ export function DashboardCustomizer({
             {pending ? "Saving…" : "Save overview"}
           </button>
         </div>
-    </form>
+      </form>
+      {state.message ? (
+        <ActionToast message={state.message} tone={state.ok ? "success" : "error"} />
+      ) : null}
+    </>
   );
 }
 

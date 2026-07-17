@@ -40,5 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local product roadmap
+# local product and agent notes
+/AGENTS.md
+/PROJECT_MEMORY.md
 /IDEAS.md
+/design.md

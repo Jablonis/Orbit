@@ -23,6 +23,13 @@ export async function importFinanceCsvAction(
   if (!(file instanceof File) || file.size === 0) {
     return { errors: ["Choose a CSV file."], message: "" };
   }
+  if (file.size > 1024 * 1024) {
+    return { errors: ["CSV files are limited to 1 MB."], message: "" };
+  }
+  const csvType = file.type === "text/csv" || file.type === "application/vnd.ms-excel";
+  if (!csvType || !file.name.toLocaleLowerCase().endsWith(".csv")) {
+    return { errors: ["Only CSV finance exports are accepted."], message: "" };
+  }
 
   const parsed = parseFinanceCsv(await file.text());
 
@@ -54,6 +61,20 @@ export async function clearFinanceDataAction(): Promise<FinanceClearResult> {
     .is("archived_at", null);
   if (error) return { ok: false, error: "Finance data could not be cleared." };
 
+  const { error: statementError } = await supabase
+    .from("finance_statement_imports")
+    .update({ archived_at: archivedAt })
+    .eq("user_id", user.id)
+    .is("archived_at", null);
+  if (statementError) {
+    await supabase
+      .from("finance_transactions")
+      .update({ archived_at: null })
+      .eq("user_id", user.id)
+      .eq("archived_at", archivedAt);
+    return { ok: false, error: "Finance data could not be cleared." };
+  }
+
   revalidatePath("/");
   revalidatePath("/finance");
   return { ok: true, archivedAt };
@@ -69,6 +90,13 @@ export async function restoreFinanceDataAction(
     .eq("user_id", user.id)
     .eq("archived_at", archivedAt);
   if (error) return { ok: false, error: "Finance data could not be restored." };
+
+  const { error: statementError } = await supabase
+    .from("finance_statement_imports")
+    .update({ archived_at: null })
+    .eq("user_id", user.id)
+    .eq("archived_at", archivedAt);
+  if (statementError) return { ok: false, error: "Finance statements could not be restored." };
 
   revalidatePath("/");
   revalidatePath("/finance");

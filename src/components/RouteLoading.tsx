@@ -22,7 +22,7 @@ export function RouteLoading({ label = "Loading Orbit" }: { label?: string }) {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-12">
           {skeletonCardClasses.map((spanClass, index) => (
             <div
-              className={`glass-panel h-48 animate-pulse rounded-[24px] bg-white/[0.025] motion-reduce:animate-none sm:col-span-2 ${spanClass}`}
+              className={`content-panel h-48 animate-pulse rounded-[24px] bg-white/[0.025] motion-reduce:animate-none sm:col-span-2 ${spanClass}`}
               key={`${spanClass}-${index}`}
             />
           ))}

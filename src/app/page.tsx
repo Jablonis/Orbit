@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { ActivityRings } from "@/components/ActivityRings";
 import { AppNavigation } from "@/components/AppNavigation";
 import { DashboardCustomizer } from "@/components/DashboardCustomizer";
+import { EmptyState } from "@/components/EmptyState";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { QuickAdd } from "@/components/QuickAdd";
 import { getAuthenticatedUser } from "@/lib/auth";
@@ -139,7 +140,7 @@ export default async function Home({
           preferences.pinnedTaskCategory.toLocaleLowerCase(),
       )
     : orderedTasks;
-  const quickTasks = filterTasks(pinnedTasks, filter, today).slice(0, 6);
+  const quickTasks = filterTasks(pinnedTasks, filter, today).slice(0, 4);
   const pinnedTaskStats = getTaskStats(pinnedTasks);
   const nextTask = orderedTasks.find((task) => !task.completed);
   const pendingFinance = [...transactions]
@@ -214,7 +215,7 @@ export default async function Home({
         <header className="mb-6 pr-14 md:pr-0">
           <div>
             <p className="label-caps text-[var(--accent-primary)]">Overview</p>
-            <h1 className="mt-2 text-[32px] font-semibold leading-[38px] text-white sm:text-[40px] sm:leading-[44px]">
+            <h1 className="page-title mt-2 text-white">
               Your day, clearly.
             </h1>
             <p className="mt-2 max-w-2xl text-[14px] leading-6 text-[var(--text-secondary)]">
@@ -434,6 +435,8 @@ function DailyRingsCard({
 }: {
   dailyRings: ReturnType<typeof getDailyRings>;
 }) {
+  const activeAreas = Object.values(dailyRings).filter((area) => area.total > 0);
+  const completeAreas = activeAreas.filter((area) => area.percent >= 100).length;
   return (
     <article className="content-panel relative overflow-hidden rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-7">
       <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full bg-[#a3e635]/10 blur-2xl" />
@@ -448,7 +451,9 @@ function DailyRingsCard({
         <div>
           <p className="label-caps text-[#c4c7c8]">Daily rings</p>
           <h2 className="mt-3 text-[28px] font-semibold leading-[34px] text-white">
-            Three signals, one view.
+            {activeAreas.length
+              ? `${completeAreas} of ${activeAreas.length} active areas complete.`
+              : "Today is clear so far."}
           </h2>
           <p className="mt-3 text-[14px] leading-6 text-[#c4c7c8]">
             All three signals use today&apos;s Bratislava calendar date and start
@@ -457,11 +462,13 @@ function DailyRingsCard({
           <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
             <RingLegend
               color="#ff4fa3"
+              href="/tasks"
               label="Tasks"
               value={`${dailyRings.tasks.completed}/${dailyRings.tasks.total} today`}
             />
             <RingLegend
               color="#a3e635"
+              href="/fitness"
               label="Fitness"
               value={dailyRings.fitness.total
                 ? `${dailyRings.fitness.completed}/${dailyRings.fitness.total} today`
@@ -469,6 +476,7 @@ function DailyRingsCard({
             />
             <RingLegend
               color="#60a5fa"
+              href="/finance"
               label="Finance"
               value={dailyRings.finance.total
                 ? `${dailyRings.finance.completed}/${dailyRings.finance.total} cleared`
@@ -491,7 +499,7 @@ function FinanceSummaryCard({
   return (
     <article className="content-panel rounded-[var(--radius-panel)] p-4 xl:col-span-5 xl:p-5">
       <p className="label-caps text-[#60a5fa]">{pinnedFinance.label}</p>
-      <p className="mt-3 text-[28px] font-semibold text-white xl:mt-4 xl:text-[34px]">
+      <p className="metric-value mt-3 text-[28px] font-semibold text-white xl:mt-4 xl:text-[34px]">
         {formatCurrency(pinnedFinance.value)}
       </p>
       <p className="mt-2 text-[14px] leading-6 text-[#c4c7c8]">
@@ -687,9 +695,13 @@ function QuickTasksCard({
           </form>
         ))}
         {quickTasks.length === 0 ? (
-          <p className="rounded-[16px] border border-white/10 bg-[#201f1f]/55 p-4 text-[13px] text-[#c4c7c8]">
-            Nothing in this view. Try another filter or add a task.
-          </p>
+          <EmptyState
+            actionHref="/tasks#new-task"
+            actionLabel="Add a task"
+            description="Choose another filter or plan the next piece of meaningful work."
+            icon="✓"
+            title="Your day is clear"
+          />
         ) : null}
       </div>
     </article>
@@ -698,15 +710,35 @@ function QuickTasksCard({
 
 function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: number; income: number; month: string }> }) {
   const max = Math.max(1, ...monthlyCashflow.flatMap((item) => [item.income, item.expense]));
+  const latest = monthlyCashflow.at(-1);
+  const previous = monthlyCashflow.at(-2);
+  const difference = latest && previous
+    ? latest.income - latest.expense - (previous.income - previous.expense)
+    : 0;
   return (
     <article className="content-panel rounded-[var(--radius-panel)] p-4 sm:p-5">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div><p className="label-caps text-[#60a5fa]">Cashflow</p><h2 className="mt-2 text-[22px] font-semibold text-white">Monthly movement</h2></div>
         <Link className="shrink-0 text-[12px] font-semibold text-[#a3e635]" href="/finance">Open</Link>
       </div>
-      <div aria-label="Monthly income and expense chart" className="flex h-48 items-end gap-2" role="img">
+      <p className="mb-4 text-[12px] leading-[18px] text-[var(--text-secondary)]">
+        {latest && previous
+          ? `${latest.month} net cashflow is ${difference >= 0 ? `${formatCurrency(difference)} ahead of` : `${formatCurrency(Math.abs(difference))} behind`} ${previous.month}.`
+          : latest
+            ? `${latest.month} net cashflow is ${formatCurrency(latest.income - latest.expense)}.`
+            : "Add finance data to unlock monthly comparisons."}
+      </p>
+      {monthlyCashflow.length > 0 ? (
+      <div aria-label="Monthly income and expense chart" className="flex h-48 items-end gap-2">
         {monthlyCashflow.map((month) => (
-          <div className="flex min-w-0 flex-1 flex-col items-center gap-2" key={month.month}>
+          <div
+            aria-label={`${month.month}: income ${formatCurrency(month.income)}, expenses ${formatCurrency(month.expense)}, net ${formatCurrency(month.income - month.expense)}`}
+            className="flex min-w-0 flex-1 flex-col items-center gap-2 rounded-[10px] focus-visible:bg-white/[0.04]"
+            key={month.month}
+            role="group"
+            tabIndex={0}
+            title={`${month.month}: ${formatCurrency(month.income - month.expense)} net`}
+          >
             <div className="flex w-full flex-1 items-end justify-center gap-1 rounded-[14px] border border-white/10 bg-[#151516] px-1.5 pb-2">
               <div className="w-full max-w-6 rounded-t-[8px] bg-[#a3e635]" style={{ height: `${(month.income / max) * 100}%` }} />
               <div className="w-full max-w-6 rounded-t-[8px] bg-[#60a5fa]/55" style={{ height: `${(month.expense / max) * 100}%` }} />
@@ -714,8 +746,16 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
             <span className="text-[11px] font-semibold text-[#c4c7c8]">{month.month.slice(5)}</span>
           </div>
         ))}
-        {monthlyCashflow.length === 0 ? <div className="grid h-full w-full place-items-center rounded-[18px] border border-white/10 bg-[#201f1f]/55 px-4 text-center text-[13px] text-[#c4c7c8]">Import finance CSV to see cashflow.</div> : null}
       </div>
+      ) : (
+        <EmptyState
+          actionHref="/finance#csv-tools"
+          actionLabel="Import CSV"
+          description="Income and expense trends will appear after your first import."
+          icon="↗"
+          title="No cashflow trend yet"
+        />
+      )}
       <div className="mt-4 flex gap-4 text-[11px] font-semibold text-[#c4c7c8]"><ChartLegend color="#a3e635" label="Income" /><ChartLegend color="#60a5fa" label="Expense" /></div>
       {monthlyCashflow.length > 0 ? (
         <details className="mt-4 border-t border-white/10 pt-3">
@@ -770,12 +810,25 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
   const chartY = (score: number) => 112 - score;
   const previousPoints = previous.map((point, index) => `${chartX(index)},${chartY(point.score ?? 0)}`).join(" ");
   const currentPoints = current.flatMap((point, index) => point.score === null ? [] : [`${chartX(index)},${chartY(point.score)}`]).join(" ");
+  const currentScores = current.flatMap((point) => point.score === null ? [] : [point.score]);
+  const previousScores = previous.flatMap((point) => point.score === null ? [] : [point.score]);
+  const currentAverage = currentScores.length ? Math.round(currentScores.reduce((sum, score) => sum + score, 0) / currentScores.length) : 0;
+  const previousAverage = previousScores.length ? Math.round(previousScores.reduce((sum, score) => sum + score, 0) / previousScores.length) : 0;
+  const scoreChange = currentAverage - previousAverage;
+  const hasActivity = current.some(
+    (point) => point.plannedTasks > 0 || point.plannedFitness > 0 || point.focusMinutes > 0,
+  );
   return (
     <article className="content-panel rounded-[var(--radius-panel)] p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div><p className="label-caps text-[#ff4fa3]">Productivity</p><h2 className="mt-2 text-[22px] font-semibold text-white">Reliable {rangeDays}-day score</h2></div>
         <span className="rounded-full bg-[#ff4fa3]/12 px-2.5 py-1 text-[11px] font-semibold text-[#ffd1e5]">60 · 25 · 15</span>
       </div>
+      <p className="mt-3 text-[12px] font-semibold text-[var(--text-secondary)]">
+        {hasActivity
+          ? `Productivity is ${scoreChange >= 0 ? `${scoreChange} points above` : `${Math.abs(scoreChange)} points below`} the previous ${rangeDays} days.`
+          : "Complete a few tasks or training days to unlock a meaningful comparison."}
+      </p>
       <p className="mt-3 text-[11px] leading-5 text-[#8d9092]">60% planned task completion · 25% planned training · 15% focus target (120 min). Enabled domains are normalized to 100%; future days stay empty.</p>
       <div className="mt-3 flex flex-wrap gap-2" aria-label="Productivity score domains">
         {(["tasks", "fitness", "focus"] as const).map((domain) => {
@@ -805,6 +858,19 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
             </circle>
           ))}
         </svg>
+        {current.map((point, index) => point.score === null ? null : (
+          <span
+            aria-label={`${point.label}: ${point.score}% productivity, ${point.completedTasks} of ${point.plannedTasks} tasks, ${point.completedFitness} of ${point.plannedFitness} training, ${point.focusMinutes} focus minutes`}
+            className="group absolute grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full outline-none"
+            key={`${point.date}-focus-target`}
+            role="img"
+            style={{ left: `${(chartX(index) / 600) * 100}%`, top: `${(chartY(point.score) / 130) * 100}%` }}
+            tabIndex={0}
+            title={`${point.label}: ${point.score}%`}
+          >
+            <span className="h-2.5 w-2.5 rounded-full bg-transparent ring-0 group-focus-visible:ring-2 group-focus-visible:ring-[var(--accent-primary)] group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-[var(--surface-1)]" />
+          </span>
+        ))}
         <div
           className="absolute inset-x-0 bottom-0 grid text-center text-[10px] font-semibold text-[#c4c7c8]"
           style={{ gridTemplateColumns: `repeat(${current.length}, minmax(0, 1fr))` }}
@@ -863,8 +929,8 @@ function WeeklyReviewCard({ reflection, review }: { reflection: WeeklyReflection
   );
 }
 
-function ReviewMetric({ detail, label, value }: { detail: string; label: string; value: string }) { return <div className="rounded-[16px] border border-white/10 bg-white/[0.035] p-4"><p className="label-caps text-[#8d9092]">{label}</p><p className="mt-2 text-[20px] font-semibold text-white">{value}</p><p className="mt-1 text-[11px] text-[#8d9092]">{detail}</p></div>; }
+function ReviewMetric({ detail, label, value }: { detail: string; label: string; value: string }) { return <div className="rounded-[16px] border border-white/10 bg-white/[0.035] p-4"><p className="label-caps text-[#8d9092]">{label}</p><p className="metric-value mt-2 text-[20px] font-semibold text-white">{value}</p><p className="mt-1 text-[11px] text-[#8d9092]">{detail}</p></div>; }
 function ChartLegend({ color, label }: { color: string; label: string }) { return <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />{label}</span>; }
 
-function RingLegend({ color, label, value }: { color: string; label: string; value: string }) { return <div className="flex items-center justify-between rounded-[16px] border border-white/10 bg-[#201f1f]/55 p-3"><span className="inline-flex items-center gap-2 text-[13px] font-semibold text-white"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />{label}</span><span className="text-[13px] font-semibold text-[#c4c7c8]">{value}</span></div>; }
-function MiniPill({ label, value }: { label: string; value: string }) { return <div className="rounded-[16px] border border-white/10 bg-[#201f1f]/60 p-3"><p className="label-caps text-[#8d9092]">{label}</p><p className="mt-2 text-[15px] font-semibold text-white">{value}</p></div>; }
+function RingLegend({ color, href, label, value }: { color: string; href: string; label: string; value: string }) { return <Link className="flex min-h-11 items-center justify-between rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-3 transition hover:bg-white/[0.05]" href={href}><span className="inline-flex items-center gap-2 text-[13px] font-semibold text-white"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />{label}</span><span className="text-[13px] font-semibold text-[var(--text-secondary)]">{value} ↗</span></Link>; }
+function MiniPill({ label, value }: { label: string; value: string }) { return <div className="rounded-[16px] border border-white/10 bg-[#201f1f]/60 p-3"><p className="label-caps text-[#8d9092]">{label}</p><p className="metric-value mt-2 text-[15px] font-semibold text-white">{value}</p></div>; }

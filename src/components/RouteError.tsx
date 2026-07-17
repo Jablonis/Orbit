@@ -17,7 +17,7 @@ export function RouteError({
   return (
     <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_50%_20%,rgba(255,79,163,0.12),transparent_30%),#0d0d0e] p-5 text-[#e5e2e1]">
       <section className="glass-panel w-full max-w-lg rounded-[28px] p-7 text-center sm:p-9">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#ffb4ab]/25 bg-[#ffb4ab]/10 text-[22px] text-[#ffdad6]">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#ff8a80]/25 bg-[#ff8a80]/10 text-[22px] text-[#ffd7d3]">
           !
         </div>
         <p className="label-caps mt-6 text-[#ff9fca]">Orbit paused</p>

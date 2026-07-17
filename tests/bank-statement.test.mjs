@@ -1,0 +1,59 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import {
+  parseBankStatementText,
+  statementFingerprintPayload,
+} from "../src/lib/bank-statement.ts";
+
+test("parses common European statement rows and ignores running balances", () => {
+  const preview = parseBankStatementText(`
+Account statement July 2026
+01.07.2026 01.07.2026 CARD PAYMENT LIDL -45,20 EUR 1 204,80 EUR
+02.07.2026 02.07.2026 SALARY +2 450,00 EUR 3 654,80 EUR
+03.07.2026 BANK FEE 2,50 EUR 3 652,30 EUR
+`, "2026-07");
+
+  assert.equal(preview.rows.length, 3);
+  assert.deepEqual(preview.rows.map((row) => row.amount), [-45.2, 2450, -2.5]);
+  assert.deepEqual(preview.rows.map((row) => row.category), ["Groceries", "Income", "Bank fees"]);
+  assert.equal(preview.income, 2450);
+  assert.equal(preview.expenses, 47.7);
+  assert.equal(preview.net, 2402.3);
+  assert.match(preview.warnings.join(" "), /multiple amounts/i);
+});
+
+test("infers the year, masks account numbers, and collapses repeated rows", () => {
+  const preview = parseBankStatementText(`
+01.07. CARD PAYMENT SK3112000000198742637541 -10,00 EUR
+01.07. CARD PAYMENT SK3112000000198742637541 -10,00 EUR
+`, "2026-07");
+
+  assert.equal(preview.rows.length, 1);
+  assert.equal(preview.rows[0].date, "2026-07-01");
+  assert.doesNotMatch(preview.rows[0].title, /SK3112/);
+  assert.match(preview.rows[0].title, /Account/);
+  assert.match(preview.warnings.join(" "), /collapsed/i);
+});
+
+test("uses a deterministic normalized payload for duplicate protection", () => {
+  const rows = parseBankStatementText(
+    "01.07.2026 COFFEE SHOP -3,20 EUR\n",
+    "2026-07",
+  ).rows;
+
+  assert.equal(
+    statementFingerprintPayload("2026-07", rows),
+    statementFingerprintPayload("2026-07", rows),
+  );
+});
+
+test("rejects invalid months and PDFs without transactions", () => {
+  assert.throws(
+    () => parseBankStatementText("01.07.2026 statement header", "2026-07"),
+    /No transactions were detected/,
+  );
+  assert.throws(
+    () => parseBankStatementText("01.07.2026 PAYMENT -1,00 EUR", "2026-13"),
+    /valid statement month/,
+  );
+});

@@ -1,9 +1,13 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { ActionToast } from "@/components/ActionToast";
+import { BankStatementImporter } from "@/components/BankStatementImporter";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { EmptyState } from "@/components/EmptyState";
 import {
-  FinanceTransaction,
+  type FinanceStatementImport,
+  type FinanceTransaction,
   formatCurrency,
   sampleFinanceCsv,
   transactionsToCsv,
@@ -19,9 +23,11 @@ const initialImportState: ImportState = { errors: [], message: "" };
 const categoryColors = ["#60a5fa", "#a3e635", "#a78bfa", "#f59e0b", "#ff4fa3"];
 
 export function FinanceClient({
+  statementImports,
   summary,
   transactions,
 }: {
+  statementImports: FinanceStatementImport[];
   summary: ReturnType<typeof import("@/lib/finance").getFinanceSummary>;
   transactions: FinanceTransaction[];
 }) {
@@ -30,6 +36,11 @@ export function FinanceClient({
     initialImportState,
   );
   const [archivedAt, setArchivedAt] = useState<string | null>(null);
+  const currentMonth = summary.monthlyCashflow.at(-1);
+  const previousMonth = summary.monthlyCashflow.at(-2);
+  const currentNet = currentMonth ? currentMonth.income - currentMonth.expense : 0;
+  const previousNet = previousMonth ? previousMonth.income - previousMonth.expense : 0;
+  const netChange = currentNet - previousNet;
 
   function download(filename: string, content: string) {
     const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
@@ -43,14 +54,14 @@ export function FinanceClient({
 
   return (
     <section className="mx-auto w-full max-w-[1440px] px-4 py-8 md:px-10">
-      <header className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <header className="mb-8 flex flex-col gap-5 pr-14 md:pr-0 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="label-caps text-[#a3e635]">Finance system</p>
-          <h1 className="mt-2 text-[34px] font-semibold leading-[40px] text-white sm:text-[44px] sm:leading-[52px]">
-            Finance overview
+          <h1 className="page-title mt-2 text-white">
+            Your money, at a glance
           </h1>
           <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[#c4c7c8]">
-            CSV-backed transaction management with live Supabase summaries.
+            Secure monthly bank-statement imports with live, user-isolated summaries.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -72,11 +83,16 @@ export function FinanceClient({
       </header>
 
       <section className="grid gap-6 xl:grid-cols-12">
-        <article className="glass-panel relative min-h-[300px] overflow-hidden rounded-[24px] p-6 xl:col-span-6 xl:row-span-2">
+        <article className="content-panel relative min-h-[300px] overflow-hidden rounded-[var(--radius-panel)] p-6 xl:col-span-12">
           <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-bl-full bg-gradient-to-bl from-[#a3e635]/15 to-transparent" />
           <p className="label-caps text-[#c4c7c8]">Available balance</p>
-          <p className="relative mt-4 text-[46px] font-bold leading-[54px] text-white sm:text-[58px] sm:leading-[64px]">
+          <p className="metric-value relative mt-4 text-[46px] font-bold leading-[54px] text-white sm:text-[58px] sm:leading-[64px]">
             {formatCurrency(summary.availableBalance)}
+          </p>
+          <p className={`relative mt-3 text-[13px] font-semibold ${netChange >= 0 ? "text-[var(--accent-primary)]" : "text-[var(--danger)]"}`}>
+            {previousMonth
+              ? `${netChange >= 0 ? "+" : ""}${formatCurrency(netChange)} net change versus ${previousMonth.month}`
+              : "Add another month of data to unlock period comparison."}
           </p>
           <div className="relative mt-8 grid gap-4 sm:grid-cols-3">
             <MiniStat label="Income" value={formatCurrency(summary.income)} />
@@ -85,34 +101,42 @@ export function FinanceClient({
           </div>
         </article>
 
-        <ImportCard
-          importAction={importAction}
-          importPending={importPending}
-          importState={importState}
-          onCleared={setArchivedAt}
-        />
         <CashflowCard summary={summary} />
         <TransactionsCard transactions={summary.recentTransactions} />
         <CategoryCard summary={summary} />
+        <StatementHistoryCard statementImports={statementImports} />
+      </section>
+      <section aria-labelledby="finance-utilities-title" className="mt-10">
+        <p className="label-caps text-[var(--text-tertiary)]">Utilities</p>
+        <h2 className="mt-1 text-[22px] font-semibold text-white" id="finance-utilities-title">Import, export, and maintenance</h2>
+        <div className="mt-4 grid gap-6 xl:grid-cols-12">
+          <BankStatementImporter initialMonth={summary.currentMonth} />
+          <ImportCard
+            importAction={importAction}
+            importPending={importPending}
+            importState={importState}
+            onCleared={setArchivedAt}
+          />
+        </div>
       </section>
       {archivedAt ? (
-        <div
-          className="glass-modal fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-full px-4 py-3 text-[13px] text-white md:left-[calc(50%+56px)]"
-          role="status"
-        >
-          Finance data archived.
-          <button
-            className="font-bold text-[#a3e635]"
-            onClick={async () => {
-              const result = await restoreFinanceDataAction(archivedAt);
-              if (result.ok) setArchivedAt(null);
-            }}
-            type="button"
-          >
-            Undo
-          </button>
-        </div>
+        <ActionToast
+          action={(
+            <button
+              className="min-h-11 shrink-0 px-2 font-bold text-[var(--accent-primary)]"
+              onClick={async () => {
+                const result = await restoreFinanceDataAction(archivedAt);
+                if (result.ok) setArchivedAt(null);
+              }}
+              type="button"
+            >
+              Undo
+            </button>
+          )}
+          message="Finance data archived."
+        />
       ) : null}
+      {!archivedAt && importState.message ? <ActionToast message={importState.message} /> : null}
     </section>
   );
 }
@@ -129,7 +153,7 @@ function ImportCard({
   onCleared: (archivedAt: string) => void;
 }) {
   return (
-    <article className="glass-panel rounded-[24px] p-6 xl:col-span-6" id="csv-tools">
+    <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-5" id="csv-tools">
       <p className="label-caps text-[#c4c7c8]">CSV tools</p>
       <form action={importAction} className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
         <input
@@ -147,13 +171,8 @@ function ImportCard({
           {importPending ? "Importing..." : "Import CSV"}
         </button>
       </form>
-      {importState.message ? (
-        <p className="mt-4 rounded-[14px] border border-[#a3e635]/25 bg-[#a3e635]/10 p-3 text-[13px] text-[#d9f99d]">
-          {importState.message}
-        </p>
-      ) : null}
       {importState.errors.length > 0 ? (
-        <div className="mt-3 rounded-[14px] border border-[#ffb4ab]/25 bg-[#ffb4ab]/10 p-3 text-[13px] text-[#ffdad6]">
+        <div className="mt-3 rounded-[14px] border border-[#ff8a80]/25 bg-[#ff8a80]/10 p-3 text-[13px] text-[#ffd7d3]">
           {importState.errors.map((error) => (
             <p key={error}>{error}</p>
           ))}
@@ -163,19 +182,82 @@ function ImportCard({
         <ConfirmDialog
           confirmationPhrase="CLEAR FINANCE"
           confirmLabel="Clear all data"
-          description="Every active finance transaction will be archived. Your dashboard totals will reset, and you can undo immediately after clearing."
+          description="Every active finance transaction and statement summary will be archived. Your dashboard totals will reset, and you can undo immediately after clearing."
           onConfirm={async () => {
             const result = await clearFinanceDataAction();
             if (result.ok) onCleared(result.archivedAt);
             return result;
           }}
           title="Clear all finance data?"
-          triggerClassName="rounded-[14px] border border-[#ffb4ab]/20 bg-[#ffb4ab]/10 px-4 py-2 text-[13px] font-semibold text-[#ffdad6]"
+          triggerClassName="rounded-[14px] border border-[#ff8a80]/20 bg-[#ff8a80]/10 px-4 py-2 text-[13px] font-semibold text-[#ffd7d3]"
           triggerLabel="Clear finance data"
         />
       </div>
     </article>
   );
+}
+
+function StatementHistoryCard({
+  statementImports,
+}: {
+  statementImports: FinanceStatementImport[];
+}) {
+  return (
+    <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-8">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="label-caps text-[var(--text-secondary)]">Monthly statements</p>
+          <h2 className="mt-2 text-[24px] font-semibold text-white">Import history</h2>
+        </div>
+        <span className="metric-value rounded-full border border-[var(--border-subtle)] bg-white/[0.025] px-3 py-1.5 text-[11px] font-semibold text-[var(--text-secondary)]">
+          {statementImports.length} saved
+        </span>
+      </div>
+      {statementImports.length > 0 ? (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {statementImports.slice(0, 6).map((statement) => (
+            <div className="rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-4" key={statement.id}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[14px] font-semibold text-white">
+                    {formatStatementMonth(statement.statementMonth)}
+                  </p>
+                  <p className="mt-1 text-[11px] text-[var(--text-tertiary)]">
+                    {statement.transactionCount} transactions · {statement.currency}
+                  </p>
+                </div>
+                <span className={`metric-value text-[13px] font-semibold ${statement.net >= 0 ? "text-[var(--accent-primary)]" : "text-[#ffd7d3]"}`}>
+                  {formatCurrency(statement.net)}
+                </span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[var(--border-subtle)] pt-3 text-[11px]">
+                <p className="text-[var(--text-tertiary)]">Income <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.income)}</span></p>
+                <p className="text-[var(--text-tertiary)]">Expenses <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.expenses)}</span></p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-5">
+          <EmptyState
+            actionHref="/finance#bank-statement-import"
+            actionLabel="Import bank PDF"
+            description="Your confirmed monthly bank statements will appear here with income, spending, and net totals."
+            icon="PDF"
+            title="No bank statements imported"
+          />
+        </div>
+      )}
+    </article>
+  );
+}
+
+function formatStatementMonth(month: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "long",
+    timeZone: "UTC",
+    year: "numeric",
+  }).format(new Date(`${month}-01T00:00:00Z`));
 }
 
 function CashflowCard({
@@ -187,9 +269,14 @@ function CashflowCard({
     1,
     ...summary.monthlyCashflow.flatMap((item) => [item.income, item.expense]),
   );
+  const latest = summary.monthlyCashflow.at(-1);
+  const previous = summary.monthlyCashflow.at(-2);
+  const latestNet = latest ? latest.income - latest.expense : 0;
+  const previousNet = previous ? previous.income - previous.expense : 0;
+  const difference = latestNet - previousNet;
 
   return (
-    <article className="glass-panel rounded-[24px] p-6 xl:col-span-8">
+    <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-8">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <p className="label-caps text-[#c4c7c8]">Monthly cashflow</p>
@@ -201,19 +288,44 @@ function CashflowCard({
           6 months
         </span>
       </div>
-      <div className="flex h-72 items-end justify-between gap-4">
-        {summary.monthlyCashflow.map((item) => (
-          <div className="flex h-full min-w-0 flex-1 flex-col items-center gap-3" key={item.month}>
-            <div className="flex w-full flex-1 items-end justify-center gap-2">
-              <div className="w-full max-w-8 rounded-t-[10px] bg-[#a3e635]" style={{ height: `${(item.income / maxValue) * 100}%` }} />
-              <div className="w-full max-w-8 rounded-t-[10px] bg-[#60a5fa]/45" style={{ height: `${(item.expense / maxValue) * 100}%` }} />
-            </div>
-            <span className="text-[12px] font-semibold uppercase text-[#c4c7c8]">
-              {item.month.slice(5)}
-            </span>
-          </div>
-        ))}
-      </div>
+      <p className="mb-5 text-[13px] leading-5 text-[var(--text-secondary)]">
+        {latest && previous
+          ? `${latest.month} net cashflow is ${difference >= 0 ? `${formatCurrency(difference)} ahead of` : `${formatCurrency(Math.abs(difference))} behind`} ${previous.month}.`
+          : latest
+            ? `${latest.month} net cashflow is ${formatCurrency(latestNet)}.`
+            : "Import transactions to reveal monthly cashflow and comparisons."}
+      </p>
+      {summary.monthlyCashflow.length > 0 ? (
+        <div className="flex h-72 items-end justify-between gap-3 sm:gap-4" aria-label="Monthly cashflow values">
+          {summary.monthlyCashflow.map((item) => (
+            <button
+              aria-label={`${item.month}: income ${formatCurrency(item.income)}, expenses ${formatCurrency(item.expense)}, net ${formatCurrency(item.income - item.expense)}`}
+              className="group relative flex h-full min-w-0 flex-1 flex-col items-center gap-3 rounded-[12px] outline-none focus-visible:bg-white/[0.035]"
+              key={item.month}
+              type="button"
+            >
+              <span className="pointer-events-none absolute -top-2 left-1/2 z-10 hidden w-max -translate-x-1/2 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--surface-hover)] px-3 py-2 text-left text-[11px] text-white shadow-xl group-hover:block group-focus-visible:block">
+                Income {formatCurrency(item.income)} · Expense {formatCurrency(item.expense)}
+              </span>
+              <span className="flex w-full flex-1 items-end justify-center gap-1 sm:gap-2">
+                <span className="w-full max-w-8 rounded-t-[10px] bg-[#a3e635]" style={{ height: `${(item.income / maxValue) * 100}%` }} />
+                <span className="w-full max-w-8 rounded-t-[10px] bg-[#60a5fa]/45" style={{ height: `${(item.expense / maxValue) * 100}%` }} />
+              </span>
+              <span className="text-[12px] font-semibold uppercase text-[#c4c7c8]">
+                {item.month.slice(5)}
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          actionHref="/finance#csv-tools"
+          actionLabel="Import CSV"
+          description="Add transactions to compare income, expenses, and net cashflow over time."
+          icon="↗"
+          title="No cashflow history yet"
+        />
+      )}
       {summary.monthlyCashflow.length > 0 ? (
         <details className="mt-5 border-t border-white/10 pt-4">
           <summary className="cursor-pointer text-[12px] font-semibold text-[#a3e635]">
@@ -233,7 +345,7 @@ function CashflowCard({
 
 function TransactionsCard({ transactions }: { transactions: FinanceTransaction[] }) {
   return (
-    <article className="glass-panel rounded-[24px] p-6 xl:col-span-4">
+    <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-4">
       <p className="label-caps text-[#c4c7c8]">Latest transactions</p>
       <h2 className="mt-2 text-[24px] font-semibold text-white">Recent flow</h2>
       <div className="mt-5 space-y-3">
@@ -253,6 +365,15 @@ function TransactionsCard({ transactions }: { transactions: FinanceTransaction[]
             </p>
           </div>
         ))}
+        {transactions.length === 0 ? (
+          <EmptyState
+            actionHref="/finance#csv-tools"
+            actionLabel="Import CSV"
+            description="Your latest income and expenses will appear here after an import."
+            icon="€"
+            title="No transactions this period"
+          />
+        ) : null}
       </div>
     </article>
   );
@@ -264,7 +385,7 @@ function CategoryCard({
   summary: ReturnType<typeof import("@/lib/finance").getFinanceSummary>;
 }) {
   return (
-    <article className="glass-panel rounded-[24px] p-6 xl:col-span-4">
+    <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-4">
       <p className="label-caps text-[#c4c7c8]">Category spend</p>
       <h2 className="mt-2 text-[24px] font-semibold text-white">This month</h2>
       <div className="mt-6 space-y-4">
@@ -285,6 +406,15 @@ function CategoryCard({
             </div>
           </div>
         ))}
+        {summary.categorySpend.length === 0 ? (
+          <EmptyState
+            actionHref="/finance#csv-tools"
+            actionLabel="Import expenses"
+            description="Expense categories appear after paid spending is added."
+            icon="◎"
+            title="No category spending yet"
+          />
+        ) : null}
       </div>
     </article>
   );
@@ -294,7 +424,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[18px] border border-white/10 bg-[#201f1f]/60 p-4">
       <p className="label-caps text-[#c4c7c8]">{label}</p>
-      <p className="mt-2 text-[20px] font-semibold text-white">{value}</p>
+      <p className="metric-value mt-2 text-[20px] font-semibold text-white">{value}</p>
     </div>
   );
 }
