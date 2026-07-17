@@ -166,6 +166,7 @@ function safeErrorMessage(message: string) {
     "No transactions were detected",
     "Remove the PDF password",
     "The extracted statement text is too large",
+    "The PDF engine could not start",
     "This PDF has no readable transaction text",
   ];
   return allowed.some((prefix) => message.startsWith(prefix))

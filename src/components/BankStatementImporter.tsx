@@ -41,7 +41,7 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
     formData.set("statementMonth", month);
 
     try {
-      const response = await fetch("/finance/import-statement", {
+      const response = await fetch("/api/finance/import-statement", {
         body: formData,
         credentials: "same-origin",
         headers: { Accept: "application/json" },

@@ -1,12 +1,24 @@
 import "server-only";
 
-import { PDFParse } from "pdf-parse";
-
 const maxPages = 40;
 const maxExtractedCharacters = 2_000_000;
 
 export async function extractBankStatementText(data: Uint8Array) {
-  const parser = new PDFParse({ data });
+  let pdfParse: typeof import("pdf-parse");
+  try {
+    // pdf-parse requires its worker entry point in serverless environments.
+    // Loading both modules here keeps platform-specific startup errors inside
+    // the Route Handler's JSON error boundary instead of crashing the function.
+    await import("pdf-parse/worker");
+    pdfParse = await import("pdf-parse");
+  } catch {
+    throw new Error("The PDF engine could not start on this server.");
+  }
+
+  const parser = new pdfParse.PDFParse({
+    data,
+    verbosity: pdfParse.VerbosityLevel.WARNINGS,
+  });
 
   try {
     const info = await parser.getInfo();
