@@ -5,6 +5,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { getWeekDateKeys } from "@/lib/fitness";
 import {
   dashboardCardIds,
+  defaultDashboardPreferences,
   parseDashboardPreferences,
 } from "@/lib/preferences";
 import { getDateInTimeZone } from "@/lib/tasks";
@@ -24,17 +25,41 @@ export async function saveDashboardPreferencesAction(
   formData: FormData,
 ): Promise<DashboardPreferencesActionState> {
   const { supabase, user } = await getAuthenticatedUser();
-  const preferences = parseDashboardPreferences({
-    cardOrder: formData.getAll("cardOrder"),
-    density: formData.get("density"),
-    hiddenCards: formData.getAll("hiddenCards"),
-    pinnedFinanceMetric: formData.get("pinnedFinanceMetric"),
-    pinnedTaskCategory: formData.get("pinnedTaskCategory"),
-    rangeDays: Number(formData.get("rangeDays")),
-  });
+  const reset = formData.get("intent") === "reset";
+  const preferences = reset
+    ? defaultDashboardPreferences
+    : parseDashboardPreferences({
+        cardOrder: formData.getAll("cardOrder"),
+        density: formData.get("density"),
+        hiddenCards: formData.getAll("hiddenCards"),
+        pinnedFinanceMetric: formData.get("pinnedFinanceMetric"),
+        pinnedTaskCategory: formData.get("pinnedTaskCategory"),
+        rangeDays: Number(formData.get("rangeDays")),
+        regional: {
+          currency: formData.get("currency"),
+          displayName: formData.get("displayName"),
+          initials: formData.get("initials"),
+          locale: formData.get("locale"),
+          timeZone: formData.get("timeZone"),
+          weekStartsOn: formData.get("weekStartsOn"),
+        },
+        scoring: {
+          focusTargetMinutes: Number(formData.get("focusTargetMinutes")),
+          weights: {
+            fitness: Number(formData.get("fitnessWeight")),
+            focus: Number(formData.get("focusWeight")),
+            tasks: Number(formData.get("tasksWeight")),
+          },
+        },
+      });
 
   if (preferences.hiddenCards.length === dashboardCardIds.length) {
     return { message: "Keep at least one dashboard card visible.", ok: false };
+  }
+  if (
+    Object.values(preferences.scoring.weights).every((weight) => weight === 0)
+  ) {
+    return { message: "Give at least one score domain a weight.", ok: false };
   }
 
   const { error } = await supabase
@@ -46,8 +71,13 @@ export async function saveDashboardPreferencesAction(
     return { message: "Overview preferences could not be saved.", ok: false };
   }
 
-  revalidatePath("/");
-  return { message: "Overview preferences saved.", ok: true };
+  revalidatePath("/", "layout");
+  return {
+    message: reset
+      ? "Overview preferences reset to defaults."
+      : "Overview preferences saved.",
+    ok: true,
+  };
 }
 
 export async function saveWeeklyReflectionAction(

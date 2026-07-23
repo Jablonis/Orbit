@@ -31,6 +31,11 @@ export type TaskSaveResult =
   | { ok: true }
   | { ok: false; error: string };
 
+export type BulkTaskIntent = "archive" | "complete" | "reopen" | "reschedule";
+export type BulkTaskResult =
+  | { ok: true; updated: number }
+  | { ok: false; error: string };
+
 function valueIn<T extends string>(value: string, values: T[], fallback: T) {
   return values.includes(value as T) ? (value as T) : fallback;
 }
@@ -178,4 +183,45 @@ export async function restoreTaskAction(taskId: string): Promise<TaskArchiveResu
   revalidatePath("/tasks");
   operation.finish("success", { status: 200 });
   return { ok: true, taskId };
+}
+
+export async function bulkUpdateTasksAction(
+  taskIds: string[],
+  intent: BulkTaskIntent,
+  dueDate = "",
+): Promise<BulkTaskResult> {
+  const { supabase, user } = await getAuthenticatedUser();
+  const ids = [...new Set(taskIds)].filter((id) =>
+    /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id),
+  ).slice(0, 100);
+
+  if (ids.length === 0) {
+    return { ok: false, error: "Select at least one task." };
+  }
+  if (intent === "reschedule" && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
+    return { ok: false, error: "Choose a valid reschedule date." };
+  }
+
+  const update =
+    intent === "archive"
+      ? { archived_at: new Date().toISOString() }
+      : intent === "complete"
+        ? { completed: true }
+        : intent === "reopen"
+          ? { completed: false }
+          : { due_date: dueDate };
+  const { data, error } = await supabase
+    .from("tasks")
+    .update(update)
+    .eq("user_id", user.id)
+    .in("id", ids)
+    .select("id");
+
+  if (error) {
+    return { ok: false, error: "The selected tasks could not be updated." };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/tasks");
+  return { ok: true, updated: data?.length ?? 0 };
 }

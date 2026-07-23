@@ -9,6 +9,7 @@ export type FinanceTransaction = {
   category: string;
   amount: number;
   status: FinanceStatus;
+  statementImportId?: string;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -24,6 +25,14 @@ export type FinanceStatementImport = {
   transactionCount: number;
 };
 
+export type FinanceStatementCoverage = {
+  coveredMonths: string[];
+  gapMonths: string[];
+  latestImportAt: string | null;
+  latestStatementMonth: string | null;
+  overlappingMonths: string[];
+};
+
 export type FinanceInput = Omit<FinanceTransaction, "id" | "createdAt" | "updatedAt">;
 
 type DbFinanceTransaction = {
@@ -33,6 +42,7 @@ type DbFinanceTransaction = {
   category: string;
   amount: number | string;
   status: string;
+  statement_import_id?: string | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -70,6 +80,7 @@ export function mapDbFinanceTransaction(
     category: transaction.category,
     amount: Number(transaction.amount),
     status: toFinanceStatus(transaction.status),
+    statementImportId: transaction.statement_import_id ?? undefined,
     createdAt: transaction.created_at,
     updatedAt: transaction.updated_at,
   };
@@ -92,7 +103,7 @@ export async function getFinanceTransactions(
 ) {
   const { data, error } = await supabase
     .from("finance_transactions")
-    .select("id,date,title,category,amount,status,created_at,updated_at")
+    .select("id,date,title,category,amount,status,statement_import_id,created_at,updated_at")
     .eq("user_id", userId)
     .is("archived_at", null)
     .order("date", { ascending: false })
@@ -137,16 +148,65 @@ export async function getFinanceStatementImports(
   });
 }
 
-export function getFinanceSummary(transactions: FinanceTransaction[]) {
+export function getFinanceStatementCoverage(
+  imports: FinanceStatementImport[],
+): FinanceStatementCoverage {
+  const counts = new Map<string, number>();
+  for (const statement of imports) {
+    counts.set(
+      statement.statementMonth,
+      (counts.get(statement.statementMonth) ?? 0) + 1,
+    );
+  }
+  const coveredMonths = [...counts.keys()].sort();
+  const gapMonths: string[] = [];
+  if (coveredMonths.length > 1) {
+    let cursor = shiftStatementMonth(coveredMonths[0], 1);
+    const last = coveredMonths.at(-1)!;
+    while (cursor < last) {
+      if (!counts.has(cursor)) gapMonths.push(cursor);
+      cursor = shiftStatementMonth(cursor, 1);
+    }
+  }
+
+  return {
+    coveredMonths,
+    gapMonths,
+    latestImportAt:
+      imports
+        .map((statement) => statement.createdAt)
+        .filter(Boolean)
+        .sort()
+        .at(-1) ?? null,
+    latestStatementMonth: coveredMonths.at(-1) ?? null,
+    overlappingMonths: [...counts.entries()]
+      .filter(([, count]) => count > 1)
+      .map(([month]) => month)
+      .sort(),
+  };
+}
+
+function shiftStatementMonth(month: string, offset: number) {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const date = new Date(Date.UTC(year, monthNumber - 1 + offset, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+export function getFinanceSummary(
+  transactions: FinanceTransaction[],
+  monthKey = new Date().toISOString().slice(0, 7),
+) {
   const paid = transactions.filter((transaction) => transaction.status === "paid");
-  const latestDate =
-    transactions
-      .map((transaction) => transaction.date)
-      .sort()
-      .at(-1) ?? new Date().toISOString().slice(0, 10);
-  const monthKey = latestDate.slice(0, 7);
   const currentMonthPaid = paid.filter((transaction) =>
     transaction.date.startsWith(monthKey),
+  );
+  const currentMonthPending = transactions.filter(
+    (transaction) =>
+      transaction.status === "pending" && transaction.date.startsWith(monthKey),
+  );
+  const currentMonthScheduled = transactions.filter(
+    (transaction) =>
+      transaction.status === "scheduled" && transaction.date.startsWith(monthKey),
   );
   const income = currentMonthPaid
     .filter((transaction) => transaction.amount > 0)
@@ -163,8 +223,11 @@ export function getFinanceSummary(transactions: FinanceTransaction[]) {
   const monthlyCashflow = getMonthlyCashflow(paid);
   const categorySpend = getCategorySpend(currentMonthPaid);
   const recentTransactions = [...transactions]
+    .filter((transaction) => transaction.date.startsWith(monthKey))
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 5);
+  const totalFor = (items: FinanceTransaction[]) =>
+    items.reduce((total, transaction) => total + transaction.amount, 0);
 
   return {
     availableBalance,
@@ -174,7 +237,9 @@ export function getFinanceSummary(transactions: FinanceTransaction[]) {
     income,
     monthlyCashflow,
     netCashflow: income - expenses,
+    pendingNet: totalFor(currentMonthPending),
     recentTransactions,
+    scheduledNet: totalFor(currentMonthScheduled),
   };
 }
 
@@ -353,9 +418,12 @@ export function transactionsToCsv(transactions: FinanceTransaction[]) {
   ].join("\n");
 }
 
-export function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-IE", {
-    currency: "EUR",
+export function formatCurrency(
+  value: number,
+  options: { currency?: string; locale?: string } = {},
+) {
+  return new Intl.NumberFormat(options.locale ?? "en-IE", {
+    currency: options.currency ?? "EUR",
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
     style: "currency",

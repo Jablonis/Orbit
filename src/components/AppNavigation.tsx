@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { ProfileMenu } from "@/components/ProfileMenu";
+import { QuickAdd } from "@/components/QuickAdd";
+import type { RegionalPreferences } from "@/lib/preferences";
 
 type NavKey = "dashboard" | "fitness" | "tasks" | "finance";
 
@@ -19,16 +21,18 @@ const navItems: Array<{
 
 export function AppNavigation({
   active,
+  profile,
   settings,
   userEmail,
 }: {
-  active: NavKey;
+  active: NavKey | null;
+  profile?: RegionalPreferences;
   settings?: ReactNode;
   userEmail: string;
 }) {
   return (
     <>
-      <nav className="fixed left-0 top-0 z-40 hidden h-screen w-[112px] border-r border-[var(--border-subtle)] bg-[#111112]/90 backdrop-blur-2xl md:block">
+      <nav className="fixed left-0 top-0 z-40 hidden h-screen w-[112px] border-r border-[var(--border-subtle)] bg-[var(--surface-nav)]/90 backdrop-blur-2xl md:block">
         <div className="flex h-full flex-col items-center justify-between px-4 py-6">
           <Link className="flex flex-col items-center gap-2" href="/">
             <LogoMark />
@@ -83,7 +87,8 @@ export function AppNavigation({
           </Link>
         ))}
       </nav>
-      <ProfileMenu userEmail={userEmail}>{settings}</ProfileMenu>
+      <QuickAdd />
+      <ProfileMenu profile={profile} userEmail={userEmail}>{settings}</ProfileMenu>
     </>
   );
 }

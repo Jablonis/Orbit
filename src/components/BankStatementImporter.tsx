@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { ActionToast } from "@/components/ActionToast";
 import type { BankStatementPreview } from "@/lib/bank-statement";
 import { formatCurrency } from "@/lib/finance";
+import type { RegionalPreferences } from "@/lib/preferences";
+import {
+  bankStatementCategories,
+  type BankStatementCategory,
+} from "@/lib/finance-categories";
 
 type StatementPreviewResponse = BankStatementPreview & {
   pages: number;
@@ -16,10 +21,19 @@ type StatementResponse = Partial<StatementPreviewResponse> & {
   message?: string;
 };
 
-export function BankStatementImporter({ initialMonth }: { initialMonth: string }) {
+export function BankStatementImporter({
+  initialMonth,
+  regional,
+}: {
+  initialMonth: string;
+  regional: RegionalPreferences;
+}) {
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
+  const [categoryOverrides, setCategoryOverrides] = useState<
+    Record<number, BankStatementCategory>
+  >({});
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
   const [month, setMonth] = useState(initialMonth);
@@ -39,6 +53,14 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
     formData.set("mode", mode);
     formData.set("statement", file);
     formData.set("statementMonth", month);
+    if (mode === "import") {
+      const corrections = Object.entries(categoryOverrides).map(
+        ([index, category]) => ({ category, index: Number(index) }),
+      );
+      if (corrections.length > 0) {
+        formData.set("categoryOverrides", JSON.stringify(corrections));
+      }
+    }
 
     try {
       const response = await fetch("/api/finance/import-statement", {
@@ -55,9 +77,11 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
           throw new Error("The statement preview was incomplete. Please try again.");
         }
         setPreview(payload as StatementPreviewResponse);
+        setCategoryOverrides({});
       } else {
         setMessage(payload.message || "Statement imported securely.");
         setPreview(null);
+        setCategoryOverrides({});
         setFile(null);
         if (fileInput.current) fileInput.current.value = "";
         router.refresh();
@@ -75,9 +99,12 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
 
   function resetPreview() {
     setPreview(null);
+    setCategoryOverrides({});
     setError("");
     setMessage("");
   }
+
+  const correctedCategoryCount = Object.keys(categoryOverrides).length;
 
   return (
     <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-7" id="bank-statement-import">
@@ -89,7 +116,7 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
             Upload a text-based EUR statement, review every detected amount, then confirm the import.
           </p>
         </div>
-        <span className="rounded-full border border-[var(--accent-primary)]/20 bg-[var(--accent-primary)]/10 px-3 py-1.5 text-[12px] font-semibold text-[#d9f99d]">
+        <span className="rounded-full border border-[var(--accent-primary)]/20 bg-[var(--accent-primary)]/10 px-3 py-1.5 text-[12px] font-semibold text-[var(--success-text)]">
           PDF is never stored
         </span>
       </div>
@@ -105,7 +132,7 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
           <span className="label-caps text-[var(--text-secondary)]">Statement PDF</span>
           <input
             accept=".pdf,application/pdf"
-            className="field-input file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-[12px] file:font-semibold file:text-[#202020]"
+            className="field-input file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-[12px] file:font-semibold file:text-[var(--text-on-light)]"
             onChange={(event) => {
               setFile(event.target.files?.[0] ?? null);
               resetPreview();
@@ -131,7 +158,7 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
           />
         </label>
         <button
-          className="min-h-11 self-end rounded-[var(--radius-control)] bg-white px-5 text-[13px] font-bold text-[#202020] disabled:opacity-55"
+          className="min-h-11 self-end rounded-[var(--radius-control)] bg-white px-5 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-55"
           disabled={pendingMode !== null}
           type="submit"
         >
@@ -147,7 +174,7 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
       </div>
 
       {error ? (
-        <p className="mt-4 rounded-[var(--radius-row)] border border-[var(--danger)]/25 bg-[var(--danger)]/10 p-4 text-[12px] leading-5 text-[#ffd7d3]" role="alert">
+        <p className="mt-4 rounded-[var(--radius-row)] border border-[var(--danger)]/25 bg-[var(--danger)]/10 p-4 text-[12px] leading-5 text-[var(--danger-text)]" role="alert">
           {error}
         </p>
       ) : null}
@@ -160,47 +187,89 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
               <h4 className="mt-1 text-[18px] font-semibold text-white" id="statement-preview-title">
                 {preview.rows.length} transactions · {preview.pages} page{preview.pages === 1 ? "" : "s"}
               </h4>
+              <p className="mt-2 max-w-2xl text-[12px] leading-5 text-[var(--text-secondary)]">
+                Correct any category below. Changes apply only to this import and
+                never alter the original PDF or duplicate fingerprint.
+              </p>
             </div>
-            <button
-              className="min-h-11 rounded-[var(--radius-control)] bg-[var(--accent-primary)] px-5 text-[13px] font-bold text-[#14200a] disabled:opacity-55"
-              disabled={pendingMode !== null}
-              onClick={() => void send("import")}
-              type="button"
-            >
-              {pendingMode === "import" ? "Importing…" : "Confirm and import"}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {correctedCategoryCount > 0 ? (
+                <button
+                  className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-4 text-[12px] font-semibold text-[var(--text-secondary)]"
+                  disabled={pendingMode !== null}
+                  onClick={() => setCategoryOverrides({})}
+                  type="button"
+                >
+                  Reset {correctedCategoryCount} change{correctedCategoryCount === 1 ? "" : "s"}
+                </button>
+              ) : null}
+              <button
+                className="min-h-11 rounded-[var(--radius-control)] bg-[var(--accent-primary)] px-5 text-[13px] font-bold text-[var(--text-on-accent)] disabled:opacity-55"
+                disabled={pendingMode !== null}
+                onClick={() => void send("import")}
+                type="button"
+              >
+                {pendingMode === "import" ? "Importing…" : "Confirm and import"}
+              </button>
+            </div>
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <PreviewMetric label="Income" value={formatCurrency(preview.income)} />
-            <PreviewMetric label="Expenses" value={formatCurrency(preview.expenses)} />
-            <PreviewMetric label="Net" value={formatCurrency(preview.net)} />
+            <PreviewMetric label="Income" value={formatCurrency(preview.income, regional)} />
+            <PreviewMetric label="Expenses" value={formatCurrency(preview.expenses, regional)} />
+            <PreviewMetric label="Net" value={formatCurrency(preview.net, regional)} />
           </div>
 
           {preview.warnings.length > 0 ? (
-            <div className="mt-4 rounded-[var(--radius-row)] border border-[#f59e0b]/25 bg-[#f59e0b]/10 p-4 text-[12px] leading-[18px] text-[#fde68a]">
+            <div className="mt-4 rounded-[var(--radius-row)] border border-[var(--warning)]/25 bg-[var(--warning)]/10 p-4 text-[12px] leading-[18px] text-[var(--warning-text)]">
               {preview.warnings.map((warning, index) => (
                 <p key={`${index}-${warning}`}>• {warning}</p>
               ))}
             </div>
           ) : null}
 
-          <div className="mt-4 max-h-[min(65vh,760px)] overflow-auto rounded-[var(--radius-row)] border border-[var(--border-subtle)]">
-            <table className="w-full min-w-[620px] text-left text-[12px]">
+          <div
+            aria-label="Scrollable statement transaction review"
+            className="mt-4 max-h-[min(65vh,760px)] overflow-auto rounded-[var(--radius-row)] border border-[var(--border-subtle)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+            tabIndex={0}
+          >
+            <table className="w-full min-w-[760px] text-left text-[12px]">
               <caption className="sr-only">
                 All {preview.rows.length} transactions that will be imported
               </caption>
-              <thead className="sticky top-0 z-10 bg-[#191919] text-[var(--text-tertiary)]">
+              <thead className="sticky top-0 z-10 bg-[var(--surface-1)] text-[var(--text-tertiary)]">
                 <tr><th className="px-4 py-3">Date</th><th>Transaction</th><th>Category</th><th className="px-4 text-right">Amount</th></tr>
               </thead>
               <tbody>
                 {preview.rows.map((row, index) => (
                   <tr className="border-t border-[var(--border-subtle)]" key={`${index}-${row.date}-${row.title}-${row.amount}`}>
                     <td className="px-4 py-3 text-[var(--text-secondary)]">{row.date}</td>
-                    <td className="max-w-[280px] truncate pr-4 font-semibold text-white">{row.title}</td>
-                    <td className="pr-4 text-[var(--text-secondary)]">{row.category}</td>
-                    <td className={`metric-value px-4 text-right font-semibold ${row.amount >= 0 ? "text-[var(--accent-primary)]" : "text-[#ffd7d3]"}`}>
-                      {formatCurrency(row.amount)}
+                    <td className="max-w-[320px] break-words pr-4 font-semibold leading-5 text-white">{row.title}</td>
+                    <td className="min-w-[190px] pr-4">
+                      <label className="sr-only" htmlFor={`statement-category-${index}`}>
+                        Category for {row.title}
+                      </label>
+                      <select
+                        className="min-h-11 w-full rounded-[10px] border border-[var(--border-strong)] bg-[var(--surface-1)] px-3 text-[12px] font-semibold text-white"
+                        id={`statement-category-${index}`}
+                        onChange={(event) => {
+                          const category = event.target.value as BankStatementCategory;
+                          setCategoryOverrides((current) => {
+                            const next = { ...current };
+                            if (category === row.category) delete next[index];
+                            else next[index] = category;
+                            return next;
+                          });
+                        }}
+                        value={categoryOverrides[index] ?? row.category}
+                      >
+                        {bankStatementCategories.map((category) => (
+                          <option key={category} value={category}>{category}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className={`metric-value whitespace-nowrap px-4 text-right font-semibold ${row.amount >= 0 ? "text-[var(--accent-primary)]" : "text-[var(--danger-text)]"}`}>
+                      {formatCurrency(row.amount, regional)}
                     </td>
                   </tr>
                 ))}
@@ -208,7 +277,8 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
             </table>
           </div>
           <p className="mt-2 text-[12px] text-[var(--text-tertiary)]">
-            Showing all {preview.rows.length} transactions. Scroll the ledger to review every row before import.
+            Showing all {preview.rows.length} transactions. Scroll horizontally
+            and vertically to review names, categories, and amounts before import.
           </p>
         </section>
       ) : null}

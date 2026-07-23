@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { parseFinanceCsv, toFinanceInsert } from "@/lib/finance";
+import {
+  type FinanceStatus,
+  parseFinanceCsv,
+  toFinanceInsert,
+} from "@/lib/finance";
 import { startOperation } from "@/lib/operation-log.server";
 
 export type ImportState = {
@@ -13,6 +17,60 @@ export type ImportState = {
 export type FinanceClearResult =
   | { ok: true; archivedAt: string }
   | { ok: false; error: string };
+
+export type FinanceTransactionResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+export async function saveFinanceTransactionAction(
+  formData: FormData,
+): Promise<FinanceTransactionResult> {
+  const { supabase, user } = await getAuthenticatedUser();
+  const id = String(formData.get("id") ?? "");
+  const date = String(formData.get("date") ?? "");
+  const title = String(formData.get("title") ?? "").trim().slice(0, 200);
+  const category = String(formData.get("category") ?? "").trim().slice(0, 80);
+  const amount = Number(formData.get("amount"));
+  const rawStatus = String(formData.get("status") ?? "paid");
+  const status: FinanceStatus =
+    rawStatus === "pending" || rawStatus === "scheduled" ? rawStatus : "paid";
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !title || !category || !Number.isFinite(amount)) {
+    return { ok: false, error: "Add a valid date, title, category, and amount." };
+  }
+
+  const input = { amount, category, date, status, title };
+  const query = id
+    ? supabase
+        .from("finance_transactions")
+        .update(toFinanceInsert(input, user.id))
+        .eq("id", id)
+        .eq("user_id", user.id)
+    : supabase.from("finance_transactions").insert(toFinanceInsert(input, user.id));
+  const { error } = await query;
+
+  if (error) return { ok: false, error: "The transaction could not be saved." };
+  revalidatePath("/");
+  revalidatePath("/finance");
+  return { ok: true };
+}
+
+export async function archiveFinanceTransactionAction(
+  transactionId: string,
+): Promise<FinanceTransactionResult> {
+  const { supabase, user } = await getAuthenticatedUser();
+  if (!transactionId) return { ok: false, error: "Choose a transaction." };
+  const { error } = await supabase
+    .from("finance_transactions")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("id", transactionId)
+    .eq("user_id", user.id);
+
+  if (error) return { ok: false, error: "The transaction could not be archived." };
+  revalidatePath("/");
+  revalidatePath("/finance");
+  return { ok: true };
+}
 
 export async function importFinanceCsvAction(
   _state: ImportState,

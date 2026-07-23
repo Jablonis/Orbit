@@ -7,6 +7,7 @@ import {
   type TrainingQuality,
   type WeekdayId,
   defaultWeeklyPlan,
+  ensureFitnessPlan,
   getDateForWeekday,
   weekdayOrder,
 } from "@/lib/fitness";
@@ -147,6 +148,51 @@ export async function toggleFitnessDoneAction(
         user_id: user.id,
       });
   if (error) return { ok: false, error: "The training status could not be updated." };
+
+  revalidateFitness();
+  return { ok: true };
+}
+
+export async function completeTodayTrainingAction(): Promise<FitnessActionResult> {
+  const { supabase, user } = await getAuthenticatedUser();
+  const today = getDateInTimeZone();
+  const weeklyPlan = await ensureFitnessPlan(supabase, user.id, today);
+  const day = weeklyPlan.find((item) => item.date === today);
+
+  if (!day || day.sport === "rest") {
+    return { ok: false, error: "Today is a recovery day in your fitness plan." };
+  }
+  if (day.log.completed) return { ok: true };
+
+  const { data: existingSession, error: readError } = await supabase
+    .from("fitness_sessions")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("performed_on", today)
+    .maybeSingle();
+  if (readError) {
+    return { ok: false, error: "Today’s training could not be updated." };
+  }
+
+  const { error } = existingSession
+    ? await supabase
+        .from("fitness_sessions")
+        .update({ completed: true })
+        .eq("id", existingSession.id)
+        .eq("user_id", user.id)
+    : await supabase.from("fitness_sessions").insert({
+        completed: true,
+        duration_minutes: day.plannedDurationMinutes || 60,
+        notes: day.log.notes,
+        performed_at: day.plannedTime || null,
+        performed_on: today,
+        quality: day.log.quality,
+        sport: day.sport,
+        user_id: user.id,
+      });
+  if (error) {
+    return { ok: false, error: "Today’s training could not be updated." };
+  }
 
   revalidateFitness();
   return { ok: true };

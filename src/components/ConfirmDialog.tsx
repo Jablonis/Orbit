@@ -69,7 +69,7 @@ export function ConfirmDialog({
   return (
     <>
       <button
-        className={triggerClassName}
+        className={`${triggerClassName} min-h-11`}
         onClick={() => {
           setError("");
           setPhrase("");
@@ -111,12 +111,12 @@ export function ConfirmDialog({
         <h2 className="mt-3 text-[24px] font-semibold text-white" id={titleId}>
           {title}
         </h2>
-        <p className="mt-3 text-[14px] leading-6 text-[#c4c7c8]" id={descriptionId}>
+        <p className="mt-3 text-[14px] leading-6 text-[var(--text-secondary)]" id={descriptionId}>
           {description}
         </p>
         {confirmationPhrase ? (
           <label className="mt-5 grid gap-2">
-            <span className="text-[12px] font-semibold text-[#c4c7c8]">
+            <span className="text-[12px] font-semibold text-[var(--text-secondary)]">
               Type <strong className="text-white">{confirmationPhrase}</strong> to continue
             </span>
             <input
@@ -139,7 +139,7 @@ export function ConfirmDialog({
         ) : null}
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="rounded-[12px] border border-white/10 px-4 py-2.5 text-[13px] font-semibold text-[#c4c7c8]"
+            className="min-h-11 rounded-[12px] border border-white/10 px-4 py-2.5 text-[13px] font-semibold text-[var(--text-secondary)]"
             disabled={pending}
             onClick={() => setOpen(false)}
             ref={cancelButton}
@@ -149,7 +149,7 @@ export function ConfirmDialog({
           </button>
           <button
             aria-busy={pending}
-            className="rounded-[12px] bg-[var(--danger)] px-4 py-2.5 text-[13px] font-bold text-[#3b0908] disabled:cursor-not-allowed disabled:opacity-45"
+            className="min-h-11 rounded-[12px] bg-[var(--danger)] px-4 py-2.5 text-[13px] font-bold text-[#3b0908] disabled:cursor-not-allowed disabled:opacity-45"
             disabled={
               pending ||
               Boolean(confirmationPhrase && phrase !== confirmationPhrase)

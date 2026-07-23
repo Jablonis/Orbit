@@ -1,20 +1,41 @@
 "use client";
 
 import type { MouseEvent, ReactNode } from "react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { openOrbitSettingsEvent } from "@/components/OpenDashboardSettingsButton";
+import type { RegionalPreferences } from "@/lib/preferences";
 
 export function ProfileMenu({
   children,
+  profile,
   userEmail,
 }: {
   children?: ReactNode;
+  profile?: RegionalPreferences;
   userEmail: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const initial = userEmail.trim().slice(0, 1).toUpperCase() || "O";
+  const initial =
+    profile?.initials ||
+    profile?.displayName.trim().slice(0, 1).toUpperCase() ||
+    userEmail.trim().slice(0, 1).toUpperCase() ||
+    "O";
+
+  useEffect(() => {
+    const openFromCommand = () => {
+      if (dialogRef.current && !dialogRef.current.open) {
+        dialogRef.current.showModal();
+      }
+    };
+    window.addEventListener(openOrbitSettingsEvent, openFromCommand);
+    return () =>
+      window.removeEventListener(openOrbitSettingsEvent, openFromCommand);
+  }, []);
 
   function open() {
-    dialogRef.current?.showModal();
+    if (dialogRef.current && !dialogRef.current.open) {
+      dialogRef.current.showModal();
+    }
   }
 
   function close() {
@@ -51,7 +72,7 @@ export function ProfileMenu({
         onClick={closeFromBackdrop}
         ref={dialogRef}
       >
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--border-subtle)] bg-[#151516]/92 px-5 py-4 backdrop-blur-xl sm:px-6">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--border-subtle)] bg-[var(--surface-1)]/92 px-5 py-4 backdrop-blur-xl sm:px-6">
           <div>
             <p className="label-caps text-[var(--accent-primary)]">Orbit settings</p>
             <h2 className="mt-1 text-[22px] font-semibold" id="profile-settings-title">
@@ -79,7 +100,17 @@ export function ProfileMenu({
               </div>
               <div className="min-w-0">
                 <p className="text-[13px] text-[var(--text-tertiary)]">Signed in as</p>
+                {profile?.displayName ? (
+                  <p className="truncate text-[15px] font-semibold text-white">
+                    {profile.displayName}
+                  </p>
+                ) : null}
                 <p className="truncate text-[14px] font-semibold text-white">{userEmail}</p>
+                {profile ? (
+                  <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
+                    {profile.timeZone} · {profile.currency}
+                  </p>
+                ) : null}
               </div>
             </div>
           </section>
@@ -96,9 +127,26 @@ export function ProfileMenu({
             </section>
           ) : null}
 
+          <section aria-labelledby="data-portability-heading" className="content-panel rounded-[var(--radius-row)] p-4">
+            <p className="label-caps text-[var(--accent-info)]" id="data-portability-heading">
+              Data portability
+            </p>
+            <p className="mt-2 text-[12px] leading-5 text-[var(--text-secondary)]">
+              Download a JSON copy of your profile, tasks, fitness, finance, and
+              reflection records.
+            </p>
+            <a
+              className="mt-3 inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-[var(--border-strong)] px-4 text-[13px] font-semibold text-white"
+              download
+              href="/api/export"
+            >
+              Download account data
+            </a>
+          </section>
+
           <form action="/auth/logout" className="border-t border-[var(--border-subtle)] pt-5" method="post">
             <button
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] bg-[color-mix(in_srgb,var(--danger)_9%,transparent)] px-4 text-[13px] font-semibold text-[#ffd7d3] transition hover:bg-[color-mix(in_srgb,var(--danger)_14%,transparent)]"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] bg-[color-mix(in_srgb,var(--danger)_9%,transparent)] px-4 text-[13px] font-semibold text-[var(--danger-text)] transition hover:bg-[color-mix(in_srgb,var(--danger)_14%,transparent)]"
               type="submit"
             >
               <LogoutIcon />

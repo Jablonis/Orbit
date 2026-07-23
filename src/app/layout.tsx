@@ -13,7 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Orbit",
+  title: {
+    default: "Orbit",
+    template: "%s · Orbit",
+  },
   description: "Personal operating system dashboard.",
 };
 
@@ -23,8 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full bg-[#0d0d0e]`}>
-      <body className="min-h-screen bg-[#0d0d0e] text-[#e5e2e1] antialiased">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full bg-[var(--canvas)]`}>
+      <body className="min-h-screen bg-[var(--canvas)] text-[var(--text-primary)] antialiased">
+        <a className="skip-link" href="#main-content">
+          Skip to main content
+        </a>
         {children}
       </body>
     </html>

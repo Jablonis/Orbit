@@ -1,0 +1,27 @@
+{
+  "viewports": [
+    { "name": "phone-reflow", "width": 320, "height": 720 },
+    { "name": "phone-standard", "width": 375, "height": 812 },
+    { "name": "phone-large", "width": 430, "height": 932 },
+    { "name": "tablet", "width": 768, "height": 1024 },
+    { "name": "compact-laptop", "width": 1024, "height": 768 },
+    { "name": "desktop", "width": 1440, "height": 1000 }
+  ],
+  "zoomLevels": [1, 2],
+  "routes": ["/", "/tasks", "/fitness", "/finance", "/login", "/ui-lab"],
+  "dataStates": ["empty", "light", "typical", "dense", "error", "stale", "long-content"],
+  "interactionStates": [
+    "keyboard-focus",
+    "open-overlay",
+    "validation-error",
+    "optimistic-save",
+    "failure",
+    "undo"
+  ],
+  "performanceBudgets": {
+    "cumulativeLayoutShift": 0.1,
+    "interactionToNextPaintMs": 200,
+    "largestContentfulPaintMs": 2500,
+    "localActionFeedbackMs": 100
+  }
+}

@@ -1,4 +1,8 @@
 import type { FinanceInput } from "@/lib/finance";
+import {
+  bankStatementCategories,
+  type BankStatementCategory,
+} from "@/lib/finance-categories";
 
 export type BankStatementPreview = {
   expenses: number;
@@ -208,6 +212,54 @@ export function statementFingerprintPayload(
     })),
     statementMonth,
   });
+}
+
+export function applyStatementCategoryOverrides(
+  rows: FinanceInput[],
+  rawOverrides: string | null,
+) {
+  if (!rawOverrides) return rows;
+  if (rawOverrides.length > 24_000) {
+    throw new Error("Invalid statement category corrections.");
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawOverrides);
+  } catch {
+    throw new Error("Invalid statement category corrections.");
+  }
+  if (!Array.isArray(parsed) || parsed.length > rows.length) {
+    throw new Error("Invalid statement category corrections.");
+  }
+
+  const correctedRows = rows.map((row) => ({ ...row }));
+  const correctedIndexes = new Set<number>();
+
+  for (const correction of parsed) {
+    if (!correction || typeof correction !== "object") {
+      throw new Error("Invalid statement category corrections.");
+    }
+    const { category, index } = correction as {
+      category?: unknown;
+      index?: unknown;
+    };
+    if (
+      !Number.isSafeInteger(index)
+      || (index as number) < 0
+      || (index as number) >= rows.length
+      || correctedIndexes.has(index as number)
+      || typeof category !== "string"
+      || !bankStatementCategories.includes(category as BankStatementCategory)
+    ) {
+      throw new Error("Invalid statement category corrections.");
+    }
+
+    correctedRows[index as number].category = category;
+    correctedIndexes.add(index as number);
+  }
+
+  return correctedRows;
 }
 
 function parseStatementDate(token: string, statementMonth: string) {

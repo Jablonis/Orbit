@@ -25,7 +25,7 @@ export function WeeklyReflectionForm({
       className="mt-5 grid gap-3 lg:grid-cols-[1fr_1fr_auto] lg:items-end"
     >
       <label className="grid gap-2">
-        <span className="label-caps text-[#c4c7c8]">What worked?</span>
+        <span className="label-caps text-[var(--text-secondary)]">What worked?</span>
         <textarea
           className="field-input min-h-20 py-3"
           defaultValue={reflection.whatWorked}
@@ -35,7 +35,7 @@ export function WeeklyReflectionForm({
         />
       </label>
       <label className="grid gap-2">
-        <span className="label-caps text-[#c4c7c8]">
+        <span className="label-caps text-[var(--text-secondary)]">
           What changes next week?
         </span>
         <textarea
@@ -48,7 +48,7 @@ export function WeeklyReflectionForm({
       </label>
       <button
         aria-busy={pending}
-        className="h-11 rounded-[12px] bg-white px-5 text-[13px] font-bold text-[#202020] disabled:cursor-wait disabled:opacity-60"
+        className="h-11 rounded-[12px] bg-white px-5 text-[13px] font-bold text-[var(--text-on-light)] disabled:cursor-wait disabled:opacity-60"
         disabled={pending}
         type="submit"
       >
@@ -59,8 +59,8 @@ export function WeeklyReflectionForm({
           aria-live="polite"
           className={`rounded-[var(--radius-row)] border px-4 py-3 text-[13px] lg:col-span-3 ${
             state.ok
-              ? "border-[var(--accent-primary)]/25 bg-[var(--accent-primary)]/10 text-[#d9f99d]"
-              : "border-[var(--danger)]/25 bg-[var(--danger)]/10 text-[#ffd7d3]"
+              ? "border-[var(--accent-primary)]/25 bg-[var(--accent-primary)]/10 text-[var(--success-text)]"
+              : "border-[var(--danger)]/25 bg-[var(--danger)]/10 text-[var(--danger-text)]"
           }`}
           role={state.ok ? "status" : "alert"}
         >

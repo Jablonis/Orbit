@@ -17,12 +17,15 @@ export type TrainingLog = {
   durationMinutes: number;
   quality: TrainingQuality;
   notes: string;
+  sport: Exclude<SportType, "rest"> | null;
 };
 
 export type WeeklyPlanDay = {
   date: string;
   id: WeekdayId;
   label: string;
+  plannedDurationMinutes: number;
+  plannedTime: string;
   shortLabel: string;
   sport: SportType;
   log: TrainingLog;
@@ -73,17 +76,17 @@ export const sportLabels: Record<SportType, string> = {
 };
 
 export const sportDescriptions: Record<SportType, string> = {
-  gym: "Silovy trening podla vypocitaneho splitu.",
-  tennis: "Technika, pohyb a koordinacia.",
-  cardio: "Kondicia, tepova zona a vytrvalost.",
-  mobility: "Mobilita, strecing a kontrola pohybu.",
-  rest: "Regeneracia, spanok a priprava na dalsi trening.",
+  gym: "Strength training based on the current weekly split.",
+  tennis: "Technique, movement, and coordination.",
+  cardio: "Conditioning, aerobic work, and endurance.",
+  mobility: "Mobility, stretching, and controlled movement.",
+  rest: "Recovery, sleep, and preparation for the next session.",
 };
 
 export const qualityLabels: Record<TrainingQuality, string> = {
-  low: "Tazke",
-  medium: "OK",
-  high: "Vyborne",
+  low: "Difficult",
+  medium: "Steady",
+  high: "Strong",
 };
 
 export const weekdayOrder: WeekdayId[] = [
@@ -123,6 +126,7 @@ export function createEmptyTrainingLog(): TrainingLog {
     durationMinutes: 60,
     quality: "medium",
     notes: "",
+    sport: null,
   };
 }
 
@@ -131,6 +135,8 @@ function createDefaultDay(id: WeekdayId, sport: SportType): WeeklyPlanDay {
     date: "",
     id,
     ...weekdayMeta[id],
+    plannedDurationMinutes: 60,
+    plannedTime: "",
     sport,
     log: createEmptyTrainingLog(),
   };
@@ -186,6 +192,8 @@ export function mapDbFitnessDay(
     date,
     id,
     ...weekdayMeta[id],
+    plannedDurationMinutes: day.planned_duration_minutes,
+    plannedTime: day.planned_time?.slice(0, 5) ?? "",
     sport: toSport(day.sport),
     log: {
       completed: session?.completed ?? false,
@@ -194,6 +202,7 @@ export function mapDbFitnessDay(
         session?.durationMinutes ?? day.planned_duration_minutes,
       quality: session?.quality ?? "medium",
       notes: session?.notes ?? day.notes ?? "",
+      sport: session?.sport ?? null,
     },
   };
 }
@@ -274,8 +283,8 @@ export async function ensureFitnessPlan(
     user_id: userId,
     weekday: day.id,
     sport: day.sport,
-    planned_time: day.log.time || null,
-    planned_duration_minutes: day.log.durationMinutes,
+    planned_time: day.plannedTime || null,
+    planned_duration_minutes: day.plannedDurationMinutes,
     notes: day.log.notes,
   }));
 

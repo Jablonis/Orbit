@@ -31,11 +31,11 @@ export function ActivityRings({ finance, fitness, tasks }: RingValues) {
       className="relative grid aspect-square place-items-center"
       role="img"
     >
-      <Ring color="#ff4fa3" radius={90} stroke={16} value={displayed.tasks} />
-      <Ring color="#a3e635" radius={68} stroke={16} value={displayed.fitness} />
-      <Ring color="#60a5fa" radius={46} stroke={16} value={displayed.finance} />
+      <Ring color="var(--accent-highlight)" radius={90} stroke={16} value={displayed.tasks} />
+      <Ring color="var(--accent-primary)" radius={68} stroke={16} value={displayed.fitness} />
+      <Ring color="var(--accent-info)" radius={46} stroke={16} value={displayed.finance} />
       <div
-        className="absolute grid h-20 w-20 place-items-center rounded-full bg-[#0d0d0e] text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+        className="absolute grid h-20 w-20 place-items-center rounded-full bg-[var(--canvas)] text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
         key={score}
       >
         <span className="ring-score-enter text-[24px] font-semibold text-white">

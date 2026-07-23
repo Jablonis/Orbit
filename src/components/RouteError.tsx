@@ -15,36 +15,40 @@ export function RouteError({
   }, [error]);
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_50%_20%,rgba(255,79,163,0.12),transparent_30%),#0d0d0e] p-5 text-[#e5e2e1]">
+    <main
+      className="grid min-h-[100dvh] place-items-center bg-[radial-gradient(circle_at_50%_20%,rgba(255,79,163,0.12),transparent_30%),var(--canvas)] p-5 text-[var(--text-primary)]"
+      id="main-content"
+      tabIndex={-1}
+    >
       <section className="glass-panel w-full max-w-lg rounded-[28px] p-7 text-center sm:p-9">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#ff8a80]/25 bg-[#ff8a80]/10 text-[22px] text-[#ffd7d3]">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[var(--danger)]/25 bg-[var(--danger)]/10 text-[22px] text-[var(--danger-text)]">
           !
         </div>
         <p className="label-caps mt-6 text-[#ff9fca]">Orbit paused</p>
         <h1 className="mt-3 text-[28px] font-semibold text-white">
           This page couldn&apos;t load.
         </h1>
-        <p className="mt-3 text-[14px] leading-6 text-[#c4c7c8]">
+        <p className="mt-3 text-[14px] leading-6 text-[var(--text-secondary)]">
           Your data is safe. Retry the request, or return to the Overview if the
           connection is still unavailable.
         </p>
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <button
-            className="rounded-full bg-white px-5 py-2.5 text-[13px] font-bold text-[#202020]"
+            className="min-h-11 rounded-full bg-white px-5 py-2.5 text-[13px] font-bold text-[var(--text-on-light)]"
             onClick={unstable_retry}
             type="button"
           >
             Try again
           </button>
           <Link
-            className="rounded-full border border-white/10 bg-white/[0.04] px-5 py-2.5 text-[13px] font-semibold text-white"
+            className="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.04] px-5 py-2.5 text-[13px] font-semibold text-white"
             href="/"
           >
             Go to Overview
           </Link>
         </div>
         {error.digest ? (
-          <p className="mt-5 font-mono text-[12px] text-[#8d9092]">
+          <p className="mt-5 font-mono text-[12px] text-[var(--text-muted)]">
             Reference {error.digest}
           </p>
         ) : null}

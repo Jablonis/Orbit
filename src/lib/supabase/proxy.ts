@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv } from "./env";
 
-const protectedRoutes = ["/", "/tasks", "/fitness", "/finance"];
+const protectedRoutes = ["/", "/tasks", "/fitness", "/finance", "/ui-lab"];
 const jsonUploadRoutes = new Set(["/api/finance/import-statement"]);
 
 function isProtectedPath(pathname: string) {

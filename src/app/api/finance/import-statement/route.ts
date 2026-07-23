@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import {
+  applyStatementCategoryOverrides,
   parseBankStatementText,
   statementFingerprintPayload,
 } from "@/lib/bank-statement";
@@ -136,6 +137,7 @@ async function processStatementUpload(
   }
 
   const file = formData.get("statement");
+  const rawCategoryOverrides = String(formData.get("categoryOverrides") ?? "");
   const statementMonth = String(formData.get("statementMonth") ?? "");
   const requestedMode = String(formData.get("mode") ?? "preview");
 
@@ -214,6 +216,24 @@ async function processStatementUpload(
   const fingerprint = createHash("sha256")
     .update(statementFingerprintPayload(statementMonth, preview.rows))
     .digest("hex");
+  let importRows = preview.rows;
+  if (mode === "import") {
+    try {
+      importRows = applyStatementCategoryOverrides(
+        preview.rows,
+        rawCategoryOverrides,
+      );
+    } catch {
+      return statementJson(
+        operation,
+        "invalid_category_corrections",
+        { error: "Review the statement categories and try again." },
+        400,
+        {},
+        metrics,
+      );
+    }
+  }
   const { data: duplicate, error: duplicateLookupError } = await supabase
     .from("finance_statement_imports")
     .select("id,statement_month")
@@ -261,7 +281,7 @@ async function processStatementUpload(
   const { data, error } = await supabase.rpc("import_finance_statement", {
     p_currency: "EUR",
     p_fingerprint: fingerprint,
-    p_rows: preview.rows,
+    p_rows: importRows,
     p_statement_month: `${statementMonth}-01`,
   });
   if (error) {
@@ -290,7 +310,7 @@ async function processStatementUpload(
     "import_complete",
     {
       import: data,
-      message: `${preview.rows.length} transactions imported securely.`,
+      message: `${importRows.length} transactions imported securely.`,
     },
     200,
     {},

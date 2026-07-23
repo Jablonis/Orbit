@@ -303,6 +303,25 @@ export async function getTasks(
   return getVisibleTasks(tasks, options.today ?? getDateInTimeZone());
 }
 
+export async function getArchivedTasks(
+  supabase: SupabaseClient,
+  userId: string,
+  limit = 50,
+) {
+  const { data, error } = await supabase
+    .from("tasks")
+    .select(
+      "id,title,category,type,complexity,priority,estimate_mode,estimate_minutes,time_from,time_to,due_date,note,completed,completed_at,created_at,updated_at",
+    )
+    .eq("user_id", userId)
+    .not("archived_at", "is", null)
+    .order("archived_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((task) => mapDbTask(task as DbTask));
+}
+
 export async function getTaskCompletions(
   supabase: SupabaseClient,
   userId: string,

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  applyStatementCategoryOverrides,
   parseBankStatementText,
   statementFingerprintPayload,
 } from "../src/lib/bank-statement";
@@ -85,5 +86,37 @@ test("rejects invalid months and PDFs without transactions", () => {
   assert.throws(
     () => parseBankStatementText("01.07.2026 PAYMENT -1,00 EUR", "2026-13"),
     /valid statement month/,
+  );
+});
+
+test("applies only allowlisted statement category corrections", () => {
+  const rows = parseBankStatementText(
+    "01.07.2026 CARD PAYMENT LOCAL MERCHANT -12,00 EUR\n02.07.2026 BANK FEE -3,00 EUR",
+    "2026-07",
+  ).rows;
+  const corrected = applyStatementCategoryOverrides(
+    rows,
+    JSON.stringify([{ category: "Dining", index: 0 }]),
+  );
+
+  assert.equal(corrected[0].category, "Dining");
+  assert.equal(corrected[1].category, "Bank fees");
+  assert.equal(rows[0].category, "Card purchases");
+  assert.throws(
+    () => applyStatementCategoryOverrides(
+      rows,
+      JSON.stringify([{ category: "Anything", index: 0 }]),
+    ),
+    /Invalid statement category corrections/,
+  );
+  assert.throws(
+    () => applyStatementCategoryOverrides(
+      rows,
+      JSON.stringify([
+        { category: "Dining", index: 0 },
+        { category: "Other", index: 0 },
+      ]),
+    ),
+    /Invalid statement category corrections/,
   );
 });

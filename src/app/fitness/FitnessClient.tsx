@@ -44,6 +44,7 @@ export function FitnessClient({
   weeklyPlan: WeeklyPlanDay[];
 }) {
   const [localPlan, setLocalPlan] = useState(weeklyPlan);
+  const [mode, setMode] = useState<"plan" | "review">("review");
   const [openDayId, setOpenDayId] = useState<WeekdayId | null>(null);
   const [pendingDayId, setPendingDayId] = useState<WeekdayId | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -57,16 +58,28 @@ export function FitnessClient({
     ? localPlan.find((day) => day.id === openDayId) ?? null
     : null;
   const focusDay = openDay ?? todayDay;
-  const focusTraining = getTrainingForDay(localPlan, focusDay.id);
+  const focusSport =
+    focusDay.log.completed && focusDay.log.sport
+      ? focusDay.log.sport
+      : focusDay.sport;
+  const focusTraining = getTrainingForDay(
+    localPlan.map((day) =>
+      day.id === focusDay.id ? { ...day, sport: focusSport } : day,
+    ),
+    focusDay.id,
+  );
   const guidance = getTrainingGuidance(focusDay.sport, focusTraining.title);
   const todayGuidance = getTrainingGuidance(todayDay.sport, todayTraining.title);
   const trainingDaysCount = localPlan.filter((day) => day.sport !== "rest").length;
   const completedSessionsCount = localPlan.filter(
-    (day) => day.sport !== "rest" && day.log.completed,
+    (day) => day.log.completed,
   ).length;
   const completionPercent = trainingDaysCount
     ? Math.round((completedSessionsCount / trainingDaysCount) * 100)
     : 0;
+  const completedDuration = localPlan
+    .filter((day) => day.log.completed)
+    .reduce((total, day) => total + day.log.durationMinutes, 0);
 
   function updateSport(dayId: WeekdayId, sport: SportType) {
     const previousDay = localPlan.find((day) => day.id === dayId);
@@ -77,8 +90,6 @@ export function FitnessClient({
           ? {
               ...day,
               sport,
-              log:
-                sport === "rest" ? { ...day.log, completed: false } : day.log,
             }
           : day,
       ),
@@ -130,7 +141,14 @@ export function FitnessClient({
         day.id === weekday
           ? {
               ...day,
-              log: { completed, durationMinutes, notes, quality, time },
+              log: {
+                completed,
+                durationMinutes,
+                notes,
+                quality,
+                sport: sport === "rest" ? null : sport,
+                time,
+              },
             }
           : day,
       ),
@@ -169,18 +187,44 @@ export function FitnessClient({
   }
 
   return (
-    <section className="mx-auto w-full max-w-[1600px] px-4 py-8 md:px-10">
+    <section className="page-container py-8">
       <header className="mb-7 flex flex-col gap-5 pr-14 md:pr-0 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="label-caps text-[#a3e635]">Fitness plan</p>
+          <p className="label-caps text-[var(--accent-primary)]">Fitness plan</p>
           <h1 className="page-title mt-2 text-white">
             Today&apos;s training
           </h1>
-          <p className="mt-3 text-[14px] text-[#9ea3a5]">
+          <p className="mt-3 text-[14px] text-[var(--text-tertiary)]">
             {completedSessionsCount} of {trainingDaysCount} planned sessions complete
           </p>
         </div>
-        <ConfirmDialog
+        <div className="flex flex-wrap items-center gap-3">
+          <div
+            aria-label="Fitness mode"
+            className="inline-flex rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-white/[0.025] p-1"
+            role="group"
+          >
+            {(["review", "plan"] as const).map((value) => (
+              <button
+                aria-pressed={mode === value}
+                className={`min-h-11 rounded-[calc(var(--radius-control)-4px)] px-4 text-[13px] font-semibold capitalize ${
+                  mode === value
+                    ? "bg-white text-[var(--text-on-light)]"
+                    : "text-[var(--text-secondary)] hover:text-white"
+                }`}
+                key={value}
+                onClick={() => {
+                  setMode(value);
+                  setOpenDayId(null);
+                }}
+                type="button"
+              >
+                {value}
+              </button>
+            ))}
+          </div>
+          {mode === "plan" ? (
+          <ConfirmDialog
           confirmLabel="Reset plan"
           description="This restores the default weekly sports and planned times. Completed training sessions stay safely in your history."
           onConfirm={resetFitnessPlanAction}
@@ -194,24 +238,26 @@ export function FitnessClient({
             setResetNotice("Plan reset. Session history was preserved.");
           }}
           title="Reset the weekly plan?"
-          triggerClassName="rounded-[12px] border border-white/10 bg-[#201f1f] px-4 py-2.5 text-[13px] font-semibold text-[#c4c7c8] transition hover:border-white/20 hover:bg-[#2a2929] hover:text-white"
+          triggerClassName="rounded-[12px] border border-white/10 bg-[var(--surface-row)] px-4 py-2.5 text-[13px] font-semibold text-[var(--text-secondary)] transition hover:border-white/20 hover:bg-[#2a2929] hover:text-white"
           triggerLabel="Reset plan"
-        />
+          />
+          ) : null}
+        </div>
       </header>
 
       <section className="grid gap-5 xl:grid-cols-12">
         <article className={`content-panel relative overflow-hidden rounded-[var(--radius-panel)] p-6 sm:p-8 xl:col-span-8 ${todayDay.log.completed ? "completion-celebrate" : ""}`}>
-          <div className="absolute inset-y-0 left-0 w-1 bg-[#a3e635]" />
+          <div className="absolute inset-y-0 left-0 w-1 bg-[var(--accent-primary)]" />
           <div className="grid gap-7 md:grid-cols-[1.35fr_1fr] md:items-end">
             <div>
               <div className="flex items-center gap-3">
-                <p className="label-caps text-[#d9f99d]">Today · {todayDay.label}</p>
+                <p className="label-caps text-[var(--success-text)]">Today · {todayDay.label}</p>
                 <StatusBadge day={todayDay} compact />
               </div>
               <h2 className="mt-5 text-[36px] font-semibold leading-[42px] text-white sm:text-[46px] sm:leading-[52px]">
                 {todayTraining.title}
               </h2>
-              <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[#c4c7c8]">
+              <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[var(--text-secondary)]">
                 {todayTraining.focus}
               </p>
               <p className="mt-2 text-[13px] font-semibold text-[var(--accent-primary)]">
@@ -219,11 +265,11 @@ export function FitnessClient({
                   ? "Recovery day — protect the space."
                   : todayDay.log.completed
                     ? "Workout logged — today’s training is complete."
-                    : `${todayDay.log.durationMinutes} minutes planned today.`}
+                    : `${todayDay.plannedDurationMinutes} minutes planned today.`}
               </p>
               {todayDay.sport !== "rest" ? (
                 <button
-                  className="mt-5 min-h-11 rounded-[var(--radius-control)] bg-[var(--accent-primary)] px-5 text-[13px] font-bold text-[#14200a]"
+                  className="mt-5 min-h-11 rounded-[var(--radius-control)] bg-[var(--accent-primary)] px-5 text-[13px] font-bold text-[var(--text-on-accent)]"
                   onClick={() => setOpenDayId(todayDay.id)}
                   type="button"
                 >
@@ -244,7 +290,7 @@ export function FitnessClient({
               <p className="mt-3 text-[18px] font-semibold leading-6 text-white">
                 {todayGuidance.headline}
               </p>
-              <p className="mt-2 text-[13px] leading-5 text-[#9ea3a5]">
+              <p className="mt-2 text-[13px] leading-5 text-[var(--text-tertiary)]">
                 {todayGuidance.intent}
               </p>
             </div>
@@ -254,34 +300,40 @@ export function FitnessClient({
         <aside className="content-panel rounded-[var(--radius-panel)] p-6 sm:p-8 xl:col-span-4">
           <div className="flex items-center justify-between gap-6">
             <div>
-              <p className="label-caps text-[#60a5fa]">Week progress</p>
+              <p className="label-caps text-[var(--accent-info)]">Week progress</p>
               <p className="metric-value mt-3 text-[26px] font-semibold text-white">
-                {completedSessionsCount} sessions done
+                {completedSessionsCount} sessions · {completedDuration} min
               </p>
-              <p className="mt-2 text-[13px] text-[#9ea3a5]">
-                {trainingDaysCount - completedSessionsCount} remaining · {localPlan.filter((day) => day.sport === "rest").length} rest days
+              <p className="mt-2 text-[13px] text-[var(--text-tertiary)]">
+                {Math.max(0, trainingDaysCount - completedSessionsCount)} remaining · {localPlan.filter((day) => day.sport === "rest").length} rest days
               </p>
             </div>
             <ProgressRing value={completionPercent} />
           </div>
           <div className="mt-7 grid grid-cols-3 border-t border-white/10 pt-5">
-            <Metric label="Gym" value={localPlan.filter((day) => day.sport === "gym").length} tone="text-[#a3e635]" />
+            <Metric label="Gym" value={localPlan.filter((day) => day.sport === "gym").length} tone="text-[var(--accent-primary)]" />
             <Metric label="Rest" value={localPlan.filter((day) => day.sport === "rest").length} tone="text-[#94a3b8]" />
-            <Metric label="Done" value={completedSessionsCount} tone="text-[#60a5fa]" />
+            <Metric label="Done" value={completedSessionsCount} tone="text-[var(--accent-info)]" />
           </div>
         </aside>
       </section>
 
       <section className="mt-8" id="training-calendar">
         <span className="block scroll-mt-6" id="weekly-plan" />
-        <div className="mb-4 flex items-end justify-between gap-4">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="label-caps text-[#9ea3a5]">Calendar</p>
-            <h2 className="mt-2 text-[24px] font-semibold text-white">Your week</h2>
+            <p className="label-caps text-[var(--text-tertiary)]">Calendar</p>
+            <h2 className="mt-2 text-[24px] font-semibold text-white">
+              {mode === "plan" ? "Edit the reusable plan" : "Review and log this week"}
+            </h2>
+            <p className="mt-2 max-w-2xl text-[12px] leading-5 text-[var(--text-secondary)]">
+              {mode === "plan"
+                ? "Sport changes affect future weekly plans. Historical sessions stay unchanged."
+                : "Each training day shows the planned duration beside the logged result, with the difference written in minutes."}
+            </p>
           </div>
-          <div className="hidden items-center gap-4 text-[12px] text-[#9ea3a5] sm:flex">
-            <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#a3e635]" />Done</span>
-            <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#60a5fa]" />Planned</span>
+          <div className="hidden items-center gap-4 text-[12px] text-[var(--text-tertiary)] sm:flex">
+            <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--accent-primary)]" />Done</span>
             <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#7d838a]" />Rest</span>
           </div>
         </div>
@@ -307,56 +359,75 @@ export function FitnessClient({
                   <p className="text-[15px] font-semibold text-white">
                     {sportLabels[day.sport]}
                   </p>
-                  <p className="mt-1 text-[12px] text-[#8f9496]">
-                    {day.sport === "rest"
-                      ? "Recovery"
-                      : day.log.time || `${day.log.durationMinutes} min planned`}
-                  </p>
-                  {day.sport !== "rest" ? (
-                    <div
-                      aria-label={`${day.log.durationMinutes} minutes planned`}
-                      className="mt-3 h-1 overflow-hidden bg-white/10"
-                      role="img"
-                    >
-                      <span
-                        className="block h-full bg-[var(--accent-primary)]"
-                        style={{ width: `${Math.min(100, Math.max(8, (day.log.durationMinutes / 90) * 100))}%` }}
-                      />
-                    </div>
-                  ) : null}
+                  {day.sport !== "rest" || day.log.completed ? (
+                    <>
+                      <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-[12px] border border-[var(--border-subtle)] bg-white/[0.025]">
+                        <div className="border-r border-[var(--border-subtle)] p-2.5">
+                          <p className="label-caps text-[var(--text-tertiary)]">Planned</p>
+                          <p className="metric-value mt-1 text-[14px] font-semibold text-[var(--info-text)]">
+                            {day.plannedDurationMinutes} min
+                          </p>
+                          {day.plannedTime ? (
+                            <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
+                              {day.plannedTime}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="p-2.5">
+                          <p className="label-caps text-[var(--text-tertiary)]">Logged</p>
+                          <p className={`metric-value mt-1 text-[14px] font-semibold ${
+                            day.log.completed
+                              ? "text-[var(--success-text)]"
+                              : "text-[var(--text-muted)]"
+                          }`}>
+                            {day.log.completed ? `${day.log.durationMinutes} min` : "Not yet"}
+                          </p>
+                          {day.log.completed ? (
+                            <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
+                              {formatDurationVariance(day)}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-[12px] text-[var(--text-tertiary)]">Recovery day</p>
+                  )}
                 </div>
 
-                <select
-                  aria-label={`Sport for ${day.label}`}
-                  className="field-input mt-5"
-                  onChange={(event) =>
-                    updateSport(day.id, event.target.value as SportType)
-                  }
-                  value={day.sport}
-                >
-                  {sportOptions.map((sport) => (
-                    <option key={sport} value={sport}>
-                      {sportLabels[sport]}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  aria-expanded={isOpen}
-                  className={`mt-3 flex h-10 w-full items-center justify-between rounded-[10px] px-3 text-[13px] font-semibold transition ${
-                    isOpen
-                      ? "bg-white text-[#171718]"
-                      : "bg-white/[0.06] text-[#d6d8d9] hover:bg-white/[0.1] hover:text-white"
-                  }`}
-                  onClick={() => {
-                    setNotice(null);
-                    setOpenDayId(isOpen ? null : day.id);
-                  }}
-                  type="button"
-                >
-                  <span>More</span>
-                  <span aria-hidden="true">{isOpen ? "−" : "+"}</span>
-                </button>
+                {mode === "plan" ? (
+                  <select
+                    aria-label={`Planned sport for ${day.label}`}
+                    className="field-input mt-5"
+                    onChange={(event) =>
+                      updateSport(day.id, event.target.value as SportType)
+                    }
+                    value={day.sport}
+                  >
+                    {sportOptions.map((sport) => (
+                      <option key={sport} value={sport}>
+                        {sportLabels[sport]}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <button
+                    aria-expanded={isOpen}
+                    className={`mt-5 flex h-11 w-full items-center justify-between rounded-[10px] px-3 text-[13px] font-semibold transition ${
+                      isOpen
+                        ? "bg-white text-[#171718]"
+                        : "bg-white/[0.06] text-[#d6d8d9] hover:bg-white/[0.1] hover:text-white"
+                    }`}
+                    onClick={() => {
+                      setNotice(null);
+                      setOpenDayId(isOpen ? null : day.id);
+                    }}
+                    type="button"
+                  >
+                    <span>{day.log.completed ? "Review log" : day.sport === "rest" ? "Review day" : "Log session"}</span>
+                    <span aria-hidden="true">{isOpen ? "−" : "+"}</span>
+                  </button>
+                )}
               </article>
             );
           })}
@@ -368,18 +439,18 @@ export function FitnessClient({
           <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <p className="label-caps text-[#a3e635]">{openDay.label}</p>
+                <p className="label-caps text-[var(--accent-primary)]">{openDay.label}</p>
                 <StatusBadge day={openDay} compact />
               </div>
               <h2 className="mt-2 text-[26px] font-semibold text-white">
                 {focusTraining.title}
               </h2>
-              <p className="mt-2 text-[13px] leading-5 text-[#9ea3a5]">
+              <p className="mt-2 text-[13px] leading-5 text-[var(--text-tertiary)]">
                 {focusTraining.focus}
               </p>
             </div>
             <button
-              className="h-10 rounded-[10px] border border-white/10 px-4 text-[13px] font-semibold text-[#c4c7c8] transition hover:bg-white/[0.06] hover:text-white"
+              className="h-11 rounded-[10px] border border-white/10 px-4 text-[13px] font-semibold text-[var(--text-secondary)] transition hover:bg-white/[0.06] hover:text-white"
               onClick={() => setOpenDayId(null)}
               type="button"
             >
@@ -387,29 +458,28 @@ export function FitnessClient({
             </button>
           </div>
 
+          {openDay.sport !== "rest" || openDay.log.sport ? (
           <form
             action={saveTrainingLog}
             className="mt-6 grid gap-4 lg:grid-cols-[1fr_1fr_1fr_1.8fr_auto] lg:items-end"
             key={openDay.id}
           >
             <input name="weekday" type="hidden" value={openDay.id} />
-            <input name="sport" type="hidden" value={openDay.sport} />
+            <input
+              name="sport"
+              type="hidden"
+              value={openDay.log.sport ?? openDay.sport}
+            />
 
-            {openDay.sport !== "rest" ? (
-              <label className="flex h-11 cursor-pointer items-center gap-3 rounded-[12px] border border-white/10 bg-white/[0.04] px-3">
-                <input
-                  className="h-5 w-5 accent-[#a3e635]"
-                  defaultChecked={openDay.log.completed}
-                  name="completed"
-                  type="checkbox"
-                />
-                <span className="text-[13px] font-semibold text-white">Training done</span>
-              </label>
-            ) : (
-              <div className="flex h-11 items-center rounded-[12px] border border-white/10 bg-white/[0.03] px-3 text-[13px] font-semibold text-[#aeb3b5]">
-                Recovery day
-              </div>
-            )}
+            <label className="flex h-11 cursor-pointer items-center gap-3 rounded-[12px] border border-white/10 bg-white/[0.04] px-3">
+              <input
+                className="h-5 w-5 accent-[var(--accent-primary)]"
+                defaultChecked={openDay.log.completed}
+                name="completed"
+                type="checkbox"
+              />
+              <span className="text-[13px] font-semibold text-white">Training done</span>
+            </label>
 
             <Field label="Time">
               <input className="field-input" defaultValue={openDay.log.time} name="time" type="time" />
@@ -427,7 +497,7 @@ export function FitnessClient({
               </select>
             </Field>
             <button
-              className="h-11 rounded-[12px] bg-[#a3e635] px-6 text-[13px] font-bold text-[#14200a] transition hover:bg-[#b7ef58] disabled:cursor-wait disabled:opacity-60"
+              className="h-11 rounded-[12px] bg-[var(--accent-primary)] px-6 text-[13px] font-bold text-[var(--text-on-accent)] transition hover:bg-[#b7ef58] disabled:cursor-wait disabled:opacity-60"
               disabled={pendingDayId === openDay.id}
               type="submit"
             >
@@ -445,6 +515,14 @@ export function FitnessClient({
               </Field>
             </div>
           </form>
+          ) : (
+            <div className="mt-6 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-5">
+              <p className="text-[14px] font-semibold text-white">Recovery is the plan for this day.</p>
+              <p className="mt-2 text-[13px] leading-5 text-[var(--text-secondary)]">
+                There is no workout to log. Switch to Plan mode if this day should contain a session instead.
+              </p>
+            </div>
+          )}
 
         </article>
       ) : null}
@@ -464,9 +542,23 @@ export function FitnessClient({
   );
 }
 
+function formatDurationVariance(day: WeeklyPlanDay) {
+  const difference = day.log.durationMinutes - day.plannedDurationMinutes;
+  if (difference === 0) return "on plan";
+  return `${Math.abs(difference)} min ${difference > 0 ? "over" : "under"} plan`;
+}
+
 function getDayCardClass(day: WeeklyPlanDay, open: boolean) {
   const base =
     "relative overflow-hidden border-b border-r border-[var(--border-subtle)] p-4 transition before:absolute before:inset-x-0 before:top-0 before:h-[2px] last:border-r-0";
+
+  if (day.log.completed) {
+    return `${base} before:bg-[var(--accent-primary)] ${
+      open
+        ? "bg-[#1b3117]"
+        : "bg-[#152614] hover:bg-[#1a2d18]"
+    }`;
+  }
 
   if (day.sport === "rest") {
     return `${base} before:bg-[#7d838a] ${
@@ -476,19 +568,11 @@ function getDayCardClass(day: WeeklyPlanDay, open: boolean) {
     }`;
   }
 
-  if (day.log.completed) {
-    return `${base} before:bg-[#a3e635] ${
-      open
-        ? "bg-[#1b3117]"
-        : "bg-[#152614] hover:bg-[#1a2d18]"
-    }`;
-  }
-
   const sportAccent: Record<Exclude<SportType, "rest">, string> = {
-    cardio: "before:bg-[#60a5fa]",
-    gym: "before:bg-[#a3e635]",
-    mobility: "before:bg-[#f59e0b]",
-    tennis: "before:bg-[#ff4fa3]",
+    cardio: "before:bg-[var(--accent-info)]",
+    gym: "before:bg-[var(--accent-primary)]",
+    mobility: "before:bg-[var(--warning)]",
+    tennis: "before:bg-[var(--accent-highlight)]",
   };
 
   return `${base} ${sportAccent[day.sport]} ${
@@ -501,9 +585,9 @@ function getDayCardClass(day: WeeklyPlanDay, open: boolean) {
 function getSportTextTone(sport: SportType) {
   const tones: Record<SportType, string> = {
     cardio: "text-[#93c5fd]",
-    gym: "text-[#d9f99d]",
+    gym: "text-[var(--success-text)]",
     mobility: "text-[#fcd34d]",
-    rest: "text-[#aeb3b5]",
+    rest: "text-[var(--text-tertiary)]",
     tennis: "text-[#ff9ac9]",
   };
   return tones[sport];
@@ -518,6 +602,14 @@ function StatusBadge({
 }) {
   const size = compact ? "px-2 py-1 text-[12px]" : "px-2.5 py-1.5 text-[12px]";
 
+  if (day.log.completed) {
+    return (
+      <span className={`${size} rounded-full bg-[var(--accent-primary)] font-bold text-[var(--text-on-accent)]`}>
+        Done
+      </span>
+    );
+  }
+
   if (day.sport === "rest") {
     return (
       <span className={`${size} rounded-full border border-white/10 bg-white/[0.06] font-bold text-[#c6cacc]`}>
@@ -526,16 +618,8 @@ function StatusBadge({
     );
   }
 
-  if (day.log.completed) {
-    return (
-      <span className={`${size} rounded-full bg-[#a3e635] font-bold text-[#14200a]`}>
-        Done
-      </span>
-    );
-  }
-
   return (
-    <span className={`${size} rounded-full border border-[#60a5fa]/25 bg-[#60a5fa]/10 font-bold text-[#bfdbfe]`}>
+    <span className={`${size} rounded-full border border-[var(--accent-info)]/25 bg-[var(--accent-info)]/10 font-bold text-[var(--info-text)]`}>
       Planned
     </span>
   );
@@ -554,7 +638,7 @@ function ProgressRing({ value }: { value: number }) {
           cy="50"
           fill="none"
           r="40"
-          stroke="#a3e635"
+          stroke="var(--accent-primary)"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
@@ -571,7 +655,7 @@ function ProgressRing({ value }: { value: number }) {
 function Field({ children, label }: { children: ReactNode; label: string }) {
   return (
     <label className="grid gap-2">
-      <span className="label-caps text-[#9ea3a5]">{label}</span>
+      <span className="label-caps text-[var(--text-tertiary)]">{label}</span>
       {children}
     </label>
   );
@@ -596,10 +680,10 @@ function TrainingInfoCard({
   value: string;
 }) {
   const tones = {
-    amber: "border-[#f59e0b]/25 bg-[#f59e0b]/10 text-[#fde68a]",
-    blue: "border-[#60a5fa]/25 bg-[#60a5fa]/10 text-[#bfdbfe]",
-    lime: "border-[#a3e635]/25 bg-[#a3e635]/10 text-[#d9f99d]",
-    pink: "border-[#ff4fa3]/25 bg-[#ff4fa3]/10 text-[#ffd1e5]",
+    amber: "border-[var(--warning)]/25 bg-[var(--warning)]/10 text-[var(--warning-text)]",
+    blue: "border-[var(--accent-info)]/25 bg-[var(--accent-info)]/10 text-[var(--info-text)]",
+    lime: "border-[var(--accent-primary)]/25 bg-[var(--accent-primary)]/10 text-[var(--success-text)]",
+    pink: "border-[var(--accent-highlight)]/25 bg-[var(--accent-highlight)]/10 text-[var(--highlight-text)]",
   };
 
   return (
