@@ -13,7 +13,7 @@ export default async function FitnessPage() {
   const stats = getFitnessStats(weeklyPlan, today);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#0d0d0e] pb-12 text-[#e5e2e1] md:pl-[112px]">
+    <main className="min-h-screen overflow-x-hidden bg-[#0d0d0e] pb-[calc(7rem+env(safe-area-inset-bottom))] text-[#e5e2e1] md:pb-12 md:pl-[112px]">
       <AppNavigation active="fitness" userEmail={user.email ?? "Orbit user"} />
       <FitnessClient
         key={weeklyPlan

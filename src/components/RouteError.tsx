@@ -44,7 +44,7 @@ export function RouteError({
           </Link>
         </div>
         {error.digest ? (
-          <p className="mt-5 font-mono text-[10px] text-[#8d9092]">
+          <p className="mt-5 font-mono text-[12px] text-[#8d9092]">
             Reference {error.digest}
           </p>
         ) : null}

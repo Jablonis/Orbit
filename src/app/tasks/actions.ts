@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { startOperation } from "@/lib/operation-log.server";
 import {
   TaskComplexity,
   TaskEstimateMode,
@@ -26,11 +27,15 @@ export type TaskArchiveResult =
   | { ok: true; taskId: string }
   | { ok: false; error: string };
 
+export type TaskSaveResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
 function valueIn<T extends string>(value: string, values: T[], fallback: T) {
   return values.includes(value as T) ? (value as T) : fallback;
 }
 
-export async function saveTaskAction(formData: FormData) {
+export async function saveTaskAction(formData: FormData): Promise<TaskSaveResult> {
   const { supabase, user } = await getAuthenticatedUser();
   const id = String(formData.get("id") ?? "");
   const estimateMode = valueIn(
@@ -40,12 +45,24 @@ export async function saveTaskAction(formData: FormData) {
   );
   const timeFrom = String(formData.get("timeFrom") ?? "");
   const timeTo = String(formData.get("timeTo") ?? "");
+  const validTime = /^([01]\d|2[0-3]):[0-5]\d$/;
+  if (
+    estimateMode === "other" &&
+    (!validTime.test(timeFrom) ||
+      !validTime.test(timeTo) ||
+      getMinutesBetweenTimes(timeFrom, timeTo) <= 0)
+  ) {
+    return {
+      ok: false,
+      error: "Choose different From and To times for the custom estimate.",
+    };
+  }
   const estimateMinutes =
     estimateMode === "other"
       ? Math.max(getMinutesBetweenTimes(timeFrom, timeTo), 0)
       : presetEstimateMinutes[estimateMode] ?? 60;
   const input = {
-    category: (String(formData.get("category") ?? "Jadro").trim() || "Jadro").slice(0, 80),
+    category: (String(formData.get("category") ?? "General").trim() || "General").slice(0, 80),
     completed: String(formData.get("completed") ?? "") === "true",
     complexity: valueIn(
       String(formData.get("complexity") ?? "medium"),
@@ -72,7 +89,7 @@ export async function saveTaskAction(formData: FormData) {
   };
 
   if (!input.title) {
-    return;
+    return { ok: false, error: "Add a task title." };
   }
 
   if (id) {
@@ -81,14 +98,15 @@ export async function saveTaskAction(formData: FormData) {
       .update(toTaskInsert(input, user.id))
       .eq("id", id)
       .eq("user_id", user.id);
-    if (error) throw new Error(error.message);
+    if (error) return { ok: false, error: "The task could not be updated." };
   } else {
     const { error } = await supabase.from("tasks").insert(toTaskInsert(input, user.id));
-    if (error) throw new Error(error.message);
+    if (error) return { ok: false, error: "The task could not be created." };
   }
 
   revalidatePath("/");
   revalidatePath("/tasks");
+  return { ok: true };
 }
 
 export async function toggleTaskAction(formData: FormData) {
@@ -113,35 +131,51 @@ export async function archiveTaskAction(
   formData: FormData,
 ): Promise<TaskArchiveResult> {
   const { supabase, user } = await getAuthenticatedUser();
+  const operation = startOperation("tasks.archive");
   const id = String(formData.get("id") ?? "");
 
-  if (!id) return { ok: false, error: "Choose a task to archive." };
+  if (!id) {
+    operation.finish("invalid_task", { status: 400 });
+    return { ok: false, error: "Choose a task to archive." };
+  }
 
   const { error } = await supabase
     .from("tasks")
     .update({ archived_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", user.id);
-  if (error) return { ok: false, error: "The task could not be archived." };
+  if (error) {
+    operation.finish("database_error", { status: 500 });
+    return { ok: false, error: "The task could not be archived." };
+  }
 
   revalidatePath("/");
   revalidatePath("/tasks");
+  operation.finish("success", { status: 200 });
   return { ok: true, taskId: id };
 }
 
 export async function restoreTaskAction(taskId: string): Promise<TaskArchiveResult> {
   const { supabase, user } = await getAuthenticatedUser();
+  const operation = startOperation("tasks.restore");
 
-  if (!taskId) return { ok: false, error: "Choose a task to restore." };
+  if (!taskId) {
+    operation.finish("invalid_task", { status: 400 });
+    return { ok: false, error: "Choose a task to restore." };
+  }
 
   const { error } = await supabase
     .from("tasks")
     .update({ archived_at: null })
     .eq("id", taskId)
     .eq("user_id", user.id);
-  if (error) return { ok: false, error: "The task could not be restored." };
+  if (error) {
+    operation.finish("database_error", { status: 500 });
+    return { ok: false, error: "The task could not be restored." };
+  }
 
   revalidatePath("/");
   revalidatePath("/tasks");
+  operation.finish("success", { status: 200 });
   return { ok: true, taskId };
 }

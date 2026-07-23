@@ -147,7 +147,7 @@ export function DashboardCustomizer({
                 defaultValue={preferences.pinnedFinanceMetric}
                 name="pinnedFinanceMetric"
               >
-                <option value="balance">Available balance</option>
+                <option value="balance">Imported net cashflow</option>
                 <option value="income">Income</option>
                 <option value="expenses">Expenses</option>
                 <option value="net">Net cashflow</option>

@@ -18,7 +18,7 @@ export default async function FinancePage() {
   const summary = getFinanceSummary(transactions);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#0d0d0e] pb-12 text-[#e5e2e1] md:pl-[112px]">
+    <main className="min-h-screen overflow-x-hidden bg-[#0d0d0e] pb-[calc(7rem+env(safe-area-inset-bottom))] text-[#e5e2e1] md:pb-12 md:pl-[112px]">
       <AppNavigation active="finance" userEmail={user.email ?? "Orbit user"} />
       <FinanceClient
         statementImports={statementImports}

@@ -40,7 +40,7 @@ export function AppNavigation({
             {navItems.map((item) => (
               <Link
                 aria-current={active === item.key ? "page" : undefined}
-                className={`relative flex min-h-[64px] flex-col items-center justify-center gap-1 overflow-hidden rounded-[18px] px-2 py-2 text-[11px] font-semibold transition duration-150 ${
+                className={`relative flex min-h-[64px] flex-col items-center justify-center gap-1 overflow-hidden rounded-[18px] px-2 py-2 text-[12px] font-semibold transition duration-150 ${
                   active === item.key
                     ? "bg-white/[0.08] text-white"
                     : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-white"
@@ -66,7 +66,7 @@ export function AppNavigation({
         {navItems.map((item) => (
           <Link
             aria-current={active === item.key ? "page" : undefined}
-            className={`relative flex min-w-0 flex-col items-center justify-center rounded-[16px] p-2 text-[11px] font-semibold transition duration-150 ${
+            className={`relative flex min-w-0 flex-col items-center justify-center rounded-[16px] p-2 text-[12px] font-semibold transition duration-150 ${
               active === item.key
                 ? "bg-white/[0.08] text-white"
                 : "text-[var(--text-secondary)] hover:bg-white/10 hover:text-white"

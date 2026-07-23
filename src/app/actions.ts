@@ -14,6 +14,11 @@ export type DashboardPreferencesActionState = {
   ok: boolean;
 };
 
+export type WeeklyReflectionActionState = {
+  message: string;
+  ok: boolean;
+};
+
 export async function saveDashboardPreferencesAction(
   _state: DashboardPreferencesActionState,
   formData: FormData,
@@ -45,7 +50,10 @@ export async function saveDashboardPreferencesAction(
   return { message: "Overview preferences saved.", ok: true };
 }
 
-export async function saveWeeklyReflectionAction(formData: FormData) {
+export async function saveWeeklyReflectionAction(
+  _state: WeeklyReflectionActionState,
+  formData: FormData,
+): Promise<WeeklyReflectionActionState> {
   const { supabase, user } = await getAuthenticatedUser();
   const weekStart = getWeekDateKeys(getDateInTimeZone())[0];
   const { error } = await supabase.from("weekly_reflections").upsert(
@@ -60,6 +68,9 @@ export async function saveWeeklyReflectionAction(formData: FormData) {
     { onConflict: "user_id,week_start" },
   );
 
-  if (error) return;
+  if (error) {
+    return { message: "The weekly reflection could not be saved.", ok: false };
+  }
   revalidatePath("/");
+  return { message: "Weekly reflection saved.", ok: true };
 }

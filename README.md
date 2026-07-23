@@ -1,96 +1,114 @@
 # Orbit
 
-Orbit is a Next.js 16 authenticated dashboard for tasks, fitness planning and finance tracking. Dashboard routes are protected by Supabase Auth and user data is stored in Supabase with RLS.
+Orbit is a private personal operating-system dashboard for tasks, reusable
+fitness planning, dated training history, finance statement imports, daily
+progress, productivity trends, and weekly reflection.
 
-## Local Setup
+The app uses Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS 4,
+Supabase Auth, and Supabase Postgres with row-level security.
+
+## Local setup
+
+Install dependencies and create the local environment file:
 
 ```bash
 npm install
 cp .env.example .env.local
-npm run dev
 ```
 
-Open `http://localhost:3000`. Logged-out users are redirected to `/login`.
-
-Create `.env.local` with:
+Set the public Supabase connection values:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
-`NEXT_PUBLIC_SUPABASE_ANON_KEY` is also supported as a fallback for older Supabase projects. Do not put a service role key in client-visible env vars.
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` remains supported for older projects. Never put a
+service-role or secret key in a client-visible environment variable.
 
-## Supabase Setup
-
-1. Create a Supabase project.
-2. Enable Email/Password in Authentication.
-3. Apply the SQL migration in `supabase/migrations/20260715120000_create_orbit_app_schema.sql`.
-4. In Auth URL configuration, add your local URL and Vercel production URL.
-
-The migration creates:
-
-- `profiles`
-- `tasks`
-- `fitness_weekly_plan`
-- `finance_transactions`
-
-RLS is enabled for all user-owned tables. Policies use `TO authenticated` with `auth.uid()` ownership checks, including `USING` and `WITH CHECK` for updates.
-
-Apply migrations with the Supabase CLI if available:
+Start the application:
 
 ```bash
-supabase link --project-ref your-project-ref
-supabase db push
+npm run dev
 ```
 
-Or paste the migration SQL into the Supabase SQL editor.
+Open `http://localhost:3000`. Signed-out users are redirected to `/login`.
 
-## Finance CSV
+## Supabase setup
 
-Import headers:
-
-```csv
-date,title,category,amount,status
-```
-
-Rules:
-
-- `date` must be `YYYY-MM-DD`
-- `amount` is positive for income and negative for expenses
-- `status` is `paid`, `pending` or `scheduled`
-- missing status defaults to `paid`
-- valid rows are imported even when other rows are invalid
-
-The finance page also supports CSV export, sample CSV download and clearing finance data for the logged-in user.
-
-## Vercel Deployment
-
-1. Push the repository to GitHub.
-2. Import the project in Vercel.
-3. Add environment variables:
+1. Create or select a Supabase project.
+2. Enable Email/Password authentication.
+3. Link the local project and apply every migration in `supabase/migrations`:
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+npx supabase link --project-ref your-project-ref
+npx supabase db push
 ```
 
-Use `NEXT_PUBLIC_SUPABASE_ANON_KEY` only if your Supabase project still uses anon-key naming.
+4. Add the local and production URLs to the Supabase Auth site/redirect URL
+   configuration.
+5. Enable leaked-password protection and choose an appropriate minimum-password
+   policy before production use.
 
-4. Deploy.
-5. Add the Vercel deployment URL to Supabase Auth redirect/site URL settings.
+The migrations create and secure:
+
+- profiles and dashboard preferences;
+- tasks plus immutable completion history;
+- reusable fitness plan days plus dated training sessions;
+- finance transactions and monthly statement-import summaries;
+- atomic Finance import, archive, and restore functions;
+- composite ownership constraints and a private statement-upload rate limit.
+
+All exposed user tables use RLS. Application reads also filter by the
+authenticated user.
+
+## Main workflows
+
+- Tasks can be created, edited, completed, reopened, archived, and restored.
+  Completion history is retained.
+- Fitness separates the reusable weekday plan from dated training results.
+- Finance accepts text-based monthly EUR bank-statement PDFs for an in-memory
+  preview. Orbit stores only confirmed normalized transactions and a
+  non-reversible duplicate fingerprint; it does not persist the source PDF or
+  extracted text.
+- Finance data can be exported as CSV. Formula-leading text is neutralized for
+  safer spreadsheet opening.
+- Clearing Finance archives transactions and statement summaries atomically and
+  offers immediate undo.
+
+PDF statements are limited to 4 MB, 40 pages, and 500 detected transactions.
+Scanned/image-only and password-protected PDFs are not supported.
 
 ## Verification
 
+Run the complete local baseline:
+
 ```bash
 npm run lint
+npx tsc --noEmit
+npm test
 npm run build
+npm audit --omit=dev
 ```
 
-After deployment:
+After deployment, verify:
 
-1. Visit `/login` and create an account.
-2. Confirm logged-out users cannot access `/`, `/tasks`, `/fitness` or `/finance`.
-3. Create, edit, complete and delete tasks.
-4. Update the weekly fitness plan.
-5. Import finance CSV data and export it again.
+1. Sign-up, optional email confirmation, login, logout, and protected redirects.
+2. Task create/edit/complete/reopen/archive/undo.
+3. Fitness plan edits and detailed training logs.
+4. PDF preview, repeated rows, full-ledger review, import, and duplicate rejection.
+5. Finance CSV export and archive/undo.
+6. Overview preferences and weekly-reflection persistence.
+7. Keyboard navigation, reduced motion, 200% zoom, and supported mobile widths.
+
+## Vercel deployment
+
+1. Import the repository into Vercel.
+2. configure `NEXT_PUBLIC_SUPABASE_URL` and
+   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+3. Deploy and add the final deployment URL to Supabase Auth.
+4. Run the verification baseline and authenticated browser flows against the
+   production deployment.
+
+Do not deploy while `npm audit --omit=dev` reports a vulnerability affecting the
+installed Next.js version.

@@ -89,12 +89,25 @@ export function FitnessClient({
     formData.set("sport", sport);
 
     startTransition(async () => {
-      const result = await updateFitnessDayAction(formData);
-      if (!result.ok && previousDay) {
-        setLocalPlan((current) =>
-          current.map((day) => (day.id === dayId ? previousDay : day)),
-        );
-        setNotice({ dayId, tone: "error", text: result.error });
+      try {
+        const result = await updateFitnessDayAction(formData);
+        if (!result.ok && previousDay) {
+          setLocalPlan((current) =>
+            current.map((day) => (day.id === dayId ? previousDay : day)),
+          );
+          setNotice({ dayId, tone: "error", text: result.error });
+        }
+      } catch {
+        if (previousDay) {
+          setLocalPlan((current) =>
+            current.map((day) => (day.id === dayId ? previousDay : day)),
+          );
+        }
+        setNotice({
+          dayId,
+          tone: "error",
+          text: "The training plan could not be saved. Please try again.",
+        });
       }
     });
   }
@@ -123,22 +136,36 @@ export function FitnessClient({
       ),
     );
 
-    const result = await saveFitnessLogAction(formData);
-    if (!result.ok) {
+    try {
+      const result = await saveFitnessLogAction(formData);
+      if (!result.ok) {
+        if (previousDay) {
+          setLocalPlan((current) =>
+            current.map((day) => (day.id === weekday ? previousDay : day)),
+          );
+        }
+        setNotice({ dayId: weekday, tone: "error", text: result.error });
+      } else {
+        setNotice({
+          dayId: weekday,
+          tone: "success",
+          text: completed ? "Training saved as done." : "Training details saved.",
+        });
+      }
+    } catch {
       if (previousDay) {
         setLocalPlan((current) =>
           current.map((day) => (day.id === weekday ? previousDay : day)),
         );
       }
-      setNotice({ dayId: weekday, tone: "error", text: result.error });
-    } else {
       setNotice({
         dayId: weekday,
-        tone: "success",
-        text: completed ? "Training saved as done." : "Training details saved.",
+        tone: "error",
+        text: "The training session could not be saved. Please try again.",
       });
+    } finally {
+      setPendingDayId(null);
     }
-    setPendingDayId(null);
   }
 
   return (
@@ -385,10 +412,10 @@ export function FitnessClient({
             )}
 
             <Field label="Time">
-              <input className="field-input" defaultValue={openDay.log.time} name="time" placeholder="18:30" />
+              <input className="field-input" defaultValue={openDay.log.time} name="time" type="time" />
             </Field>
             <Field label="Duration">
-              <input className="field-input" defaultValue={openDay.log.durationMinutes} min="0" name="durationMinutes" type="number" />
+              <input className="field-input" defaultValue={openDay.log.durationMinutes} max="1440" min="1" name="durationMinutes" required type="number" />
             </Field>
             <Field label="Quality">
               <select className="field-input" defaultValue={openDay.log.quality} name="quality">
@@ -489,7 +516,7 @@ function StatusBadge({
   compact?: boolean;
   day: WeeklyPlanDay;
 }) {
-  const size = compact ? "px-2 py-1 text-[10px]" : "px-2.5 py-1.5 text-[11px]";
+  const size = compact ? "px-2 py-1 text-[12px]" : "px-2.5 py-1.5 text-[12px]";
 
   if (day.sport === "rest") {
     return (

@@ -44,6 +44,14 @@ export function TasksClient({
   const [editing, setEditing] = useState<Task | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [archivedTaskId, setArchivedTaskId] = useState<string | null>(null);
+  const [estimateMode, setEstimateMode] = useState<TaskEstimateMode>("1hr");
+  const [formVersion, setFormVersion] = useState(0);
+  const [taskSaveNotice, setTaskSaveNotice] = useState<{
+    error: boolean;
+    message: string;
+  } | null>(null);
+  const [undoError, setUndoError] = useState("");
+  const [undoPending, setUndoPending] = useState(false);
   const displayTasks = tasks.filter((task) => task.id !== archivedTaskId);
   const activeTasks = displayTasks.filter((task) => !task.completed);
   const taskGroups = [
@@ -59,6 +67,7 @@ export function TasksClient({
     const openFromHash = () => {
       if (window.location.hash === "#new-task") {
         setEditing(null);
+        setEstimateMode("1hr");
         setFormOpen(true);
       }
     };
@@ -69,6 +78,48 @@ export function TasksClient({
       window.removeEventListener("hashchange", openFromHash);
     };
   }, []);
+
+  async function saveTask(formData: FormData) {
+    setTaskSaveNotice(null);
+    try {
+      const result = await saveTaskAction(formData);
+      if (!result.ok) {
+        setTaskSaveNotice({ error: true, message: result.error });
+        return;
+      }
+      setTaskSaveNotice({
+        error: false,
+        message: editing ? "Task updated." : "Task created.",
+      });
+      setEditing(null);
+      setEstimateMode("1hr");
+      setFormVersion((current) => current + 1);
+      setFormOpen(false);
+    } catch {
+      setTaskSaveNotice({
+        error: true,
+        message: "The task could not be saved. Please try again.",
+      });
+    }
+  }
+
+  async function undoArchive() {
+    if (!archivedTaskId || undoPending) return;
+    setUndoPending(true);
+    setUndoError("");
+    try {
+      const result = await restoreTaskAction(archivedTaskId);
+      if (result.ok) {
+        setArchivedTaskId(null);
+        return;
+      }
+      setUndoError(result.error);
+    } catch {
+      setUndoError("The task could not be restored. Please try again.");
+    } finally {
+      setUndoPending(false);
+    }
+  }
 
   return (
     <section className="mx-auto w-full max-w-[1440px] px-4 py-8 md:px-10">
@@ -87,6 +138,8 @@ export function TasksClient({
           className="hidden min-h-11 shrink-0 rounded-[var(--radius-control)] bg-[var(--accent-primary)] px-4 text-[13px] font-bold text-[#14200a] max-xl:block"
           onClick={() => {
             setEditing(null);
+            setEstimateMode("1hr");
+            setTaskSaveNotice(null);
             setFormOpen(true);
           }}
           type="button"
@@ -119,7 +172,11 @@ export function TasksClient({
               ×
             </button>
           </div>
-          <form action={saveTaskAction} className="mt-5 grid gap-3" key={editing?.id ?? "new-task"}>
+          <form
+            action={saveTask}
+            className="mt-5 grid gap-3"
+            key={`${editing?.id ?? "new-task"}-${formVersion}`}
+          >
             <input name="id" type="hidden" value={editing?.id ?? ""} />
             <input name="completed" type="hidden" value={String(editing?.completed ?? false)} />
             <Field label="Title">
@@ -133,7 +190,7 @@ export function TasksClient({
             <Field label="Category">
               <input
                 className="field-input"
-                defaultValue={editing?.category ?? "Jadro"}
+                defaultValue={editing?.category ?? "General"}
                 list="task-category-suggestions"
                 name="category"
                 required
@@ -144,7 +201,7 @@ export function TasksClient({
                 ))}
               </datalist>
               {categorySuggestions.length > 0 ? (
-                <span className="text-[11px] leading-4 text-[#8d9092]">
+                <span className="text-[12px] leading-4 text-[#8d9092]">
                   Type a new category or choose one of your most used suggestions.
                 </span>
               ) : null}
@@ -180,7 +237,12 @@ export function TasksClient({
                 </select>
               </Field>
               <Field label="Estimate">
-                <select className="field-input" defaultValue={editing?.estimateMode ?? "1hr"} name="estimateMode">
+                <select
+                  className="field-input"
+                  name="estimateMode"
+                  onChange={(event) => setEstimateMode(event.target.value as TaskEstimateMode)}
+                  value={estimateMode}
+                >
                   {estimateOptions.map((value) => (
                     <option key={value} value={value}>
                       {value === "other" ? "Custom" : value}
@@ -189,13 +251,17 @@ export function TasksClient({
                 </select>
               </Field>
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              <Field label="From">
-                <input className="field-input" defaultValue={editing?.timeFrom ?? ""} name="timeFrom" type="time" />
-              </Field>
-              <Field label="To">
-                <input className="field-input" defaultValue={editing?.timeTo ?? ""} name="timeTo" type="time" />
-              </Field>
+            <div className={`grid gap-3 ${estimateMode === "other" ? "grid-cols-3" : "grid-cols-1"}`}>
+              {estimateMode === "other" ? (
+                <>
+                  <Field label="From">
+                    <input className="field-input" defaultValue={editing?.timeFrom ?? ""} name="timeFrom" required type="time" />
+                  </Field>
+                  <Field label="To">
+                    <input className="field-input" defaultValue={editing?.timeTo ?? ""} name="timeTo" required type="time" />
+                  </Field>
+                </>
+              ) : null}
               <Field label="Due">
                 <input className="field-input" defaultValue={editing?.dueDate ?? ""} name="dueDate" type="date" />
               </Field>
@@ -219,6 +285,8 @@ export function TasksClient({
                   className="rounded-[14px] border border-white/10 bg-[#201f1f] px-4 py-3 text-[13px] font-semibold text-[#c4c7c8]"
                   onClick={() => {
                     setEditing(null);
+                    setEstimateMode("1hr");
+                    setTaskSaveNotice(null);
                     setFormOpen(false);
                   }}
                   type="button"
@@ -227,6 +295,15 @@ export function TasksClient({
                 </button>
               ) : null}
             </div>
+            {taskSaveNotice ? (
+              <p
+                aria-live="polite"
+                className={taskSaveNotice.error ? "text-[13px] text-[var(--danger)]" : "text-[13px] text-[var(--accent-primary)]"}
+                role={taskSaveNotice.error ? "alert" : "status"}
+              >
+                {taskSaveNotice.message}
+              </p>
+            ) : null}
           </form>
         </aside>
 
@@ -254,7 +331,7 @@ export function TasksClient({
                 <section aria-labelledby={`task-group-${group.key}`} className="relative pl-7" key={group.key}>
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-[13px] font-semibold text-white" id={`task-group-${group.key}`}>{group.label}</h3>
-                    <span className="metric-value text-[11px] text-[var(--text-tertiary)]">{group.tasks.length}</span>
+                    <span className="metric-value text-[12px] text-[var(--text-tertiary)]">{group.tasks.length}</span>
                   </div>
                   <div className="grid gap-3">
                     {group.tasks.map((task) => (
@@ -263,6 +340,8 @@ export function TasksClient({
                         onArchived={() => setArchivedTaskId(task.id)}
                         onEdit={() => {
                           setEditing(task);
+                          setEstimateMode(task.estimateMode);
+                          setTaskSaveNotice(null);
                           setFormOpen(true);
                         }}
                         task={task}
@@ -280,6 +359,8 @@ export function TasksClient({
                       className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-white/[0.045] px-4 text-[12px] font-semibold text-white"
                       onClick={() => {
                         setEditing(null);
+                        setEstimateMode("1hr");
+                        setTaskSaveNotice(null);
                         setFormOpen(true);
                       }}
                       type="button"
@@ -305,6 +386,8 @@ export function TasksClient({
                         onArchived={() => setArchivedTaskId(task.id)}
                         onEdit={() => {
                           setEditing(task);
+                          setEstimateMode(task.estimateMode);
+                          setTaskSaveNotice(null);
                           setFormOpen(true);
                         }}
                         task={task}
@@ -323,16 +406,15 @@ export function TasksClient({
           action={(
             <button
               className="min-h-11 shrink-0 px-2 font-bold text-[var(--accent-primary)]"
-              onClick={async () => {
-                const result = await restoreTaskAction(archivedTaskId);
-                if (result.ok) setArchivedTaskId(null);
-              }}
+              disabled={undoPending}
+              onClick={() => void undoArchive()}
               type="button"
             >
-              Undo
+              {undoPending ? "Restoring…" : undoError ? "Retry" : "Undo"}
             </button>
           )}
-          message="Task archived."
+          message={undoError || "Task archived."}
+          tone={undoError ? "error" : "success"}
         />
       ) : null}
     </section>
@@ -360,7 +442,7 @@ function TaskRow({
           <h4 className={`min-w-0 text-[16px] font-semibold leading-6 ${tone.title}`}>
             {task.title}
           </h4>
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${tone.badge}`}>
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold ${tone.badge}`}>
             {tone.label}
           </span>
         </div>

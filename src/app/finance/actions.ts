@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { parseFinanceCsv, toFinanceInsert } from "@/lib/finance";
+import { startOperation } from "@/lib/operation-log.server";
 
 export type ImportState = {
   message: string;
@@ -52,53 +53,41 @@ export async function importFinanceCsvAction(
 }
 
 export async function clearFinanceDataAction(): Promise<FinanceClearResult> {
-  const { supabase, user } = await getAuthenticatedUser();
-  const archivedAt = new Date().toISOString();
-  const { error } = await supabase
-    .from("finance_transactions")
-    .update({ archived_at: archivedAt })
-    .eq("user_id", user.id)
-    .is("archived_at", null);
-  if (error) return { ok: false, error: "Finance data could not be cleared." };
-
-  const { error: statementError } = await supabase
-    .from("finance_statement_imports")
-    .update({ archived_at: archivedAt })
-    .eq("user_id", user.id)
-    .is("archived_at", null);
-  if (statementError) {
-    await supabase
-      .from("finance_transactions")
-      .update({ archived_at: null })
-      .eq("user_id", user.id)
-      .eq("archived_at", archivedAt);
+  const { supabase } = await getAuthenticatedUser();
+  const operation = startOperation("finance.archive");
+  const { data: archivedAt, error } = await supabase.rpc("archive_finance_data");
+  if (error || typeof archivedAt !== "string") {
+    operation.finish("database_error", { status: 500 });
     return { ok: false, error: "Finance data could not be cleared." };
   }
 
   revalidatePath("/");
   revalidatePath("/finance");
+  operation.finish("success", { status: 200 });
   return { ok: true, archivedAt };
 }
 
 export async function restoreFinanceDataAction(
   archivedAt: string,
 ): Promise<FinanceClearResult> {
-  const { supabase, user } = await getAuthenticatedUser();
-  const { error } = await supabase
-    .from("finance_transactions")
-    .update({ archived_at: null })
-    .eq("user_id", user.id)
-    .eq("archived_at", archivedAt);
-  if (error) return { ok: false, error: "Finance data could not be restored." };
+  const operation = startOperation("finance.restore");
+  const timestamp = Date.parse(archivedAt);
+  if (!Number.isFinite(timestamp)) {
+    operation.finish("invalid_archive_token", { status: 400 });
+    return { ok: false, error: "Finance data could not be restored." };
+  }
 
-  const { error: statementError } = await supabase
-    .from("finance_statement_imports")
-    .update({ archived_at: null })
-    .eq("user_id", user.id)
-    .eq("archived_at", archivedAt);
-  if (statementError) return { ok: false, error: "Finance statements could not be restored." };
+  const { supabase } = await getAuthenticatedUser();
+  const { data: restored, error } = await supabase.rpc("restore_finance_data", {
+    p_archived_at: archivedAt,
+  });
+  if (error || restored !== true) {
+    operation.finish("database_error", { status: 500 });
+    return { ok: false, error: "Finance data could not be restored." };
+  }
 
   revalidatePath("/");
   revalidatePath("/finance");
+  operation.finish("success", { status: 200 });
   return { ok: true, archivedAt };
 }

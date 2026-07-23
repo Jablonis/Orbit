@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { QuickAdd } from "@/components/QuickAdd";
+import { WeeklyReflectionForm } from "@/components/WeeklyReflectionForm";
 import { getAuthenticatedUser } from "@/lib/auth";
 import {
   type ProductivityPoint,
@@ -39,6 +40,11 @@ import {
   getDashboardPreferences,
 } from "@/lib/preferences";
 import {
+  type OverviewQueryState,
+  type OverviewTaskFilter,
+  getOverviewHref,
+} from "@/lib/overview-query";
+import {
   type Task,
   formatRelativeTaskDate,
   getDateInTimeZone,
@@ -50,13 +56,10 @@ import {
   getVisibleTasks,
   sortDashboardTasks,
 } from "@/lib/tasks";
-import { saveWeeklyReflectionAction } from "./actions";
 import { toggleFitnessDoneFormAction } from "./fitness/actions";
 import { toggleTaskAction } from "./tasks/actions";
 
 export const dynamic = "force-dynamic";
-
-type TaskFilter = "today" | "overdue" | "upcoming";
 
 export default async function Home({
   searchParams,
@@ -129,6 +132,11 @@ export default async function Home({
   );
   const briefMode = params.brief === "weekly" ? "weekly" : "daily";
   const filter = getTaskFilter(params.tasks);
+  const overviewQuery: OverviewQueryState = {
+    brief: briefMode,
+    domains: params.domains,
+    tasks: filter,
+  };
   const categoryOptions = [
     ...new Set([
       preferences.pinnedTaskCategory,
@@ -156,9 +164,9 @@ export default async function Home({
     analytics: (
       <AnalyticsCards
         enabledDomains={enabledDomains}
-        filter={filter}
         key="analytics"
         monthlyCashflow={finance.monthlyCashflow}
+        overviewQuery={overviewQuery}
         productivity={productivity}
         rangeDays={preferences.rangeDays}
         today={today}
@@ -180,9 +188,9 @@ export default async function Home({
     rings: <DailyRingsCard dailyRings={dailyRings} key="rings" />,
     tasks: (
       <QuickTasksCard
-        domainParam={params.domains}
         filter={filter}
         key="tasks"
+        overviewQuery={overviewQuery}
         pinnedCategory={preferences.pinnedTaskCategory}
         quickTasks={quickTasks}
         taskStats={pinnedTaskStats}
@@ -202,7 +210,7 @@ export default async function Home({
   );
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[var(--canvas)] pb-28 text-[var(--text-primary)] md:pb-12 md:pl-[112px]">
+    <main className="min-h-screen overflow-x-hidden bg-[var(--canvas)] pb-[calc(7rem+env(safe-area-inset-bottom))] text-[var(--text-primary)] md:pb-12 md:pl-[112px]">
       <AppNavigation
         active="dashboard"
         settings={(
@@ -227,15 +235,16 @@ export default async function Home({
         </header>
 
         <BriefHero
-          dailyHref={getBriefHref("daily", params)}
+          dailyHref={getOverviewHref(overviewQuery, { brief: "daily" })}
           dailyRings={dailyRings}
           mode={briefMode}
           nextTask={nextTask}
           pendingFinance={pendingFinance}
           review={review}
+          showWeeklyReview={!preferences.hiddenCards.includes("review")}
           today={today}
           training={fitnessStats.todayTraining}
-          weeklyHref={getBriefHref("weekly", params)}
+          weeklyHref={getOverviewHref(overviewQuery, { brief: "weekly" })}
         />
 
         {todayCardOrder.length > 0 ? (
@@ -278,16 +287,6 @@ export default async function Home({
   );
 }
 
-function getBriefHref(
-  mode: "daily" | "weekly",
-  params: { domains?: string; tasks?: string },
-) {
-  const query = new URLSearchParams({ brief: mode });
-  if (params.domains) query.set("domains", params.domains);
-  if (params.tasks) query.set("tasks", params.tasks);
-  return `/?${query.toString()}`;
-}
-
 function BriefHero({
   dailyHref,
   dailyRings,
@@ -295,6 +294,7 @@ function BriefHero({
   nextTask,
   pendingFinance,
   review,
+  showWeeklyReview,
   today,
   training,
   weeklyHref,
@@ -305,6 +305,7 @@ function BriefHero({
   nextTask?: Task;
   pendingFinance?: import("@/lib/finance").FinanceTransaction;
   review: WeeklyReview;
+  showWeeklyReview: boolean;
   today: string;
   training: import("@/lib/fitness").TodayTraining;
   weeklyHref: string;
@@ -415,7 +416,11 @@ function BriefHero({
         </div>
       </div>
       ) : (
-        <WeeklyBriefBody review={review} today={today} />
+        <WeeklyBriefBody
+          review={review}
+          showWeeklyReview={showWeeklyReview}
+          today={today}
+        />
       )}
     </section>
   );
@@ -439,7 +444,15 @@ function BriefPeriodLink({ active, href, label }: { active: boolean; href: strin
   );
 }
 
-function WeeklyBriefBody({ review, today }: { review: WeeklyReview; today: string }) {
+function WeeklyBriefBody({
+  review,
+  showWeeklyReview,
+  today,
+}: {
+  review: WeeklyReview;
+  showWeeklyReview: boolean;
+  today: string;
+}) {
   const scoreChange = review.score - review.previousScore;
   const dateLabel = new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
@@ -474,12 +487,14 @@ function WeeklyBriefBody({ review, today }: { review: WeeklyReview; today: strin
           <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
             Net cashflow {formatCurrency(review.income - review.expenses)} · {review.savingsRate}% savings rate
           </p>
-          <Link
-            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] bg-white px-5 text-[13px] font-bold text-[#171718] transition hover:brightness-105"
-            href="#weekly-review"
-          >
-            Open weekly review
-          </Link>
+          {showWeeklyReview ? (
+            <Link
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] bg-white px-5 text-[13px] font-bold text-[#171718] transition hover:brightness-105"
+              href="#weekly-review"
+            >
+              Open weekly review
+            </Link>
+          ) : null}
         </div>
       </div>
 
@@ -689,8 +704,8 @@ function getPinnedFinanceMetric(
     };
   }
   return {
-    detail: "Balance from paid transactions.",
-    label: "Finance",
+    detail: "Income minus expenses across all imported paid transactions.",
+    label: "Imported net cashflow",
     value: finance.availableBalance,
   };
 }
@@ -745,11 +760,15 @@ function FitnessTodayCard({
   );
 }
 
-function getTaskFilter(value: string | undefined): TaskFilter {
+function getTaskFilter(value: string | undefined): OverviewTaskFilter {
   return value === "overdue" || value === "upcoming" ? value : "today";
 }
 
-function filterTasks(tasks: Task[], filter: TaskFilter, today: string) {
+function filterTasks(
+  tasks: Task[],
+  filter: OverviewTaskFilter,
+  today: string,
+) {
   if (filter === "overdue") {
     return tasks.filter((task) => getTaskDayStatus(task, today) === "overdue");
   }
@@ -763,16 +782,16 @@ function filterTasks(tasks: Task[], filter: TaskFilter, today: string) {
 }
 
 function QuickTasksCard({
-  domainParam,
   filter,
+  overviewQuery,
   pinnedCategory,
   quickTasks,
   taskStats,
   today,
   total,
 }: {
-  domainParam?: string;
-  filter: TaskFilter;
+  filter: OverviewTaskFilter;
+  overviewQuery: OverviewQueryState;
   pinnedCategory: string;
   quickTasks: Task[];
   taskStats: ReturnType<typeof getTaskStats>;
@@ -786,7 +805,7 @@ function QuickTasksCard({
           <p className="label-caps text-[#ff4fa3]">Quick tasks</p>
           <h2 className="mt-2 text-[26px] font-semibold text-white">What matters next</h2>
           {pinnedCategory ? (
-            <p className="mt-1 text-[11px] font-semibold text-[#ffd1e5]">
+            <p className="mt-1 text-[12px] font-semibold text-[#ffd1e5]">
               Pinned · {pinnedCategory}
             </p>
           ) : null}
@@ -796,19 +815,19 @@ function QuickTasksCard({
       <div className="mt-4 flex flex-wrap gap-2">
         {(["today", "overdue", "upcoming"] as const).map((value) => (
           <Link
-            className={`rounded-full px-3 py-1.5 text-[11px] font-semibold capitalize ${
+            className={`rounded-full px-3 py-1.5 text-[12px] font-semibold capitalize ${
               value === filter
                 ? "bg-white text-[#202020]"
                 : "border border-white/10 text-[#c4c7c8]"
             }`}
-            href={`/?tasks=${value}${domainParam ? `&domains=${encodeURIComponent(domainParam)}` : ""}`}
+            href={getOverviewHref(overviewQuery, { tasks: value })}
             key={value}
           >
             {value}
             <LinkPendingIndicator label={`Loading ${value} tasks`} />
           </Link>
         ))}
-        <span className="ml-auto rounded-full bg-[#ff4fa3]/12 px-3 py-1.5 text-[11px] font-semibold text-[#ffd1e5]">
+        <span className="ml-auto rounded-full bg-[#ff4fa3]/12 px-3 py-1.5 text-[12px] font-semibold text-[#ffd1e5]">
           {taskStats.completedTasksCount}/{total}
         </span>
       </div>
@@ -841,7 +860,7 @@ function QuickTasksCard({
                 {task.category} · {formatRelativeTaskDate(task, today)}
               </p>
             </div>
-            <span className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold text-[#c4c7c8]">
+            <span className="rounded-full border border-white/10 px-2.5 py-1 text-[12px] font-semibold text-[#c4c7c8]">
               {task.priority}
             </span>
           </form>
@@ -895,7 +914,7 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
               <div className="overview-bar-enter w-full max-w-6 rounded-t-[8px] bg-[#a3e635]" style={{ animationDelay: `${180 + index * 55}ms`, height: `${(month.income / max) * 100}%` }} />
               <div className="overview-bar-enter w-full max-w-6 rounded-t-[8px] bg-[#60a5fa]/55" style={{ animationDelay: `${230 + index * 55}ms`, height: `${(month.expense / max) * 100}%` }} />
             </div>
-            <span className="text-[11px] font-semibold text-[#c4c7c8]">{month.month.slice(5)}</span>
+            <span className="text-[12px] font-semibold text-[#c4c7c8]">{month.month.slice(5)}</span>
           </div>
         ))}
       </div>
@@ -908,14 +927,14 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
           title="No cashflow trend yet"
         />
       )}
-      <div className="mt-4 flex gap-4 text-[11px] font-semibold text-[#c4c7c8]"><ChartLegend color="#a3e635" label="Income" /><ChartLegend color="#60a5fa" label="Expense" /></div>
+      <div className="mt-4 flex gap-4 text-[12px] font-semibold text-[#c4c7c8]"><ChartLegend color="#a3e635" label="Income" /><ChartLegend color="#60a5fa" label="Expense" /></div>
       {monthlyCashflow.length > 0 ? (
         <details className="mt-4 border-t border-white/10 pt-3">
-          <summary className="cursor-pointer text-[11px] font-semibold text-[#a3e635]">
+          <summary className="cursor-pointer text-[12px] font-semibold text-[#a3e635]">
             Accessible cashflow summary
           </summary>
           <div className="mt-3 overflow-x-auto">
-            <table className="w-full text-left text-[11px]">
+            <table className="w-full text-left text-[12px]">
               <thead className="text-[#aeb2b4]"><tr><th className="pb-2">Month</th><th>Income</th><th>Expense</th></tr></thead>
               <tbody>{monthlyCashflow.map((month) => <tr className="border-t border-white/[0.06]" key={month.month}><td className="py-2 text-white">{month.month}</td><td>{formatCurrency(month.income)}</td><td>{formatCurrency(month.expense)}</td></tr>)}</tbody>
             </table>
@@ -928,15 +947,15 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
 
 function AnalyticsCards({
   enabledDomains,
-  filter,
   monthlyCashflow,
+  overviewQuery,
   productivity,
   rangeDays,
   today,
 }: {
   enabledDomains: ProductivityDomain[];
-  filter: TaskFilter;
   monthlyCashflow: Array<{ expense: number; income: number; month: string }>;
+  overviewQuery: OverviewQueryState;
   productivity: ReturnType<typeof rescoreProductivity>;
   rangeDays: 7 | 30;
   today: string;
@@ -947,7 +966,7 @@ function AnalyticsCards({
       <ProductivityChart
         current={productivity.current}
         enabledDomains={enabledDomains}
-        filter={filter}
+        overviewQuery={overviewQuery}
         previous={productivity.previous}
         rangeDays={rangeDays}
         today={today}
@@ -956,7 +975,7 @@ function AnalyticsCards({
   );
 }
 
-function ProductivityChart({ current, enabledDomains, filter, previous, rangeDays, today }: { current: ProductivityPoint[]; enabledDomains: ProductivityDomain[]; filter: TaskFilter; previous: ProductivityPoint[]; rangeDays: 7 | 30; today: string }) {
+function ProductivityChart({ current, enabledDomains, overviewQuery, previous, rangeDays, today }: { current: ProductivityPoint[]; enabledDomains: ProductivityDomain[]; overviewQuery: OverviewQueryState; previous: ProductivityPoint[]; rangeDays: 7 | 30; today: string }) {
   const chartX = (index: number) =>
     20 + (index / Math.max(1, current.length - 1)) * 560;
   const chartY = (score: number) => 112 - score;
@@ -967,6 +986,7 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
   const currentAverage = currentScores.length ? Math.round(currentScores.reduce((sum, score) => sum + score, 0) / currentScores.length) : 0;
   const previousAverage = previousScores.length ? Math.round(previousScores.reduce((sum, score) => sum + score, 0) / previousScores.length) : 0;
   const scoreChange = currentAverage - previousAverage;
+  const hasEnabledDomains = enabledDomains.length > 0;
   const hasActivity = current.some(
     (point) => point.plannedTasks > 0 || point.plannedFitness > 0 || point.focusMinutes > 0,
   );
@@ -974,11 +994,17 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
     <article className="content-panel overview-card-enter overview-delay-6 rounded-[var(--radius-panel)] p-4 sm:p-5">
       <div><p className="label-caps text-[#ff4fa3]">Productivity</p><h2 className="mt-2 text-[22px] font-semibold text-white">Reliable {rangeDays}-day score</h2></div>
       <p className="mt-3 text-[12px] font-semibold text-[var(--text-secondary)]">
-        {hasActivity
+        {!hasEnabledDomains
+          ? "Choose at least one score domain to calculate productivity."
+          : hasActivity
           ? `Productivity is ${scoreChange >= 0 ? `${scoreChange} points above` : `${Math.abs(scoreChange)} points below`} the previous ${rangeDays} days.`
           : "Complete a few tasks or training days to unlock a meaningful comparison."}
       </p>
-      <p className="mt-3 text-[11px] leading-5 text-[#8d9092]">60% planned task completion · 25% planned training · 15% focus target (120 min). Enabled domains are normalized to 100%; future days stay empty.</p>
+      <p className="mt-3 text-[12px] leading-5 text-[#8d9092]">
+        {hasEnabledDomains
+          ? "60% planned task completion · 25% planned training · 15% focus target (120 min). Enabled domains are normalized to 100%; future days stay empty."
+          : "Scores remain empty until tasks, fitness, or focus is enabled."}
+      </p>
       <div className="mt-3 flex flex-wrap gap-2" aria-label="Productivity score domains">
         {(["tasks", "fitness", "focus"] as const).map((domain) => {
           const enabled = enabledDomains.includes(domain);
@@ -987,8 +1013,10 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
             : [...enabledDomains, domain];
           return (
             <Link
-              className={`rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${enabled ? "bg-white text-[#202020]" : "border border-white/10 text-[#8d9092]"}`}
-              href={`/?tasks=${filter}&domains=${nextDomains.length ? nextDomains.join(",") : "none"}`}
+              className={`rounded-full px-2.5 py-1 text-[12px] font-semibold capitalize ${enabled ? "bg-white text-[#202020]" : "border border-white/10 text-[#8d9092]"}`}
+              href={getOverviewHref(overviewQuery, {
+                domains: nextDomains.length ? nextDomains.join(",") : "none",
+              })}
               key={domain}
             >
               {enabled ? "✓ " : ""}{domain}
@@ -997,6 +1025,8 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
           );
         })}
       </div>
+      {hasEnabledDomains ? (
+        <>
       <div className="relative mt-3 h-44" role="img" aria-label={`Current and previous ${rangeDays}-day productivity scores`}>
         <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 600 130">
           {[12, 62, 112].map((y) => <line key={y} stroke="rgba(255,255,255,0.07)" x1="20" x2="580" y1={y} y2={y} />)}
@@ -1022,7 +1052,7 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
           </span>
         ))}
         <div
-          className="absolute inset-x-0 bottom-0 grid text-center text-[10px] font-semibold text-[#c4c7c8]"
+          className="absolute inset-x-0 bottom-0 grid text-center text-[12px] font-semibold text-[#c4c7c8]"
           style={{ gridTemplateColumns: `repeat(${current.length}, minmax(0, 1fr))` }}
         >
           {current.map((point, index) => (
@@ -1034,11 +1064,23 @@ function ProductivityChart({ current, enabledDomains, filter, previous, rangeDay
           ))}
         </div>
       </div>
-      <div className="mt-2 flex gap-4 text-[11px] font-semibold text-[#c4c7c8]"><ChartLegend color="#ff4fa3" label={`Last ${rangeDays} days`} /><ChartLegend color="rgba(196,199,200,0.45)" label={`Previous ${rangeDays} days`} /></div>
+      <div className="mt-2 flex gap-4 text-[12px] font-semibold text-[#c4c7c8]"><ChartLegend color="#ff4fa3" label={`Last ${rangeDays} days`} /><ChartLegend color="rgba(196,199,200,0.45)" label={`Previous ${rangeDays} days`} /></div>
       <details className="mt-4 border-t border-white/10 pt-3">
-        <summary className="cursor-pointer text-[11px] font-semibold text-[#a3e635]">Accessible score summary</summary>
-        <div className="mt-3 overflow-x-auto"><table className="w-full text-left text-[11px]"><thead className="text-[#8d9092]"><tr><th className="pb-2">Day</th><th>Score</th><th>Tasks</th><th>Training</th><th>Focus</th></tr></thead><tbody>{current.map((point) => <tr className="border-t border-white/[0.06]" key={point.date}><td className="py-2 text-white">{point.label}</td><td>{point.score === null ? "—" : `${point.score}%`}</td><td>{point.future ? "—" : `${point.completedTasks}/${point.plannedTasks}`}</td><td>{point.future ? "—" : `${point.completedFitness}/${point.plannedFitness}`}</td><td>{point.future ? "—" : `${point.focusMinutes} min`}</td></tr>)}</tbody></table></div>
+        <summary className="cursor-pointer text-[12px] font-semibold text-[#a3e635]">Accessible score summary</summary>
+        <div className="mt-3 overflow-x-auto"><table className="w-full text-left text-[12px]"><thead className="text-[#8d9092]"><tr><th className="pb-2">Day</th><th>Score</th><th>Tasks</th><th>Training</th><th>Focus</th></tr></thead><tbody>{current.map((point) => <tr className="border-t border-white/[0.06]" key={point.date}><td className="py-2 text-white">{point.label}</td><td>{point.score === null ? "—" : `${point.score}%`}</td><td>{point.future ? "—" : `${point.completedTasks}/${point.plannedTasks}`}</td><td>{point.future ? "—" : `${point.completedFitness}/${point.plannedFitness}`}</td><td>{point.future ? "—" : `${point.focusMinutes} min`}</td></tr>)}</tbody></table></div>
       </details>
+        </>
+      ) : (
+        <div
+          className="mt-4 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] px-4 py-8 text-center"
+          role="status"
+        >
+          <p className="text-[14px] font-semibold text-white">No score domains selected</p>
+          <p className="mt-2 text-[12px] leading-5 text-[var(--text-secondary)]">
+            Enable one of the domains above to restore the chart and comparison.
+          </p>
+        </div>
+      )}
     </article>
   );
 }
@@ -1065,21 +1107,12 @@ function WeeklyReviewCard({ reflection, review }: { reflection: WeeklyReflection
         <ReviewMetric label="Expenses" value={formatCurrency(review.expenses)} detail="Paid this week" />
         <ReviewMetric label="Savings rate" value={`${review.savingsRate}%`} detail={`${review.score}% weekly score`} />
       </dl>
-      <form action={saveWeeklyReflectionAction} className="mt-5 grid gap-3 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
-        <label className="grid gap-2"><span className="label-caps text-[#c4c7c8]">What worked?</span><textarea className="field-input min-h-20 py-3" defaultValue={reflection.whatWorked} name="whatWorked" placeholder="One thing worth repeating…" /></label>
-        <label className="grid gap-2"><span className="label-caps text-[#c4c7c8]">What changes next week?</span><textarea className="field-input min-h-20 py-3" defaultValue={reflection.changeNextWeek} name="changeNextWeek" placeholder="One deliberate adjustment…" /></label>
-        <PendingSubmitButton
-          className="h-11 rounded-[12px] bg-white px-5 text-[13px] font-bold text-[#202020]"
-          pendingLabel="Saving…"
-        >
-          Save review
-        </PendingSubmitButton>
-      </form>
+      <WeeklyReflectionForm reflection={reflection} />
     </article>
   );
 }
 
-function ReviewMetric({ detail, label, value }: { detail: string; label: string; value: string }) { return <div className="border-b border-[var(--border-subtle)] p-4 last:border-b-0 sm:border-r xl:border-b-0 xl:last:border-r-0"><dt className="label-caps text-[#8d9092]">{label}</dt><dd className="metric-value mt-2 text-[20px] font-semibold text-white">{value}</dd><p className="mt-1 text-[11px] text-[#8d9092]">{detail}</p></div>; }
+function ReviewMetric({ detail, label, value }: { detail: string; label: string; value: string }) { return <div className="border-b border-[var(--border-subtle)] p-4 last:border-b-0 sm:border-r xl:border-b-0 xl:last:border-r-0"><dt className="label-caps text-[#8d9092]">{label}</dt><dd className="metric-value mt-2 text-[20px] font-semibold text-white">{value}</dd><p className="mt-1 text-[12px] text-[#8d9092]">{detail}</p></div>; }
 function ChartLegend({ color, label }: { color: string; label: string }) { return <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />{label}</span>; }
 
 function RingLegend({ color, href, label, value }: { color: string; href: string; label: string; value: string }) { return <Link className="overview-interactive-card flex min-h-11 items-center justify-between rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-3 transition hover:bg-white/[0.05]" href={href}><span className="inline-flex items-center gap-2 text-[13px] font-semibold text-white"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />{label}</span><span className="text-[13px] font-semibold text-[var(--text-secondary)]">{value}</span><LinkPendingIndicator label={`Opening ${label}`} /></Link>; }

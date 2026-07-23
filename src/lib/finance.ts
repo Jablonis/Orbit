@@ -330,7 +330,10 @@ function parseCsv(csv: string) {
 
 export function transactionsToCsv(transactions: FinanceTransaction[]) {
   const escapeCell = (value: string | number) => {
-    const text = String(value);
+    const rawText = String(value);
+    const text = typeof value === "string" && /^[\t ]*[=+\-@]/.test(rawText)
+      ? `'${rawText}`
+      : rawText;
     return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
   };
 
@@ -351,7 +354,7 @@ export function transactionsToCsv(transactions: FinanceTransaction[]) {
 }
 
 export function formatCurrency(value: number) {
-  return new Intl.NumberFormat("sk-SK", {
+  return new Intl.NumberFormat("en-IE", {
     currency: "EUR",
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,

@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 
 const actions = [
@@ -20,40 +26,50 @@ export function QuickAdd() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [recentHref, setRecentHref] = useState("");
+  const [position, setPosition] = useState({ left: 12, top: 64 });
   const actionRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
-  const container = useRef<HTMLDivElement>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
   const searchInput = useRef<HTMLInputElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+
+  const preparePalette = useCallback(() => {
+    const bounds = trigger.current?.getBoundingClientRect();
+    if (bounds) {
+      setPosition({
+        left: Math.max(12, Math.min(bounds.left, window.innerWidth - 352)),
+        top: bounds.bottom + 8,
+      });
+    }
+    setRecentHref(window.localStorage.getItem(recentStorageKey) ?? "");
+    setActiveIndex(0);
+    setQuery("");
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        setRecentHref(window.localStorage.getItem(recentStorageKey) ?? "");
-        setActiveIndex(0);
-        setQuery("");
-        setOpen((current) => !current);
+        if (open) {
+          setOpen(false);
+        } else {
+          preparePalette();
+          setOpen(true);
+        }
       }
-      if (event.key === "Escape") {
-        setOpen(false);
-        window.requestAnimationFrame(() => trigger.current?.focus());
-      }
-    };
-    const onPointerDown = (event: PointerEvent) => {
-      if (!container.current?.contains(event.target as Node)) setOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("pointerdown", onPointerDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("pointerdown", onPointerDown);
-    };
-  }, []);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, preparePalette]);
 
   useEffect(() => {
-    if (!open) return;
-    const frame = window.requestAnimationFrame(() => searchInput.current?.focus());
-    return () => window.cancelAnimationFrame(frame);
+    const node = dialog.current;
+    if (!node) return;
+    if (open && !node.open) {
+      node.showModal();
+      const frame = window.requestAnimationFrame(() => searchInput.current?.focus());
+      return () => window.cancelAnimationFrame(frame);
+    }
+    if (!open && node.open) node.close();
   }, [open]);
 
   const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -72,13 +88,12 @@ export function QuickAdd() {
   function choose(href: string) {
     window.localStorage.setItem(recentStorageKey, href);
     setRecentHref(href);
+    setOpen(false);
   }
 
   function togglePalette() {
     if (!open) {
-      setRecentHref(window.localStorage.getItem(recentStorageKey) ?? "");
-      setActiveIndex(0);
-      setQuery("");
+      preparePalette();
     }
     setOpen((current) => !current);
   }
@@ -101,7 +116,7 @@ export function QuickAdd() {
   }
 
   return (
-    <div className="relative z-50" ref={container}>
+    <div className="relative z-50">
       <button
         aria-controls="quick-add-dialog"
         aria-expanded={open}
@@ -113,25 +128,36 @@ export function QuickAdd() {
       >
         <span aria-hidden="true">＋</span>
         Quick add
-        <kbd className="hidden rounded-md bg-white/[0.07] px-1.5 py-0.5 text-[10px] text-[var(--text-secondary)] sm:inline">⌘K</kbd>
+        <kbd className="hidden rounded-md bg-white/[0.07] px-1.5 py-0.5 text-[12px] text-[var(--text-secondary)] sm:inline">⌘K</kbd>
       </button>
-      {open ? (
-        <>
-          <button
-            aria-label="Close Quick Add"
-            className="fixed inset-0 z-40 bg-black/55 backdrop-blur-[2px] sm:hidden"
-            onClick={() => {
-              setOpen(false);
-              window.requestAnimationFrame(() => trigger.current?.focus());
-            }}
-            type="button"
-          />
-          <div
-            aria-label="Quick Add commands"
-            className="glass-modal modal-animate fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[100] w-auto rounded-[22px] p-2 sm:absolute sm:bottom-auto sm:left-0 sm:right-auto sm:top-12 sm:w-[340px] sm:rounded-[18px]"
-            id="quick-add-dialog"
-            role="dialog"
-          >
+      <dialog
+        aria-label="Quick Add commands"
+        aria-modal="true"
+        className="glass-modal modal-animate fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[100] m-0 max-h-[min(72dvh,520px)] w-auto overflow-y-auto rounded-[22px] border-0 p-2 text-[var(--text-primary)] backdrop:bg-black/55 backdrop:backdrop-blur-[2px] sm:inset-x-auto sm:bottom-auto sm:left-[var(--quick-add-left)] sm:top-[var(--quick-add-top)] sm:w-[340px] sm:rounded-[18px] sm:backdrop:bg-transparent sm:backdrop:backdrop-blur-none"
+        id="quick-add-dialog"
+        onCancel={(event) => {
+          event.preventDefault();
+          setOpen(false);
+        }}
+        onClick={(event) => {
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const outside =
+            event.clientX < bounds.left ||
+            event.clientX > bounds.right ||
+            event.clientY < bounds.top ||
+            event.clientY > bounds.bottom;
+          if (outside) setOpen(false);
+        }}
+        onClose={() => {
+          setOpen(false);
+          window.requestAnimationFrame(() => trigger.current?.focus());
+        }}
+        ref={dialog}
+        style={{
+          "--quick-add-left": `${position.left}px`,
+          "--quick-add-top": `${position.top}px`,
+        } as CSSProperties}
+      >
             <label className="relative block">
               <span className="sr-only">Search Quick Add actions</span>
               <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]">⌕</span>
@@ -175,9 +201,9 @@ export function QuickAdd() {
                     >
                       <span className="flex items-center justify-between gap-3">
                         <span className="text-[13px] font-semibold text-white">{action.label}</span>
-                        <span className="text-[10px] font-semibold text-[var(--text-tertiary)]">{action.group}</span>
+                        <span className="text-[12px] font-semibold text-[var(--text-tertiary)]">{action.group}</span>
                       </span>
-                      <span className="mt-1 block text-[11px] text-[#aeb2b4]">{action.detail}</span>
+                      <span className="mt-1 block text-[12px] text-[#aeb2b4]">{action.detail}</span>
                       <LinkPendingIndicator label={`Opening ${action.label}`} />
                     </Link>
                   </div>
@@ -186,17 +212,15 @@ export function QuickAdd() {
               {visibleActions.length === 0 ? (
                 <div className="px-3 py-6 text-center">
                   <p className="text-[13px] font-semibold text-white">No matching action</p>
-                  <p className="mt-1 text-[11px] text-[var(--text-tertiary)]">Try “task”, “workout”, or “finance”.</p>
+                  <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">Try “task”, “workout”, or “finance”.</p>
                 </div>
               ) : null}
             </div>
-            <div className="mt-2 hidden items-center justify-between border-t border-[var(--border-subtle)] px-3 pt-2 text-[10px] text-[var(--text-tertiary)] sm:flex">
+            <div className="mt-2 hidden items-center justify-between border-t border-[var(--border-subtle)] px-3 pt-2 text-[12px] text-[var(--text-tertiary)] sm:flex">
               <span>↑↓ navigate · ↵ open</span>
               <span>esc close</span>
             </div>
-          </div>
-        </>
-      ) : null}
+      </dialog>
     </div>
   );
 }

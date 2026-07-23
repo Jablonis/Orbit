@@ -64,7 +64,9 @@ export async function saveFitnessLogAction(
   const weekday = String(formData.get("weekday") ?? "");
   const sport = String(formData.get("sport") ?? "");
   const qualityValue = String(formData.get("quality") ?? "medium");
-  const durationValue = Number(formData.get("durationMinutes") ?? 60);
+  const durationInput = String(formData.get("durationMinutes") ?? "");
+  const durationValue = Number(durationInput);
+  const timeValue = String(formData.get("time") ?? "").trim();
 
   if (
     !isWeekday(weekday) ||
@@ -75,16 +77,25 @@ export async function saveFitnessLogAction(
     return { ok: false, error: "Invalid training details." };
   }
 
-  const durationMinutes = Number.isFinite(durationValue)
-    ? Math.min(1440, Math.max(0, Math.round(durationValue)))
-    : 60;
+  if (
+    !durationInput ||
+    !Number.isInteger(durationValue) ||
+    durationValue < 1 ||
+    durationValue > 1440
+  ) {
+    return { ok: false, error: "Duration must be between 1 and 1,440 minutes." };
+  }
+  if (timeValue && !/^([01]\d|2[0-3]):[0-5]\d$/.test(timeValue)) {
+    return { ok: false, error: "Choose a valid training time." };
+  }
+
   const performedOn = getDateForWeekday(getDateInTimeZone(), weekday);
   const { error } = await supabase.from("fitness_sessions").upsert(
     {
       completed: String(formData.get("completed") ?? "") === "on",
-      duration_minutes: durationMinutes,
+      duration_minutes: durationValue,
       notes: String(formData.get("notes") ?? "").trim().slice(0, 2000),
-      performed_at: String(formData.get("time") ?? "").trim() || null,
+      performed_at: timeValue || null,
       performed_on: performedOn,
       quality: qualityValue,
       sport,
@@ -110,17 +121,31 @@ export async function toggleFitnessDoneAction(
     return { ok: false, error: "Invalid training session." };
   }
 
-  const { error } = await supabase.from("fitness_sessions").upsert(
-    {
-      completed,
-      duration_minutes: 60,
-      performed_on: getDateForWeekday(getDateInTimeZone(), weekday),
-      quality: "medium",
-      sport,
-      user_id: user.id,
-    },
-    { onConflict: "user_id,performed_on" },
-  );
+  const performedOn = getDateForWeekday(getDateInTimeZone(), weekday);
+  const { data: existingSession, error: readError } = await supabase
+    .from("fitness_sessions")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("performed_on", performedOn)
+    .maybeSingle();
+  if (readError) {
+    return { ok: false, error: "The training status could not be updated." };
+  }
+
+  const { error } = existingSession
+    ? await supabase
+        .from("fitness_sessions")
+        .update({ completed })
+        .eq("id", existingSession.id)
+        .eq("user_id", user.id)
+    : await supabase.from("fitness_sessions").insert({
+        completed,
+        duration_minutes: 60,
+        performed_on: performedOn,
+        quality: "medium",
+        sport,
+        user_id: user.id,
+      });
   if (error) return { ok: false, error: "The training status could not be updated." };
 
   revalidateFitness();

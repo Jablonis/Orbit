@@ -89,7 +89,7 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
             Upload a text-based EUR statement, review every detected amount, then confirm the import.
           </p>
         </div>
-        <span className="rounded-full border border-[var(--accent-primary)]/20 bg-[var(--accent-primary)]/10 px-3 py-1.5 text-[11px] font-semibold text-[#d9f99d]">
+        <span className="rounded-full border border-[var(--accent-primary)]/20 bg-[var(--accent-primary)]/10 px-3 py-1.5 text-[12px] font-semibold text-[#d9f99d]">
           PDF is never stored
         </span>
       </div>
@@ -141,7 +141,7 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
 
       <div className="mt-4 flex items-start gap-3 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.02] p-4">
         <span aria-hidden="true" className="mt-0.5 text-[var(--accent-info)]">◈</span>
-        <p className="text-[11px] leading-[18px] text-[var(--text-tertiary)]">
+        <p className="text-[12px] leading-[18px] text-[var(--text-tertiary)]">
           Orbit validates the file type, size, PDF signature, page count, origin, and signed-in user on the server. It discards the document after parsing and stores only confirmed transactions plus a non-reversible duplicate fingerprint. Account and card numbers found in descriptions are masked.
         </p>
       </div>
@@ -178,19 +178,24 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
           </div>
 
           {preview.warnings.length > 0 ? (
-            <div className="mt-4 rounded-[var(--radius-row)] border border-[#f59e0b]/25 bg-[#f59e0b]/10 p-4 text-[11px] leading-[18px] text-[#fde68a]">
-              {preview.warnings.map((warning) => <p key={warning}>• {warning}</p>)}
+            <div className="mt-4 rounded-[var(--radius-row)] border border-[#f59e0b]/25 bg-[#f59e0b]/10 p-4 text-[12px] leading-[18px] text-[#fde68a]">
+              {preview.warnings.map((warning, index) => (
+                <p key={`${index}-${warning}`}>• {warning}</p>
+              ))}
             </div>
           ) : null}
 
-          <div className="mt-4 overflow-x-auto rounded-[var(--radius-row)] border border-[var(--border-subtle)]">
+          <div className="mt-4 max-h-[min(65vh,760px)] overflow-auto rounded-[var(--radius-row)] border border-[var(--border-subtle)]">
             <table className="w-full min-w-[620px] text-left text-[12px]">
-              <thead className="bg-white/[0.025] text-[var(--text-tertiary)]">
+              <caption className="sr-only">
+                All {preview.rows.length} transactions that will be imported
+              </caption>
+              <thead className="sticky top-0 z-10 bg-[#191919] text-[var(--text-tertiary)]">
                 <tr><th className="px-4 py-3">Date</th><th>Transaction</th><th>Category</th><th className="px-4 text-right">Amount</th></tr>
               </thead>
               <tbody>
-                {preview.rows.slice(0, 10).map((row) => (
-                  <tr className="border-t border-[var(--border-subtle)]" key={`${row.date}-${row.title}-${row.amount}`}>
+                {preview.rows.map((row, index) => (
+                  <tr className="border-t border-[var(--border-subtle)]" key={`${index}-${row.date}-${row.title}-${row.amount}`}>
                     <td className="px-4 py-3 text-[var(--text-secondary)]">{row.date}</td>
                     <td className="max-w-[280px] truncate pr-4 font-semibold text-white">{row.title}</td>
                     <td className="pr-4 text-[var(--text-secondary)]">{row.category}</td>
@@ -202,11 +207,9 @@ export function BankStatementImporter({ initialMonth }: { initialMonth: string }
               </tbody>
             </table>
           </div>
-          {preview.rows.length > 10 ? (
-            <p className="mt-2 text-[11px] text-[var(--text-tertiary)]">
-              Showing the first 10 of {preview.rows.length} transactions. Totals include every detected row.
-            </p>
-          ) : null}
+          <p className="mt-2 text-[12px] text-[var(--text-tertiary)]">
+            Showing all {preview.rows.length} transactions. Scroll the ledger to review every row before import.
+          </p>
         </section>
       ) : null}
 

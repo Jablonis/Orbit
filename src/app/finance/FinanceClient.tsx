@@ -28,11 +28,31 @@ export function FinanceClient({
   transactions: FinanceTransaction[];
 }) {
   const [archivedAt, setArchivedAt] = useState<string | null>(null);
+  const [undoError, setUndoError] = useState("");
+  const [undoPending, setUndoPending] = useState(false);
   const currentMonth = summary.monthlyCashflow.at(-1);
   const previousMonth = summary.monthlyCashflow.at(-2);
   const currentNet = currentMonth ? currentMonth.income - currentMonth.expense : 0;
   const previousNet = previousMonth ? previousMonth.income - previousMonth.expense : 0;
   const netChange = currentNet - previousNet;
+
+  async function undoClear() {
+    if (!archivedAt || undoPending) return;
+    setUndoPending(true);
+    setUndoError("");
+    try {
+      const result = await restoreFinanceDataAction(archivedAt);
+      if (result.ok) {
+        setArchivedAt(null);
+        return;
+      }
+      setUndoError(result.error);
+    } catch {
+      setUndoError("Finance data could not be restored. Please try again.");
+    } finally {
+      setUndoPending(false);
+    }
+  }
 
   function download(filename: string, content: string) {
     const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
@@ -69,7 +89,7 @@ export function FinanceClient({
 
       <section className="grid gap-6 xl:grid-cols-12">
         <article className="content-panel relative min-h-[300px] overflow-hidden rounded-[var(--radius-panel)] p-6 xl:col-span-12">
-          <p className="label-caps text-[#c4c7c8]">Available balance</p>
+          <p className="label-caps text-[#c4c7c8]">Imported net cashflow</p>
           <p className="metric-value relative mt-4 text-[46px] font-bold leading-[54px] text-white sm:text-[58px] sm:leading-[64px]">
             {formatCurrency(summary.availableBalance)}
           </p>
@@ -95,7 +115,12 @@ export function FinanceClient({
         <h2 className="mt-1 text-[22px] font-semibold text-white" id="finance-utilities-title">Statement import and maintenance</h2>
         <div className="mt-4 grid gap-6 xl:grid-cols-12">
           <BankStatementImporter initialMonth={summary.currentMonth} />
-          <MaintenanceCard onCleared={setArchivedAt} />
+          <MaintenanceCard
+            onCleared={(value) => {
+              setArchivedAt(value);
+              setUndoError("");
+            }}
+          />
         </div>
       </section>
       {archivedAt ? (
@@ -103,16 +128,15 @@ export function FinanceClient({
           action={(
             <button
               className="min-h-11 shrink-0 px-2 font-bold text-[var(--accent-primary)]"
-              onClick={async () => {
-                const result = await restoreFinanceDataAction(archivedAt);
-                if (result.ok) setArchivedAt(null);
-              }}
+              disabled={undoPending}
+              onClick={() => void undoClear()}
               type="button"
             >
-              Undo
+              {undoPending ? "Restoring…" : undoError ? "Retry" : "Undo"}
             </button>
           )}
-          message="Finance data archived."
+          message={undoError || "Finance data archived."}
+          tone={undoError ? "error" : "success"}
         />
       ) : null}
     </section>
@@ -162,7 +186,7 @@ function StatementHistoryCard({
           <p className="label-caps text-[var(--text-secondary)]">Monthly statements</p>
           <h2 className="mt-2 text-[24px] font-semibold text-white">Import history</h2>
         </div>
-        <span className="metric-value text-[11px] font-semibold text-[var(--text-secondary)]">
+        <span className="metric-value text-[12px] font-semibold text-[var(--text-secondary)]">
           {statementImports.length} saved
         </span>
       </div>
@@ -175,13 +199,13 @@ function StatementHistoryCard({
                   <p className="text-[14px] font-semibold text-white">
                     {formatStatementMonth(statement.statementMonth)}
                   </p>
-                  <p className="mt-1 text-[11px] text-[var(--text-tertiary)]">
+                  <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
                     {statement.transactionCount} transactions · {statement.currency}
                   </p>
                 </div>
               </div>
-              <p className="text-[11px] text-[var(--text-tertiary)]">Income <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.income)}</span></p>
-              <p className="text-[11px] text-[var(--text-tertiary)]">Expenses <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.expenses)}</span></p>
+              <p className="text-[12px] text-[var(--text-tertiary)]">Income <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.income)}</span></p>
+              <p className="text-[12px] text-[var(--text-tertiary)]">Expenses <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.expenses)}</span></p>
               <p className={`metric-value text-[13px] font-semibold ${statement.net >= 0 ? "text-[var(--accent-primary)]" : "text-[#ffd7d3]"}`}>
                 {formatCurrency(statement.net)}
               </p>
@@ -248,14 +272,22 @@ function CashflowCard({
       </p>
       {summary.monthlyCashflow.length > 0 ? (
         <div className="flex h-72 items-end justify-between gap-3 sm:gap-4" aria-label="Monthly cashflow values">
-          {summary.monthlyCashflow.map((item) => (
+          {summary.monthlyCashflow.map((item, index) => (
             <button
               aria-label={`${item.month}: income ${formatCurrency(item.income)}, expenses ${formatCurrency(item.expense)}, net ${formatCurrency(item.income - item.expense)}`}
               className="group relative flex h-full min-w-0 flex-1 flex-col items-center gap-3 rounded-[12px] outline-none focus-visible:bg-white/[0.035]"
               key={item.month}
               type="button"
             >
-              <span className="pointer-events-none absolute -top-2 left-1/2 z-10 hidden w-max -translate-x-1/2 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--surface-hover)] px-3 py-2 text-left text-[11px] text-white shadow-xl group-hover:block group-focus-visible:block">
+              <span
+                className={`pointer-events-none absolute -top-2 z-10 hidden max-w-[min(18rem,80vw)] rounded-[10px] border border-[var(--border-subtle)] bg-[var(--surface-hover)] px-3 py-2 text-left text-[12px] text-white shadow-xl group-hover:block group-focus-visible:block ${
+                  index === 0
+                    ? "left-0"
+                    : index === summary.monthlyCashflow.length - 1
+                      ? "right-0"
+                      : "left-1/2 -translate-x-1/2"
+                }`}
+              >
                 Income {formatCurrency(item.income)} · Expense {formatCurrency(item.expense)}
               </span>
               <span className="flex w-full flex-1 items-end justify-center gap-1 sm:gap-2">

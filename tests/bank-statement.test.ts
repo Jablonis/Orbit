@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   parseBankStatementText,
   statementFingerprintPayload,
-} from "../src/lib/bank-statement.ts";
+} from "../src/lib/bank-statement";
 
 test("parses common European statement rows and ignores running balances", () => {
   const preview = parseBankStatementText(`

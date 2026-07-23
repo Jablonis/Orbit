@@ -20,7 +20,7 @@ export default async function TasksPage() {
   const categorySuggestions = getMostUsedTaskCategories(taskHistory);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#0d0d0e] pb-12 text-[#e5e2e1] md:pl-[112px]">
+    <main className="min-h-screen overflow-x-hidden bg-[#0d0d0e] pb-[calc(7rem+env(safe-area-inset-bottom))] text-[#e5e2e1] md:pb-12 md:pl-[112px]">
       <AppNavigation active="tasks" userEmail={user.email ?? "Orbit user"} />
       <TasksClient
         categorySuggestions={categorySuggestions}

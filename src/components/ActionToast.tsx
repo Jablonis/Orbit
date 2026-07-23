@@ -15,7 +15,7 @@ export function ActionToast({
       role={tone === "error" ? "alert" : "status"}
     >
       <span className="flex min-w-0 items-center gap-2">
-        <span aria-hidden="true" className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold ${tone === "success" ? "bg-[var(--accent-primary)] text-[#14200a]" : "bg-[var(--danger)] text-[#3b0908]"}`}>
+        <span aria-hidden="true" className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[12px] font-bold ${tone === "success" ? "bg-[var(--accent-primary)] text-[#14200a]" : "bg-[var(--danger)] text-[#3b0908]"}`}>
           {tone === "success" ? "✓" : "!"}
         </span>
         <span>{message}</span>

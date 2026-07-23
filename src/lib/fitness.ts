@@ -97,13 +97,13 @@ export const weekdayOrder: WeekdayId[] = [
 ];
 
 export const weekdayMeta: Record<WeekdayId, { label: string; shortLabel: string }> = {
-  monday: { label: "Pondelok", shortLabel: "Po" },
-  tuesday: { label: "Utorok", shortLabel: "Ut" },
-  wednesday: { label: "Streda", shortLabel: "St" },
-  thursday: { label: "Stvrtok", shortLabel: "Stv" },
-  friday: { label: "Piatok", shortLabel: "Pi" },
-  saturday: { label: "Sobota", shortLabel: "So" },
-  sunday: { label: "Nedela", shortLabel: "Ne" },
+  monday: { label: "Monday", shortLabel: "Mon" },
+  tuesday: { label: "Tuesday", shortLabel: "Tue" },
+  wednesday: { label: "Wednesday", shortLabel: "Wed" },
+  thursday: { label: "Thursday", shortLabel: "Thu" },
+  friday: { label: "Friday", shortLabel: "Fri" },
+  saturday: { label: "Saturday", shortLabel: "Sat" },
+  sunday: { label: "Sunday", shortLabel: "Sun" },
 };
 
 export const defaultWeeklyPlan: WeeklyPlanDay[] = [
