@@ -89,7 +89,9 @@ export function FitnessClient({
         day.id === dayId
           ? {
               ...day,
-              sport,
+              sport:
+                day.date >= stats.todayTraining.day.date ? sport : day.sport,
+              templateSport: sport,
             }
           : day,
       ),
@@ -230,9 +232,16 @@ export function FitnessClient({
           onConfirm={resetFitnessPlanAction}
           onSuccess={() => {
             setLocalPlan((current) =>
-              current.map((day, index) => ({
+              current.map((day) => ({
                 ...day,
-                sport: defaultWeeklyPlan[index].sport,
+                sport:
+                  day.date >= stats.todayTraining.day.date
+                    ? (defaultWeeklyPlan.find((item) => item.id === day.id)
+                        ?.sport ?? day.sport)
+                    : day.sport,
+                templateSport:
+                  defaultWeeklyPlan.find((item) => item.id === day.id)?.sport ??
+                  day.templateSport,
               })),
             );
             setResetNotice("Plan reset. Session history was preserved.");
@@ -341,25 +350,29 @@ export function FitnessClient({
         <div className="content-panel grid overflow-hidden rounded-[var(--radius-panel)] sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           {localPlan.map((day) => {
             const isOpen = day.id === openDayId;
+            const displayDay =
+              mode === "plan"
+                ? { ...day, sport: day.templateSport }
+                : day;
             return (
-              <article className={getDayCardClass(day, isOpen)} key={day.id}>
+              <article className={getDayCardClass(displayDay, isOpen)} key={day.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className={`label-caps ${getSportTextTone(day.sport)}`}>
+                    <p className={`label-caps ${getSportTextTone(displayDay.sport)}`}>
                       {day.shortLabel}
                     </p>
                     <h3 className="mt-2 text-[18px] font-semibold text-white">
                       {day.label}
                     </h3>
                   </div>
-                  <StatusBadge day={day} />
+                  <StatusBadge day={displayDay} />
                 </div>
 
                 <div className="mt-6 min-h-[48px]">
                   <p className="text-[15px] font-semibold text-white">
-                    {sportLabels[day.sport]}
+                    {sportLabels[displayDay.sport]}
                   </p>
-                  {day.sport !== "rest" || day.log.completed ? (
+                  {displayDay.sport !== "rest" || day.log.completed ? (
                     <>
                       <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-[12px] border border-[var(--border-subtle)] bg-white/[0.025]">
                         <div className="border-r border-[var(--border-subtle)] p-2.5">
@@ -402,7 +415,7 @@ export function FitnessClient({
                     onChange={(event) =>
                       updateSport(day.id, event.target.value as SportType)
                     }
-                    value={day.sport}
+                    value={day.templateSport}
                   >
                     {sportOptions.map((sport) => (
                       <option key={sport} value={sport}>

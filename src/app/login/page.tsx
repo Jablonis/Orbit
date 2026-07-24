@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getSafeReturnPath } from "@/lib/auth-return";
 import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
 
@@ -9,7 +10,16 @@ export const metadata: Metadata = {
   title: "Sign in",
 };
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    next?: string | string[];
+    recovery?: string | string[];
+  }>;
+}) {
+  const query = await searchParams;
+  const nextPath = getSafeReturnPath(query.next);
   let isAuthenticated = false;
 
   try {
@@ -21,7 +31,7 @@ export default async function LoginPage() {
   }
 
   if (isAuthenticated) {
-    redirect("/");
+    redirect(nextPath);
   }
 
   return (
@@ -40,7 +50,22 @@ export default async function LoginPage() {
             Your tasks, training plan and finance data are stored per account.
           </p>
         </div>
-        <LoginForm />
+        {query.recovery === "complete" ? (
+          <p
+            className="mb-5 rounded-[12px] border border-[color-mix(in_srgb,var(--success)_30%,transparent)] bg-[color-mix(in_srgb,var(--success)_9%,transparent)] p-3 text-[13px] text-[var(--success-text)]"
+            role="status"
+          >
+            Password updated. Sign in with your new password.
+          </p>
+        ) : query.recovery === "expired" ? (
+          <p
+            className="mb-5 rounded-[12px] border border-[color-mix(in_srgb,var(--danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--danger)_9%,transparent)] p-3 text-[13px] text-[var(--danger-text)]"
+            role="alert"
+          >
+            That recovery link is invalid or expired. Request a new one.
+          </p>
+        ) : null}
+        <LoginForm nextPath={nextPath} />
       </section>
     </main>
   );

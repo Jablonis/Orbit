@@ -50,6 +50,11 @@ export type RegionalPreferences = {
   weekStartsOn: "monday" | "sunday";
 };
 
+export type CalendarPreferences = Pick<
+  RegionalPreferences,
+  "timeZone" | "weekStartsOn"
+>;
+
 export type DashboardPreferences = {
   cardOrder: DashboardCardId[];
   density: DashboardDensity;

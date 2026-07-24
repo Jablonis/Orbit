@@ -26,7 +26,11 @@ export default async function TasksPage() {
     getTasks(supabase, user.id, { includeHistory: true }),
     getArchivedTasks(supabase, user.id),
   ]);
-  const tasks = getVisibleTasks(taskHistory, today);
+  const tasks = getVisibleTasks(
+    taskHistory,
+    today,
+    preferences.regional.timeZone,
+  );
   const stats = getTaskStats(tasks);
   const categorySuggestions = getMostUsedTaskCategories(taskHistory);
 
@@ -40,6 +44,7 @@ export default async function TasksPage() {
         tasks={tasks}
         today={today}
         locale={preferences.regional.locale}
+        timeZone={preferences.regional.timeZone}
       />
     </main>
   );

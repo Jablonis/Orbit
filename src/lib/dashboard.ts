@@ -1,7 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { FitnessSession, TodayTraining, WeeklyPlanDay } from "@/lib/fitness";
+import type {
+  DatedFitnessPlan,
+  FitnessSession,
+  TodayTraining,
+} from "@/lib/fitness";
 import { getWeekDateKeys, shiftDate } from "@/lib/fitness";
 import type { FinanceTransaction } from "@/lib/finance";
+import type { CalendarPreferences } from "@/lib/preferences";
 import type { Task, TaskCompletion } from "@/lib/tasks";
 import { getDateInTimeZone, getTaskDayStatus } from "@/lib/tasks";
 import type { ProductivityPoint } from "@/lib/productivity-score";
@@ -54,9 +59,10 @@ export function getDailyRings(
   training: TodayTraining,
   transactions: FinanceTransaction[],
   today: string,
+  timeZone: CalendarPreferences["timeZone"],
 ): DailyRings {
   const dailyTasks = tasks.filter(
-    (task) => getTaskDayStatus(task, today) !== "scheduled",
+    (task) => getTaskDayStatus(task, today, timeZone) !== "scheduled",
   );
   const todayTransactions = transactions.filter(
     (transaction) => transaction.date === today,
@@ -80,16 +86,29 @@ export function getDailyRings(
   };
 }
 
-function completionDate(completion: TaskCompletion) {
-  return getDateInTimeZone(completion.completedAt);
+function completionDate(
+  completion: TaskCompletion,
+  timeZone: CalendarPreferences["timeZone"],
+) {
+  return getDateInTimeZone(completion.completedAt, timeZone);
 }
 
-function plannedTaskIds(tasks: Task[], completions: TaskCompletion[], date: string) {
+function plannedTaskIds(
+  tasks: Task[],
+  completions: TaskCompletion[],
+  date: string,
+  timeZone: CalendarPreferences["timeZone"],
+) {
+  const tasksWithCompletionHistory = new Set(
+    completions.map((completion) => completion.taskId),
+  );
   const ids = new Set(
     tasks
       .filter((task) => {
-        const created = getDateInTimeZone(task.createdAt ?? "");
-        return task.dueDate === date || (!task.dueDate && created === date);
+        if (task.dueDate) return task.dueDate === date;
+        if (tasksWithCompletionHistory.has(task.id)) return false;
+        const created = getDateInTimeZone(task.createdAt ?? "", timeZone);
+        return created === date;
       })
       .map((task) => task.id),
   );
@@ -104,15 +123,20 @@ function pointForDate(
   tasks: Task[],
   completions: TaskCompletion[],
   sessions: FitnessSession[],
-  plan: WeeklyPlanDay[],
+  plan: DatedFitnessPlan[],
   today: string,
   allowFuture: boolean,
+  calendar: CalendarPreferences,
 ): ProductivityPoint {
-  const weekdayIndex = getWeekDateKeys(date).indexOf(date);
-  const dayPlan = plan[weekdayIndex];
-  const plannedIds = plannedTaskIds(tasks, completions, date);
+  const dayPlan = plan.find((day) => day.date === date);
+  const plannedIds = plannedTaskIds(
+    tasks,
+    completions,
+    date,
+    calendar.timeZone,
+  );
   const dayCompletions = completions.filter(
-    (completion) => completionDate(completion) === date,
+    (completion) => completionDate(completion, calendar.timeZone) === date,
   );
   const completedIds = new Set(dayCompletions.map((completion) => completion.taskId));
   const plannedTasks = Math.max(plannedIds.size, completedIds.size);
@@ -154,18 +178,37 @@ export function getProductivityWeeks(
   tasks: Task[],
   completions: TaskCompletion[],
   sessions: FitnessSession[],
-  plan: WeeklyPlanDay[],
+  plan: DatedFitnessPlan[],
   today: string,
+  calendar: CalendarPreferences,
 ) {
-  const currentDates = getWeekDateKeys(today);
+  const currentDates = getWeekDateKeys(today, calendar.weekStartsOn);
   const previousDates = currentDates.map((date) => shiftDate(date, -7));
 
   return {
     current: currentDates.map((date) =>
-      pointForDate(date, tasks, completions, sessions, plan, today, true),
+      pointForDate(
+        date,
+        tasks,
+        completions,
+        sessions,
+        plan,
+        today,
+        true,
+        calendar,
+      ),
     ),
     previous: previousDates.map((date) =>
-      pointForDate(date, tasks, completions, sessions, plan, today, false),
+      pointForDate(
+        date,
+        tasks,
+        completions,
+        sessions,
+        plan,
+        today,
+        false,
+        calendar,
+      ),
     ),
   };
 }
@@ -174,9 +217,10 @@ export function getProductivityRange(
   tasks: Task[],
   completions: TaskCompletion[],
   sessions: FitnessSession[],
-  plan: WeeklyPlanDay[],
+  plan: DatedFitnessPlan[],
   today: string,
   days: 7 | 30,
+  calendar: CalendarPreferences,
 ) {
   const currentDates = Array.from({ length: days }, (_, index) =>
     shiftDate(today, index - days + 1),
@@ -185,10 +229,28 @@ export function getProductivityRange(
 
   return {
     current: currentDates.map((date) =>
-      pointForDate(date, tasks, completions, sessions, plan, today, false),
+      pointForDate(
+        date,
+        tasks,
+        completions,
+        sessions,
+        plan,
+        today,
+        false,
+        calendar,
+      ),
     ),
     previous: previousDates.map((date) =>
-      pointForDate(date, tasks, completions, sessions, plan, today, false),
+      pointForDate(
+        date,
+        tasks,
+        completions,
+        sessions,
+        plan,
+        today,
+        false,
+        calendar,
+      ),
     ),
   };
 }
@@ -209,16 +271,24 @@ export function getWeeklyReview(
   transactions: FinanceTransaction[],
   productivity: ReturnType<typeof getProductivityWeeks>,
   today: string,
+  calendar: CalendarPreferences,
 ): WeeklyReview {
-  const dates = getWeekDateKeys(today);
+  const dates = getWeekDateKeys(today, calendar.weekStartsOn);
   const weekStart = dates[0];
   const weekEnd = dates[6];
   const plannedIds = new Set<string>();
   for (const date of dates) {
-    for (const id of plannedTaskIds(tasks, completions, date)) plannedIds.add(id);
+    for (const id of plannedTaskIds(
+      tasks,
+      completions,
+      date,
+      calendar.timeZone,
+    )) {
+      plannedIds.add(id);
+    }
   }
   const weekCompletions = completions.filter((completion) => {
-    const date = completionDate(completion);
+    const date = completionDate(completion, calendar.timeZone);
     return date >= weekStart && date <= weekEnd;
   });
   const completedIds = new Set(weekCompletions.map((item) => item.taskId));

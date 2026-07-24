@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { CalendarPreferences } from "@/lib/preferences";
 
 export type SportType = "gym" | "tennis" | "cardio" | "mobility" | "rest";
 export type WeekdayId =
@@ -28,6 +29,7 @@ export type WeeklyPlanDay = {
   plannedTime: string;
   shortLabel: string;
   sport: SportType;
+  templateSport: SportType;
   log: TrainingLog;
 };
 
@@ -49,12 +51,29 @@ export type FitnessSession = {
   time: string;
 };
 
+export type DatedFitnessPlan = {
+  date: string;
+  notes: string;
+  plannedDurationMinutes: number;
+  plannedTime: string;
+  sport: SportType;
+};
+
+export type FitnessPlanVersion = Omit<DatedFitnessPlan, "date"> & {
+  effectiveFrom: string;
+  weekday: WeekdayId;
+};
+
 type DbFitnessPlanDay = {
   weekday: string;
   sport: string;
   planned_time: string | null;
   planned_duration_minutes: number;
   notes: string | null;
+};
+
+type DbFitnessPlanVersion = DbFitnessPlanDay & {
+  effective_from: string;
 };
 
 type DbFitnessSession = {
@@ -71,7 +90,7 @@ export const sportLabels: Record<SportType, string> = {
   gym: "Gym",
   tennis: "Tennis",
   cardio: "Cardio",
-  mobility: "Mobilita",
+  mobility: "Mobility",
   rest: "Rest",
 };
 
@@ -99,6 +118,14 @@ export const weekdayOrder: WeekdayId[] = [
   "sunday",
 ];
 
+export function getWeekdayOrder(
+  weekStartsOn: CalendarPreferences["weekStartsOn"] = "monday",
+) {
+  return weekStartsOn === "sunday"
+    ? [weekdayOrder[6], ...weekdayOrder.slice(0, 6)]
+    : [...weekdayOrder];
+}
+
 export const weekdayMeta: Record<WeekdayId, { label: string; shortLabel: string }> = {
   monday: { label: "Monday", shortLabel: "Mon" },
   tuesday: { label: "Tuesday", shortLabel: "Tue" },
@@ -111,11 +138,11 @@ export const weekdayMeta: Record<WeekdayId, { label: string; shortLabel: string 
 
 export const defaultWeeklyPlan: WeeklyPlanDay[] = [
   createDefaultDay("monday", "gym"),
-  createDefaultDay("tuesday", "tennis"),
-  createDefaultDay("wednesday", "rest"),
-  createDefaultDay("thursday", "gym"),
+  createDefaultDay("tuesday", "rest"),
+  createDefaultDay("wednesday", "cardio"),
+  createDefaultDay("thursday", "rest"),
   createDefaultDay("friday", "mobility"),
-  createDefaultDay("saturday", "cardio"),
+  createDefaultDay("saturday", "rest"),
   createDefaultDay("sunday", "rest"),
 ];
 
@@ -138,6 +165,7 @@ function createDefaultDay(id: WeekdayId, sport: SportType): WeeklyPlanDay {
     plannedDurationMinutes: 60,
     plannedTime: "",
     sport,
+    templateSport: sport,
     log: createEmptyTrainingLog(),
   };
 }
@@ -159,14 +187,20 @@ function toWeekday(value: string): WeekdayId {
   return weekdayOrder.includes(value as WeekdayId) ? (value as WeekdayId) : "monday";
 }
 
-export function getWeekDateKeys(today: string) {
+export function getWeekDateKeys(
+  today: string,
+  weekStartsOn: CalendarPreferences["weekStartsOn"] = "monday",
+) {
   const date = new Date(`${today}T12:00:00Z`);
-  const monday = new Date(date);
-  monday.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
+  const weekStart = new Date(date);
+  const firstDay = weekStartsOn === "sunday" ? 0 : 1;
+  weekStart.setUTCDate(
+    date.getUTCDate() - ((date.getUTCDay() - firstDay + 7) % 7),
+  );
 
   return Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(monday);
-    day.setUTCDate(monday.getUTCDate() + index);
+    const day = new Date(weekStart);
+    day.setUTCDate(weekStart.getUTCDate() + index);
     return day.toISOString().slice(0, 10);
   });
 }
@@ -177,31 +211,51 @@ export function shiftDate(date: string, days: number) {
   return value.toISOString().slice(0, 10);
 }
 
-export function getDateForWeekday(today: string, weekday: WeekdayId) {
-  return getWeekDateKeys(today)[weekdayOrder.indexOf(weekday)];
+function getWeekdayForDate(date: string): WeekdayId {
+  const day = new Date(`${date}T12:00:00Z`).getUTCDay();
+  return day === 0 ? "sunday" : weekdayOrder[day - 1];
+}
+
+export function getDateForWeekday(
+  today: string,
+  weekday: WeekdayId,
+  weekStartsOn: CalendarPreferences["weekStartsOn"] = "monday",
+) {
+  return (
+    getWeekDateKeys(today, weekStartsOn).find(
+      (date) => getWeekdayForDate(date) === weekday,
+    ) ?? today
+  );
 }
 
 export function mapDbFitnessDay(
   day: DbFitnessPlanDay,
   date: string,
   session?: FitnessSession,
+  datedPlan?: DatedFitnessPlan,
 ): WeeklyPlanDay {
   const id = toWeekday(day.weekday);
+  const plannedDurationMinutes =
+    datedPlan?.plannedDurationMinutes ?? day.planned_duration_minutes;
+  const plannedTime =
+    datedPlan?.plannedTime ?? day.planned_time?.slice(0, 5) ?? "";
+  const plannedNotes = datedPlan?.notes ?? day.notes ?? "";
 
   return {
     date,
     id,
     ...weekdayMeta[id],
-    plannedDurationMinutes: day.planned_duration_minutes,
-    plannedTime: day.planned_time?.slice(0, 5) ?? "",
-    sport: toSport(day.sport),
+    plannedDurationMinutes,
+    plannedTime,
+    sport: datedPlan?.sport ?? toSport(day.sport),
+    templateSport: toSport(day.sport),
     log: {
       completed: session?.completed ?? false,
-      time: session?.time ?? day.planned_time?.slice(0, 5) ?? "",
+      time: session?.time ?? plannedTime,
       durationMinutes:
-        session?.durationMinutes ?? day.planned_duration_minutes,
+        session?.durationMinutes ?? plannedDurationMinutes,
       quality: session?.quality ?? "medium",
-      notes: session?.notes ?? day.notes ?? "",
+      notes: session?.notes ?? plannedNotes,
       sport: session?.sport ?? null,
     },
   };
@@ -241,19 +295,92 @@ export async function getFitnessSessions(
   });
 }
 
+export async function getFitnessPlanHistory(
+  supabase: SupabaseClient,
+  userId: string,
+  from: string,
+  to: string,
+) {
+  if (!from || !to || from >= to) return [] satisfies DatedFitnessPlan[];
+
+  const { data, error } = await supabase
+    .from("fitness_plan_versions")
+    .select(
+      "weekday,effective_from,sport,planned_time,planned_duration_minutes,notes",
+    )
+    .eq("user_id", userId)
+    .lte("effective_from", shiftDate(to, -1))
+    .order("effective_from", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  const versions: FitnessPlanVersion[] = (data ?? []).map((item) => {
+    const row = item as DbFitnessPlanVersion;
+    return {
+      effectiveFrom: row.effective_from,
+      notes: row.notes ?? "",
+      plannedDurationMinutes: row.planned_duration_minutes,
+      plannedTime: row.planned_time?.slice(0, 5) ?? "",
+      sport: toSport(row.sport),
+      weekday: toWeekday(row.weekday),
+    };
+  });
+  if (versions.length === 0) return [];
+  return resolveFitnessPlanHistory(versions, from, to);
+}
+
+export function resolveFitnessPlanHistory(
+  versions: FitnessPlanVersion[],
+  from: string,
+  to: string,
+) {
+  const datedPlan: DatedFitnessPlan[] = [];
+  for (let date = from; date < to; date = shiftDate(date, 1)) {
+    const weekday = getWeekdayForDate(date);
+    let selected = versions.find(
+      (version) =>
+        version.weekday === weekday && version.effectiveFrom <= date,
+    );
+    for (const version of versions) {
+      if (version.weekday === weekday && version.effectiveFrom <= date) {
+        selected = version;
+      }
+    }
+    const fallback = defaultWeeklyPlan.find((day) => day.id === weekday)!;
+    datedPlan.push({
+      date,
+      notes: selected?.notes ?? fallback.log.notes,
+      plannedDurationMinutes:
+        selected?.plannedDurationMinutes ?? fallback.plannedDurationMinutes,
+      plannedTime: selected?.plannedTime ?? fallback.plannedTime,
+      sport: selected?.sport ?? fallback.sport,
+    });
+  }
+
+  return datedPlan;
+}
+
 export async function ensureFitnessPlan(
   supabase: SupabaseClient,
   userId: string,
   today: string,
+  weekStartsOn: CalendarPreferences["weekStartsOn"] = "monday",
 ) {
-  const weekDates = getWeekDateKeys(today);
-  const [planResult, sessions] = await Promise.all([
+  const orderedWeekdays = getWeekdayOrder(weekStartsOn);
+  const weekDates = getWeekDateKeys(today, weekStartsOn);
+  const [planResult, sessions, datedPlan] = await Promise.all([
     supabase
       .from("fitness_plan_days")
       .select("weekday,sport,planned_time,planned_duration_minutes,notes")
       .eq("user_id", userId)
       .order("weekday"),
     getFitnessSessions(
+      supabase,
+      userId,
+      weekDates[0],
+      shiftDate(weekDates[6], 1),
+    ),
+    getFitnessPlanHistory(
       supabase,
       userId,
       weekDates[0],
@@ -267,37 +394,34 @@ export async function ensureFitnessPlan(
 
   if (planResult.data && planResult.data.length > 0) {
     const mapped = planResult.data.map((day) => day as DbFitnessPlanDay);
-    return weekdayOrder.map((weekday, index) => {
+    return orderedWeekdays.map((weekday, index) => {
       const row = mapped.find((day) => day.weekday === weekday);
       const session = sessions.find(
         (item) => item.performedOn === weekDates[index],
       );
-      if (row) return mapDbFitnessDay(row, weekDates[index], session);
+      const planned = datedPlan.find((item) => item.date === weekDates[index]);
+      if (row) {
+        return mapDbFitnessDay(row, weekDates[index], session, planned);
+      }
 
       const fallback = defaultWeeklyPlan.find((day) => day.id === weekday)!;
       return { ...fallback, date: weekDates[index], log: { ...fallback.log } };
     });
   }
 
-  const rows = defaultWeeklyPlan.map((day) => ({
-    user_id: userId,
-    weekday: day.id,
-    sport: day.sport,
-    planned_time: day.plannedTime || null,
-    planned_duration_minutes: day.plannedDurationMinutes,
-    notes: day.log.notes,
-  }));
+  return null;
+}
 
-  const { error: insertError } = await supabase.from("fitness_plan_days").insert(rows);
+export function createUnconfiguredWeeklyPlan(
+  today: string,
+  weekStartsOn: CalendarPreferences["weekStartsOn"] = "monday",
+) {
+  const orderedWeekdays = getWeekdayOrder(weekStartsOn);
+  const weekDates = getWeekDateKeys(today, weekStartsOn);
 
-  if (insertError) {
-    throw new Error(insertError.message);
-  }
-
-  return defaultWeeklyPlan.map((day, index) => ({
-    ...day,
+  return orderedWeekdays.map((weekday, index) => ({
+    ...createDefaultDay(weekday, "rest"),
     date: weekDates[index],
-    log: { ...day.log },
   }));
 }
 
@@ -340,7 +464,7 @@ function getTrainingFocus(sport: SportType, gymDaysCount: number, gymDayIndex: n
     Lower: "Lower-body strength, posterior chain and carries.",
   };
 
-  return focusBySplit[split] ?? "Silovy trening podla aktualneho splitu.";
+  return focusBySplit[split] ?? "Strength training based on the current split.";
 }
 
 export function getTrainingForDay(
@@ -358,7 +482,7 @@ export function getTrainingForDay(
       day,
       gymDaysCount: gymDays.length,
       title: splitLabel,
-      detail: `${gymDays.length} gym session za tyzden`,
+      detail: `${gymDays.length} gym session${gymDays.length === 1 ? "" : "s"} this week`,
       focus: getTrainingFocus(day.sport, gymDays.length, gymDayIndex),
     };
   }
@@ -377,11 +501,23 @@ export function getTodayTraining(weeklyPlan: WeeklyPlanDay[], today?: string) {
   return getTrainingForDay(weeklyPlan, day?.id ?? getTodayId());
 }
 
-export function getFitnessStats(weeklyPlan: WeeklyPlanDay[], today?: string) {
+export function getFitnessStats(
+  weeklyPlan: WeeklyPlanDay[],
+  today?: string,
+  configured = true,
+) {
+  const todayTraining = getTodayTraining(weeklyPlan, today);
   return {
     completedSessionsCount: weeklyPlan.filter((day) => day.log.completed).length,
     gymDaysCount: weeklyPlan.filter((day) => day.sport === "gym").length,
     restDaysCount: weeklyPlan.filter((day) => day.sport === "rest").length,
-    todayTraining: getTodayTraining(weeklyPlan, today),
+    todayTraining: configured
+      ? todayTraining
+      : {
+          ...todayTraining,
+          detail: "Choose a reviewed starter plan before training is scheduled.",
+          focus: "No fitness plan is active yet.",
+          title: "Set up Fitness",
+        },
   };
 }

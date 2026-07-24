@@ -44,6 +44,7 @@ export function TasksClient({
   tasks,
   today,
   locale,
+  timeZone,
 }: {
   archivedTasks: Task[];
   categorySuggestions: string[];
@@ -51,6 +52,7 @@ export function TasksClient({
   tasks: Task[];
   today: string;
   locale: string;
+  timeZone: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -107,7 +109,7 @@ export function TasksClient({
     sort !== "today";
   const filteredTasks = sortTaskList(
     displayTasks.filter((task) => {
-      const dayStatus = getTaskDayStatus(task, today);
+      const dayStatus = getTaskDayStatus(task, today, timeZone);
       const searchable = `${task.title} ${task.category} ${task.note}`.toLocaleLowerCase();
       if (query && !searchable.includes(query)) return false;
       if (status === "open" && task.completed) return false;
@@ -119,15 +121,16 @@ export function TasksClient({
     }),
     sort,
     today,
+    timeZone,
   );
   const activeTasks = filteredTasks.filter((task) => !task.completed);
   const taskGroups = [
-    { key: "overdue", label: "Overdue", tasks: filteredTasks.filter((task) => getTaskDayStatus(task, today) === "overdue") },
-    { key: "today", label: "Today", tasks: filteredTasks.filter((task) => getTaskDayStatus(task, today) === "today") },
-    { key: "scheduled", label: "Upcoming", tasks: filteredTasks.filter((task) => getTaskDayStatus(task, today) === "scheduled") },
+    { key: "overdue", label: "Overdue", tasks: filteredTasks.filter((task) => getTaskDayStatus(task, today, timeZone) === "overdue") },
+    { key: "today", label: "Today", tasks: filteredTasks.filter((task) => getTaskDayStatus(task, today, timeZone) === "today") },
+    { key: "scheduled", label: "Upcoming", tasks: filteredTasks.filter((task) => getTaskDayStatus(task, today, timeZone) === "scheduled") },
   ] as const;
   const completedTasks = filteredTasks.filter(
-    (task) => getTaskDayStatus(task, today) === "completed",
+    (task) => getTaskDayStatus(task, today, timeZone) === "completed",
   );
   const allVisibleSelected =
     filteredTasks.length > 0 &&
@@ -637,6 +640,7 @@ export function TasksClient({
                         task={task}
                         today={today}
                         locale={locale}
+                        timeZone={timeZone}
                       />
                     ))}
                   </div>
@@ -688,6 +692,7 @@ export function TasksClient({
                         }}
                         task={task}
                         today={today}
+                        timeZone={timeZone}
                       />
                     ))}
                   </div>
@@ -756,6 +761,7 @@ function TaskRow({
   selected,
   task,
   today,
+  timeZone,
 }: {
   locale: string;
   onArchived: () => void;
@@ -764,8 +770,9 @@ function TaskRow({
   selected: boolean;
   task: Task;
   today: string;
+  timeZone: string;
 }) {
-  const dayStatus = getTaskDayStatus(task, today);
+  const dayStatus = getTaskDayStatus(task, today, timeZone);
   const tone = taskDayTones[dayStatus];
 
   return (
@@ -796,7 +803,7 @@ function TaskRow({
                 dateTime={task.dueDate}
                 title={formatExactDate(task.dueDate, locale)}
               >
-                {formatTaskDueDate(task, today, locale)}
+                {formatTaskDueDate(task, today, locale, timeZone)}
               </time>
             </>
           ) : ""}
@@ -884,7 +891,12 @@ function valueFromOptions<const T extends readonly string[]>(
   return options.includes(value ?? "") ? (value as T[number]) : fallback;
 }
 
-function sortTaskList(tasks: Task[], sort: TaskSort, today: string) {
+function sortTaskList(
+  tasks: Task[],
+  sort: TaskSort,
+  today: string,
+  timeZone: string,
+) {
   const priorityRank = { high: 0, normal: 1, low: 2 } as const;
   const dayRank = { overdue: 0, today: 1, scheduled: 2, completed: 3 } as const;
   return [...tasks].sort((a, b) => {
@@ -902,15 +914,20 @@ function sortTaskList(tasks: Task[], sort: TaskSort, today: string) {
       );
     }
     return (
-      dayRank[getTaskDayStatus(a, today)] -
-        dayRank[getTaskDayStatus(b, today)] ||
+      dayRank[getTaskDayStatus(a, today, timeZone)] -
+        dayRank[getTaskDayStatus(b, today, timeZone)] ||
       priorityRank[a.priority] - priorityRank[b.priority]
     );
   });
 }
 
-function formatTaskDueDate(task: Task, today: string, locale: string) {
-  const relative = formatRelativeTaskDate(task, today);
+function formatTaskDueDate(
+  task: Task,
+  today: string,
+  locale: string,
+  timeZone: string,
+) {
+  const relative = formatRelativeTaskDate(task, today, timeZone);
   if (
     relative === "Today" ||
     relative === "Tomorrow" ||

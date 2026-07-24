@@ -6,6 +6,8 @@ const userTables = [
   "tasks",
   "task_completions",
   "fitness_plan_days",
+  "fitness_plan_versions",
+  "fitness_profiles",
   "fitness_sessions",
   "finance_transactions",
   "finance_statement_imports",

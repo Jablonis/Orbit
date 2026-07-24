@@ -23,7 +23,9 @@ import {
   rescoreProductivity,
 } from "@/lib/dashboard";
 import {
+  createUnconfiguredWeeklyPlan,
   ensureFitnessPlan,
+  getFitnessPlanHistory,
   getFitnessSessions,
   getFitnessStats,
   getWeekDateKeys,
@@ -76,35 +78,51 @@ export default async function Home({
   const { supabase, user } = await getAuthenticatedUser();
   const params = await searchParams;
   const preferences = await getDashboardPreferences(supabase, user.id);
+  const calendar = preferences.regional;
   const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
-  const currentWeek = getWeekDateKeys(today);
+  const currentWeek = getWeekDateKeys(today, calendar.weekStartsOn);
   const historyFrom = shiftDate(today, -59);
   const historyTo = shiftDate(today, 1);
   const [
     taskHistory,
-    weeklyPlan,
+    weeklyPlanResult,
     transactions,
     completions,
     sessions,
+    fitnessPlanHistory,
     reflection,
   ] =
     await Promise.all([
       getTasks(supabase, user.id, { includeHistory: true }),
-      ensureFitnessPlan(supabase, user.id, today),
+      ensureFitnessPlan(supabase, user.id, today, calendar.weekStartsOn),
       getFinanceTransactions(supabase, user.id),
       getTaskCompletions(supabase, user.id, historyFrom, historyTo),
       getFitnessSessions(supabase, user.id, historyFrom, historyTo),
+      getFitnessPlanHistory(supabase, user.id, historyFrom, historyTo),
       getWeeklyReflection(supabase, user.id, currentWeek[0]),
     ]);
-  const visibleTasks = getVisibleTasks(taskHistory, today);
-  const orderedTasks = sortDashboardTasks(visibleTasks, today);
-  const fitnessStats = getFitnessStats(weeklyPlan, today);
+  const visibleTasks = getVisibleTasks(taskHistory, today, calendar.timeZone);
+  const orderedTasks = sortDashboardTasks(
+    visibleTasks,
+    today,
+    calendar.timeZone,
+  );
+  const fitnessConfigured = Boolean(weeklyPlanResult);
+  const weeklyPlan =
+    weeklyPlanResult ??
+    createUnconfiguredWeeklyPlan(today, calendar.weekStartsOn);
+  const fitnessStats = getFitnessStats(
+    weeklyPlan,
+    today,
+    fitnessConfigured,
+  );
   const finance = getFinanceSummary(transactions, today.slice(0, 7));
   const dailyRings = getDailyRings(
     visibleTasks,
     fitnessStats.todayTraining,
     transactions,
     today,
+    calendar.timeZone,
   );
   const enabledDomains = getEnabledDomains(params.domains);
   const productivity = rescoreProductivity(
@@ -112,9 +130,10 @@ export default async function Home({
       taskHistory,
       completions,
       sessions,
-      weeklyPlan,
+      fitnessPlanHistory,
       today,
       preferences.rangeDays,
+      calendar,
     ),
     enabledDomains,
     preferences.scoring,
@@ -124,8 +143,9 @@ export default async function Home({
       taskHistory,
       completions,
       sessions,
-      weeklyPlan,
+      fitnessPlanHistory,
       today,
+      calendar,
     ),
     enabledDomains,
     preferences.scoring,
@@ -137,6 +157,7 @@ export default async function Home({
     transactions,
     weeklyProductivity,
     today,
+    calendar,
   );
   const briefMode = params.brief === "weekly" ? "weekly" : "daily";
   const filter = getTaskFilter(params.tasks);
@@ -158,7 +179,12 @@ export default async function Home({
           preferences.pinnedTaskCategory.toLocaleLowerCase(),
       )
     : orderedTasks;
-  const quickTasks = filterTasks(pinnedTasks, filter, today).slice(0, 4);
+  const quickTasks = filterTasks(
+    pinnedTasks,
+    filter,
+    today,
+    calendar.timeZone,
+  ).slice(0, 4);
   const pinnedTaskStats = getTaskStats(pinnedTasks);
   const nextTask = orderedTasks.find((task) => !task.completed);
   const pendingFinance = [...transactions]
@@ -224,6 +250,7 @@ export default async function Home({
         quickTasks={quickTasks}
         taskStats={pinnedTaskStats}
         today={today}
+        timeZone={calendar.timeZone}
         total={pinnedTasks.length}
       />
     ),
@@ -417,7 +444,7 @@ function BriefHero({
             </p>
             <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
               {nextTask
-                ? `${nextTask.category} · ${formatRelativeTaskDate(nextTask, today)}`
+                ? `${nextTask.category} · ${formatRelativeTaskDate(nextTask, today, timeZone)}`
                 : training.day.sport !== "rest"
                   ? `${training.day.plannedDurationMinutes} min planned · ${training.focus}`
                   : "Add something only if it deserves your attention."}
@@ -804,15 +831,20 @@ function filterTasks(
   tasks: Task[],
   filter: OverviewTaskFilter,
   today: string,
+  timeZone: string,
 ) {
   if (filter === "overdue") {
-    return tasks.filter((task) => getTaskDayStatus(task, today) === "overdue");
+    return tasks.filter(
+      (task) => getTaskDayStatus(task, today, timeZone) === "overdue",
+    );
   }
   if (filter === "upcoming") {
-    return tasks.filter((task) => getTaskDayStatus(task, today) === "scheduled");
+    return tasks.filter(
+      (task) => getTaskDayStatus(task, today, timeZone) === "scheduled",
+    );
   }
   return tasks.filter((task) => {
-    const status = getTaskDayStatus(task, today);
+    const status = getTaskDayStatus(task, today, timeZone);
     return status === "today" || status === "completed";
   });
 }
@@ -824,6 +856,7 @@ function QuickTasksCard({
   quickTasks,
   taskStats,
   today,
+  timeZone,
   total,
 }: {
   filter: OverviewTaskFilter;
@@ -832,6 +865,7 @@ function QuickTasksCard({
   quickTasks: Task[];
   taskStats: ReturnType<typeof getTaskStats>;
   today: string;
+  timeZone: string;
   total: number;
 }) {
   return (
@@ -892,8 +926,8 @@ function QuickTasksCard({
               <p className={`truncate text-[14px] font-semibold ${task.completed ? "text-[var(--text-muted)] line-through" : "text-white"}`}>
                 {task.title}
               </p>
-              <p className={`mt-0.5 text-[12px] ${getTaskDayStatus(task, today) === "overdue" ? "text-[#ff9f9f]" : "text-[var(--text-secondary)]"}`}>
-                {task.category} · {formatRelativeTaskDate(task, today)}
+              <p className={`mt-0.5 text-[12px] ${getTaskDayStatus(task, today, timeZone) === "overdue" ? "text-[#ff9f9f]" : "text-[var(--text-secondary)]"}`}>
+                {task.category} · {formatRelativeTaskDate(task, today, timeZone)}
               </p>
             </div>
             <span className="rounded-full border border-white/10 px-2.5 py-1 text-[12px] font-semibold text-[var(--text-secondary)]">

@@ -165,12 +165,17 @@ export function getDateInTimeZone(
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
-export function getTaskDayStatus(task: Task, today: string): TaskDayStatus {
+export function getTaskDayStatus(
+  task: Task,
+  today: string,
+  timeZone = taskTimeZone,
+): TaskDayStatus {
   if (task.completed) {
     return "completed";
   }
 
-  const taskDate = task.dueDate || getDateInTimeZone(task.createdAt ?? "");
+  const taskDate =
+    task.dueDate || getDateInTimeZone(task.createdAt ?? "", timeZone);
 
   if (taskDate && taskDate < today) {
     return "overdue";
@@ -183,16 +188,24 @@ export function getTaskDayStatus(task: Task, today: string): TaskDayStatus {
   return "today";
 }
 
-export function isTaskVisibleToday(task: Task, today: string) {
+export function isTaskVisibleToday(
+  task: Task,
+  today: string,
+  timeZone = taskTimeZone,
+) {
   if (!task.completed) {
     return true;
   }
 
-  return getDateInTimeZone(task.completedAt ?? "") === today;
+  return getDateInTimeZone(task.completedAt ?? "", timeZone) === today;
 }
 
-export function getVisibleTasks(tasks: Task[], today: string) {
-  return tasks.filter((task) => isTaskVisibleToday(task, today));
+export function getVisibleTasks(
+  tasks: Task[],
+  today: string,
+  timeZone = taskTimeZone,
+) {
+  return tasks.filter((task) => isTaskVisibleToday(task, today, timeZone));
 }
 
 export function getMostUsedTaskCategories(tasks: Task[], limit = 6) {
@@ -279,7 +292,7 @@ export function toTaskInsert(input: TaskInput, userId: string) {
 export async function getTasks(
   supabase: SupabaseClient,
   userId: string,
-  options: { includeHistory?: boolean; today?: string } = {},
+  options: { includeHistory?: boolean; timeZone?: string; today?: string } = {},
 ) {
   const { data, error } = await supabase
     .from("tasks")
@@ -300,7 +313,11 @@ export async function getTasks(
     return tasks;
   }
 
-  return getVisibleTasks(tasks, options.today ?? getDateInTimeZone());
+  return getVisibleTasks(
+    tasks,
+    options.today ?? getDateInTimeZone(new Date(), options.timeZone),
+    options.timeZone,
+  );
 }
 
 export async function getArchivedTasks(
@@ -351,9 +368,13 @@ export async function getTaskCompletions(
   });
 }
 
-export function sortDashboardTasks(tasks: Task[], today: string) {
+export function sortDashboardTasks(
+  tasks: Task[],
+  today: string,
+  timeZone = taskTimeZone,
+) {
   const rank = (task: Task) => {
-    const status = getTaskDayStatus(task, today);
+    const status = getTaskDayStatus(task, today, timeZone);
     if (status === "overdue") return 0;
     if (status === "today") return 1;
     if (status === "scheduled") return 2;
@@ -370,8 +391,12 @@ export function sortDashboardTasks(tasks: Task[], today: string) {
   );
 }
 
-export function formatRelativeTaskDate(task: Task, today: string) {
-  const status = getTaskDayStatus(task, today);
+export function formatRelativeTaskDate(
+  task: Task,
+  today: string,
+  timeZone = taskTimeZone,
+) {
+  const status = getTaskDayStatus(task, today, timeZone);
   if (status === "completed") return "Done today";
   if (!task.dueDate) return status === "overdue" ? "Carried forward" : "Today";
   if (task.dueDate === today) return "Today";

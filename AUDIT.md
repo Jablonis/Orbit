@@ -1,103 +1,202 @@
-# Orbit Application Audit — Remaining Work
+# Orbit Dashboard Audit — Active Findings
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
 
-This file intentionally contains only unresolved or partially resolved findings.
-Completed audit items are removed after their implementation and verification.
+This file contains only unresolved or partially resolved findings. Remove an
+item after its implementation and proportionate verification.
+
+## Audit-first workflow
+
+Every dashboard work session starts by reviewing the current application state
+and this file before planning or implementation:
+
+1. Read `PROJECT_MEMORY.md`, `AUDIT.md`, and the relevant product/design notes.
+2. Check the working tree and inspect the current implementation affected by the
+   requested work.
+3. Re-run proportionate baseline checks and confirm that listed findings are
+   still true.
+4. Add newly discovered findings, remove verified completed findings, and work
+   in priority order.
+5. Record any verification boundary instead of treating an untested flow as
+   passing.
 
 ## Current verification boundary
 
-- Production build, strict TypeScript, and ESLint pass.
-- Twelve TypeScript parser/export/scoring/query-state tests pass without a
-  module-type warning.
-- Signed-out authenticated routes redirect to `/login`.
-- The same-origin signed-out PDF route returns JSON `401`.
-- Live Supabase schema checks and advisors were run after the latest migrations.
-- Authenticated browser flows, screenshots, real-device behavior, and 200% zoom
-  remain unverified because no browser backend is attached.
+Verified on 2026-07-24:
 
-## Priority 0 — deployment blocker
+- ESLint passes.
+- Strict TypeScript passes.
+- The full test command passes 44 tests, including calendar/DST boundaries,
+  effective-dated fitness plans, CSP policy, database-grant contracts, upload
+  guard ordering, safe authentication return paths, reviewed Fitness setup,
+  Settings dismissal protection, recovery-flow contracts, and 9 static UI
+  contract checks.
+- The 9-test UI contract subset also passes independently.
+- The Next.js 16.2.11 production build passes.
+- Signed-out `/`, `/tasks`, `/fitness`, `/finance`, and `/ui-lab` requests
+  redirect to `/login`.
+- Signed-out `/api/search` and `/api/export` requests return `401`.
+- A production response carries a per-request CSP nonce and its `script-src`
+  contains no `unsafe-inline`.
+- `npm audit --omit=dev` reports zero production dependency vulnerabilities.
+- Live Supabase migrations, RLS policies, function grants, and plan-history
+  backfill were applied and queried successfully. `fitness_profiles` has
+  owner-scoped select/insert/update policies, anonymous clients have no table or
+  setup-RPC access, and the setup RPC runs as security invoker. The security
+  advisor reports only leaked-password protection as disabled. Performance
+  advisors report only informational unused-index notices.
 
-### P0-01 — Upgrade Next.js from 16.2.10
+Not verified in this audit:
 
-The installed Next.js `16.2.10` remains affected by current high-severity
-advisories, including a Proxy bypass relevant to Orbit's route protection.
+- Authenticated browser flows, screenshots, responsive layouts, 200% zoom,
+  screen readers, forced colors, mobile keyboards, and authenticated CSP console
+  output. No browser runtime or reusable signed-in browser was available.
+- Cross-user RLS behavior using isolated test identities.
+- Vercel Firewall/IP throttling and concurrent multi-instance upload behavior.
+  This checkout has no `.vercel` project link or Vercel API credential.
+- Auth signup/password-manager behavior after leaked-password protection is
+  enabled.
+- End-to-end recovery email delivery, deployed redirect-URL configuration,
+  expired-link handling, password-manager autofill, and recovery forms with a
+  mobile keyboard.
+- Production Core Web Vitals and the budgets in `ui-quality.config.json`.
+
+# Priority 1 — Correctness, security, and trust
+
+## P1-03 — Add authenticated browser and database-policy regression coverage
+
+CI now also runs a production dependency audit. Source tests cover the new CSP,
+anonymous fitness-history grants, and upload defense ordering; live metadata
+checks confirmed owner policies and anonymous grant removal. It still does not
+prove complete authenticated behavior, actual responsive layout, or cross-user
+ownership enforcement with isolated identities.
 
 **Required work**
 
-1. Upgrade `next` and `eslint-config-next` together to a current compatible patch.
-2. Run lint, TypeScript, tests, build, dependency audit, and the signed-out route
-   matrix.
-3. Verify every authenticated page and Server Action with an expired session.
+- Add isolated database tests for RLS, composite ownership constraints, and
+  archive/import functions.
+- Add authenticated browser flows for every route, Quick Add, Settings, task
+  mutations, fitness logs, Finance changes, statement preview/import, undo, and
+  expired sessions.
+- Consume the route/viewport/state matrix in `ui-quality.config.json`.
+- Use deterministic non-personal seed fixtures for empty, typical, dense,
+  failure, stale, and long-content states.
 
-**Acceptance:** `npm audit --omit=dev` reports no applicable Next.js/Sharp
-advisory and all verification checks pass.
+**Acceptance:** CI can catch a broken authenticated flow, cross-user data
+access, modal/focus regression, or viewport overflow before deployment.
 
-## Priority 1 — correctness and security
+## P1-04 — Remove production `script-src 'unsafe-inline'`
 
-### P1-07 — Complete platform/IP upload-abuse defenses
+The code and signed-out production response now use the supported Next.js
+per-request nonce with `strict-dynamic`, and production `script-src` contains no
+`unsafe-inline`. Authenticated browser verification remains unavailable.
 
-Orbit now enforces the actual streamed body size before multipart parsing and a
-private per-user limit of 10 requests per 10 minutes.
-
-**Remaining work:** add deployment-level body enforcement, a trusted
-platform/distributed IP throttle, and validate it under concurrent load.
-
-### P1-08 — Preserve historical planning semantics
-
-`src/lib/dashboard.ts` applies the current reusable weekday plan to historical
-dates. Changing the plan can therefore change previously calculated productivity.
-
-**Required work:** store dated plan snapshots or introduce plan versions with an
-effective date. Closed days and weeks must not change when a future plan changes.
-
-### P1-11 — Add automated authenticated flow and responsive coverage
-
-The repository has parser/export unit tests but no authenticated component,
-database-policy, or Playwright flow suite and no CI workflow.
-
-**Required work**
-
-- unit tests for task dates, fitness mutation behavior, dashboard scoring, and
-  preference parsing;
-- database tests for RLS, ownership constraints, and atomic functions;
-- Playwright flows for authentication, every route, destructive confirmations,
-  keyboard behavior, PDF import, and the target viewport matrix;
-- CI for lint, TypeScript, tests, build, and dependency audit.
-
-### P1-12 — Replace production script `unsafe-inline`
-
-`next.config.ts` still permits inline scripts in production CSP.
-
-**Required work:** implement the Next.js 16 nonce/hash pattern and verify App
-Router streaming, fonts, authentication, and the PDF worker without CSP
+**Required work:** verify authenticated App Router streaming, Server Actions,
+authentication, fonts, and the PDF worker in a real browser without CSP console
 violations.
 
-### P1-13 — Enable leaked-password protection
+**Acceptance:** production responses do not require
+`script-src 'unsafe-inline'`, and authenticated browser flows produce no CSP
+errors.
 
-The live Supabase security advisor still reports leaked-password protection as
-disabled.
+## P1-05 — Complete deployment-level upload-abuse defenses
 
-**Required work:** enable the setting, review the minimum-password policy, and
-re-run the security advisor.
+Statement import already enforces the streamed body size and a private per-user
+limit of 10 requests per 10 minutes. It does not yet provide a trusted
+distributed/IP layer before application parsing.
 
-## Priority 2 — visual verification
+**Required work:** link the deployment, add a Vercel Firewall rule for
+`POST /api/finance/import-statement` using a fixed-window IP limit, then test
+concurrent and multi-instance requests. Keep the existing authenticated
+per-user database throttle as the second layer.
 
-### P2-12 — Validate metadata readability on real devices and at 200% zoom
+**Acceptance:** oversized and abusive requests are rejected before expensive PDF
+work, while normal authenticated imports remain reliable.
 
-Critical 10–11 px application metadata has been raised to 12 px. Static code,
-lint, TypeScript, and build checks cannot verify real-device readability or
-reflow.
+## P1-06 — Enable leaked-password protection
 
-**Required work:** execute the viewport/zoom matrix below and correct any
-clipping, overlap, or unreadable chart labels found.
+The 2026-07-24 live Supabase security advisor confirms leaked-password
+protection is disabled. The available project tools do not expose the Auth
+setting required to change it.
 
-## Priority 3 — polish and operational follow-up
+**Required work:** verify the current Auth setting, enable breached-password
+protection if still disabled, review the password policy, and re-run the
+security advisor.
 
-### P3-03 — Monitor currently unused indexes
+**Acceptance:** the advisor no longer reports the warning and normal sign-up,
+login, and password-manager behavior still works.
 
-The live performance advisor was re-run on 2026-07-23 and still reports these
-unused indexes at informational severity:
+# Priority 2 — Daily-use UX and visual validation
+
+## P2-03 — Complete entry and account recovery flows
+
+Protected redirects now carry a validated Orbit-only path through login.
+Forgot-password, PKCE callback, reset-password, expired-link, and completed
+recovery states are implemented with password-manager autocomplete tokens and
+open-redirect regression coverage.
+
+**Required work:** confirm the deployed `/auth/callback` URL is allowlisted in
+Supabase Auth, then verify real recovery email delivery, password-manager
+autofill, expired links, and mobile keyboard behavior in a browser/device run.
+
+**Acceptance:** users recover access and return to their intended Orbit route
+without open-redirect risk.
+
+## P2-05 — Execute the responsive, accessibility, and performance matrix
+
+Static contracts cannot prove real layout and interaction quality. The matrix in
+`ui-quality.config.json` remains unexecuted against authenticated states.
+
+**Required work**
+
+- Check `/`, `/tasks`, `/fitness`, `/finance`, `/login`, and `/ui-lab` at 320,
+  375, 430, 768, 1024, and 1440 px plus 200% zoom.
+- Cover empty, typical, dense, error, stale, and long-content states.
+- Verify keyboard order, focus return, modal inertness, VoiceOver/NVDA, reduced
+  motion, forced colors, safe areas, and the on-screen keyboard.
+- Measure CLS, INP, LCP, and local action-feedback latency against the recorded
+  budgets.
+- Approve and automate visual regression baselines after manual review.
+
+**Acceptance:** results are recorded, failures are fixed, and repeatable visual
+checks run in CI.
+
+# Priority 3 — Maintainability and premium polish
+
+## P3-01 — Split oversized route and client modules by responsibility
+
+Several files now concentrate too much UI and behavior:
+
+- `src/app/page.tsx` — 1,193 lines
+- `src/app/tasks/TasksClient.tsx` — 982 lines
+- `src/app/fitness/FitnessClient.tsx` — 750 lines
+- `src/app/finance/FinanceClient.tsx` — 693 lines
+- `src/components/QuickAdd.tsx` — 526 lines
+- `src/components/DashboardCustomizer.tsx` — 485 lines
+
+**Required work:** extract route sections, state hooks, validation helpers, and
+focused interaction components where the boundaries are stable. Keep data
+fetching server-side and avoid creating wrapper-only component layers.
+
+**Acceptance:** each extracted unit has one clear responsibility, existing
+behavior remains covered, and route composition becomes easier to audit.
+
+## P3-02 — Finish migration to semantic UI primitives
+
+`docs/UI_SYSTEM.md` defines canonical primitives and semantic surface roles, but
+many route components still rely on legacy `content-panel`, `glass-panel`, and
+route-specific styling.
+
+**Required work:** migrate touched areas incrementally, remove duplicate visual
+roles, and add a lint/static rule for new raw color values when practical.
+
+**Acceptance:** new features use the canonical component/tokens layer and no
+longer introduce another visual dialect.
+
+## P3-03 — Monitor currently unused database indexes
+
+The last recorded live performance advisor reported these informational unused
+indexes:
 
 - `tasks_user_created_idx`
 - `tasks_user_due_idx`
@@ -106,56 +205,17 @@ unused indexes at informational severity:
 - `finance_transactions_statement_import_owner_idx`
 - `task_completions_task_owner_idx`
 
-The app is new and these indexes support current queries or ownership checks.
-Reassess with meaningful production traffic before removing any index. See the
-[Supabase unused-index guidance](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index).
+They support current queries or ownership constraints, so do not remove them
+without representative production traffic and query-plan evidence.
 
-## Required browser matrix
+**Acceptance:** reassess after meaningful traffic; retain, consolidate, or remove
+each index based on measured usage and query plans.
 
-### Viewports
+## Recommended execution order
 
-- 320 × 568
-- 375 × 667
-- 430 × 932
-- 768 × 1024
-- 1024 × 768
-- 1440 × 900
-- 200% desktop zoom and mobile-width reflow
-- iOS safe-area simulation and Android keyboard-open behavior
-
-### Checks on every authenticated route
-
-1. No horizontal page scroll or unintended clipping.
-2. The final control scrolls above the mobile navigation.
-3. Settings, Quick Add, task form, and confirmation dialogs fit within `100dvh`.
-4. Tab order matches visual order and focus is always visible.
-5. Escape closes the active modal and focus returns to its opener.
-6. Modal background controls are inert.
-7. Long labels, titles, notes, amounts, and warnings wrap intentionally.
-8. Pending states prevent duplicate submissions without losing input.
-9. Success and error feedback is visible and announced.
-10. Reduced-motion mode removes nonessential animation.
-
-### End-to-end stories
-
-1. Sign-up → confirmation if enabled → login → logout → protected redirect.
-2. Task create → edit → complete → reopen → archive → failed undo → retry.
-3. Fitness plan edit → detailed log → Overview toggle → detail preservation.
-4. PDF preview with duplicates and 10+ rows → full review → import → duplicate
-   rejection.
-5. Invalid, scanned, protected, oversized, wrong-origin, expired, and
-   rate-limited PDF requests.
-6. CSV export containing commas, quotes, newlines, Unicode, and formula-leading
-   text.
-7. Finance clear → failed undo → retry → atomic restoration.
-8. Overview preferences and reflection save → reload → sign out/in → persistence.
-
-## Recommended next order
-
-1. Resolve P0-01 before another production deployment.
-2. Add the authenticated Playwright/CI baseline in P1-11.
-3. Execute P2-12's browser matrix.
-4. Design and migrate the historical-plan model in P1-08.
-5. Harden CSP and platform upload controls.
-6. Enable the Supabase Auth password setting.
-7. Reassess P3-03 after meaningful production traffic.
+1. Add authenticated browser and isolated database-policy coverage.
+2. Verify recovery email delivery and deployed redirect configuration.
+3. Execute the responsive, accessibility, CSP, and performance matrix.
+4. Link deployment-level upload throttling and enable leaked-password
+   protection.
+5. Refactor large modules only alongside verified product work.

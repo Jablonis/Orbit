@@ -17,6 +17,7 @@ jobs:
           cache: npm
           node-version: 20
       - run: npm ci
+      - run: npm run audit:prod
       - run: npm run lint
       - run: npx tsc --noEmit
       - run: npm test

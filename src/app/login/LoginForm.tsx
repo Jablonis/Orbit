@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { AuthActionState, loginAction, signupAction } from "./actions";
 
 const initialState: AuthActionState = { message: "" };
 
-export function LoginForm() {
+export function LoginForm({ nextPath }: { nextPath: string }) {
   const [loginState, loginFormAction, loginPending] = useActionState(
     loginAction,
     initialState,
@@ -18,7 +19,14 @@ export function LoginForm() {
   return (
     <div className="grid gap-4">
       <form action={loginFormAction} className="grid gap-3">
+        <input name="next" type="hidden" value={nextPath} />
         <AuthFields passwordAutocomplete="current-password" />
+        <Link
+          className="justify-self-end text-[13px] font-semibold text-[var(--accent-primary)] hover:underline"
+          href={`/forgot-password?next=${encodeURIComponent(nextPath)}`}
+        >
+          Forgot password?
+        </Link>
         <button
           className="rounded-[14px] bg-white px-4 py-3 text-[13px] font-semibold text-[var(--text-on-light)] transition hover:bg-white/90 disabled:opacity-60"
           disabled={loginPending}
@@ -46,6 +54,7 @@ export function LoginForm() {
       </div>
 
       <form action={signupFormAction} className="grid gap-3">
+        <input name="next" type="hidden" value={nextPath} />
         <AuthFields passwordAutocomplete="new-password" />
         <button
           className="rounded-[14px] border border-white/10 bg-[var(--surface-row)] px-4 py-3 text-[13px] font-semibold text-white transition hover:bg-[#303030] disabled:opacity-60"

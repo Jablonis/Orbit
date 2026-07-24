@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { saveDashboardPreferencesAction } from "@/app/actions";
 import { ActionToast } from "@/components/ActionToast";
+import { useSettingsDirtyState } from "@/components/SettingsDirtyState";
 import {
   type DashboardCardId,
   type DashboardPreferences,
@@ -11,6 +12,22 @@ import {
 } from "@/lib/preferences";
 
 const initialState = { message: "", ok: false };
+
+function signatureFromPreferences(preferences: DashboardPreferences) {
+  return JSON.stringify({
+    density: preferences.density,
+    fitnessWeight: String(preferences.scoring.weights.fitness),
+    focusTarget: String(preferences.scoring.focusTargetMinutes),
+    focusWeight: String(preferences.scoring.weights.focus),
+    hidden: [...preferences.hiddenCards].sort(),
+    order: preferences.cardOrder,
+    pinnedFinanceMetric: preferences.pinnedFinanceMetric,
+    pinnedTaskCategory: preferences.pinnedTaskCategory,
+    rangeDays: preferences.rangeDays,
+    regional: preferences.regional,
+    tasksWeight: String(preferences.scoring.weights.tasks),
+  });
+}
 
 export function DashboardCustomizer({
   categories,
@@ -46,18 +63,58 @@ export function DashboardCustomizer({
     saveDashboardPreferencesAction,
     initialState,
   );
+  const { discardVersion, setDirty } = useSettingsDirtyState();
+  const lastSuccessfulState = useRef<typeof state | null>(null);
+  const [savedSignature, setSavedSignature] = useState(() =>
+    signatureFromPreferences(preferences),
+  );
+  const currentSignature = JSON.stringify({
+    density,
+    fitnessWeight,
+    focusTarget,
+    focusWeight,
+    hidden: [...hidden].sort(),
+    order,
+    pinnedFinanceMetric,
+    pinnedTaskCategory,
+    rangeDays,
+    regional,
+    tasksWeight,
+  });
   const hasUnsavedChanges =
-    order.join("|") !== preferences.cardOrder.join("|") ||
-    [...hidden].sort().join("|") !== [...preferences.hiddenCards].sort().join("|") ||
-    density !== preferences.density ||
-    rangeDays !== preferences.rangeDays ||
-    pinnedTaskCategory !== preferences.pinnedTaskCategory ||
-    pinnedFinanceMetric !== preferences.pinnedFinanceMetric ||
-    focusTarget !== String(preferences.scoring.focusTargetMinutes) ||
-    tasksWeight !== String(preferences.scoring.weights.tasks) ||
-    fitnessWeight !== String(preferences.scoring.weights.fitness) ||
-    focusWeight !== String(preferences.scoring.weights.focus) ||
-    JSON.stringify(regional) !== JSON.stringify(preferences.regional);
+    currentSignature !== savedSignature;
+
+  useEffect(() => {
+    setDirty(hasUnsavedChanges);
+    return () => setDirty(false);
+  }, [hasUnsavedChanges, setDirty]);
+
+  useEffect(() => {
+    if (state.ok && lastSuccessfulState.current !== state) {
+      lastSuccessfulState.current = state;
+      setSavedSignature(currentSignature);
+      setDirty(false);
+    }
+  }, [currentSignature, setDirty, state]);
+
+  useEffect(() => {
+    if (discardVersion === 0) return;
+    const frame = window.requestAnimationFrame(() => {
+      setOrder([...preferences.cardOrder]);
+      setHidden([...preferences.hiddenCards]);
+      setDensity(preferences.density);
+      setRangeDays(preferences.rangeDays);
+      setPinnedTaskCategory(preferences.pinnedTaskCategory);
+      setPinnedFinanceMetric(preferences.pinnedFinanceMetric);
+      setFocusTarget(String(preferences.scoring.focusTargetMinutes));
+      setTasksWeight(String(preferences.scoring.weights.tasks));
+      setFitnessWeight(String(preferences.scoring.weights.fitness));
+      setFocusWeight(String(preferences.scoring.weights.focus));
+      setRegional(preferences.regional);
+      setSavedSignature(signatureFromPreferences(preferences));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [discardVersion, preferences]);
 
   function move(card: DashboardCardId, direction: -1 | 1) {
     setOrder((current) => {
@@ -285,7 +342,7 @@ export function DashboardCustomizer({
                 <option value="UTC">UTC</option>
               </select>
             </PreferenceField>
-            <PreferenceField label="Language and dates">
+            <PreferenceField label="Date and number format">
               <select
                 className="field-input"
                 name="locale"

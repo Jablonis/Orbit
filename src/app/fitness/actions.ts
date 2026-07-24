@@ -6,11 +6,16 @@ import {
   type SportType,
   type TrainingQuality,
   type WeekdayId,
-  defaultWeeklyPlan,
   ensureFitnessPlan,
   getDateForWeekday,
   weekdayOrder,
 } from "@/lib/fitness";
+import {
+  buildReviewedFitnessPlan,
+  defaultFitnessProfile,
+  normalizeFitnessProfile,
+} from "@/lib/fitness-setup";
+import { getDashboardPreferences } from "@/lib/preferences";
 import { getDateInTimeZone } from "@/lib/tasks";
 
 const sportTypes: SportType[] = ["gym", "tennis", "cardio", "mobility", "rest"];
@@ -19,6 +24,11 @@ const trainingQualities: TrainingQuality[] = ["low", "medium", "high"];
 export type FitnessActionResult =
   | { ok: true }
   | { ok: false; error: string };
+
+export type FitnessSetupActionState = {
+  message: string;
+  ok: boolean;
+};
 
 function isWeekday(value: string): value is WeekdayId {
   return weekdayOrder.includes(value as WeekdayId);
@@ -48,10 +58,16 @@ export async function updateFitnessDayAction(
     return { ok: false, error: "Invalid training day." };
   }
 
-  const { error } = await supabase.from("fitness_plan_days").upsert(
-    { sport, user_id: user.id, weekday },
-    { onConflict: "user_id,weekday" },
+  const preferences = await getDashboardPreferences(supabase, user.id);
+  const effectiveFrom = getDateInTimeZone(
+    new Date(),
+    preferences.regional.timeZone,
   );
+  const { error } = await supabase.rpc("set_fitness_plan_day", {
+    p_effective_from: effectiveFrom,
+    p_sport: sport,
+    p_weekday: weekday,
+  });
   if (error) return { ok: false, error: "The training plan could not be saved." };
 
   revalidateFitness();
@@ -90,7 +106,13 @@ export async function saveFitnessLogAction(
     return { ok: false, error: "Choose a valid training time." };
   }
 
-  const performedOn = getDateForWeekday(getDateInTimeZone(), weekday);
+  const preferences = await getDashboardPreferences(supabase, user.id);
+  const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
+  const performedOn = getDateForWeekday(
+    today,
+    weekday,
+    preferences.regional.weekStartsOn,
+  );
   const { error } = await supabase.from("fitness_sessions").upsert(
     {
       completed: String(formData.get("completed") ?? "") === "on",
@@ -122,7 +144,13 @@ export async function toggleFitnessDoneAction(
     return { ok: false, error: "Invalid training session." };
   }
 
-  const performedOn = getDateForWeekday(getDateInTimeZone(), weekday);
+  const preferences = await getDashboardPreferences(supabase, user.id);
+  const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
+  const performedOn = getDateForWeekday(
+    today,
+    weekday,
+    preferences.regional.weekStartsOn,
+  );
   const { data: existingSession, error: readError } = await supabase
     .from("fitness_sessions")
     .select("id")
@@ -155,8 +183,20 @@ export async function toggleFitnessDoneAction(
 
 export async function completeTodayTrainingAction(): Promise<FitnessActionResult> {
   const { supabase, user } = await getAuthenticatedUser();
-  const today = getDateInTimeZone();
-  const weeklyPlan = await ensureFitnessPlan(supabase, user.id, today);
+  const preferences = await getDashboardPreferences(supabase, user.id);
+  const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
+  const weeklyPlan = await ensureFitnessPlan(
+    supabase,
+    user.id,
+    today,
+    preferences.regional.weekStartsOn,
+  );
+  if (!weeklyPlan) {
+    return {
+      ok: false,
+      error: "Set up your Fitness plan before completing a workout.",
+    };
+  }
   const day = weeklyPlan.find((item) => item.date === today);
 
   if (!day || day.sport === "rest") {
@@ -204,19 +244,80 @@ export async function toggleFitnessDoneFormAction(formData: FormData) {
 
 export async function resetFitnessPlanAction(): Promise<FitnessActionResult> {
   const { supabase, user } = await getAuthenticatedUser();
-  const rows = defaultWeeklyPlan.map((day) => ({
-    notes: "",
-    planned_duration_minutes: 60,
-    planned_time: null,
-    sport: day.sport,
-    user_id: user.id,
-    weekday: day.id,
-  }));
-  const { error } = await supabase
-    .from("fitness_plan_days")
-    .upsert(rows, { onConflict: "user_id,weekday" });
+  const preferences = await getDashboardPreferences(supabase, user.id);
+  const effectiveFrom = getDateInTimeZone(
+    new Date(),
+    preferences.regional.timeZone,
+  );
+  const { error } = await supabase.rpc("configure_fitness_plan", {
+    p_effective_from: effectiveFrom,
+    p_plan: buildReviewedFitnessPlan(defaultFitnessProfile),
+    p_profile: {
+      available_days: defaultFitnessProfile.availableDays,
+      equipment: defaultFitnessProfile.equipment,
+      exercises_to_avoid: defaultFitnessProfile.exercisesToAvoid,
+      experience: defaultFitnessProfile.experience,
+      goal: defaultFitnessProfile.goal,
+      session_length_minutes: defaultFitnessProfile.sessionLengthMinutes,
+      template_id: defaultFitnessProfile.templateId,
+    },
+  });
   if (error) return { ok: false, error: "The training plan could not be reset." };
 
   revalidateFitness();
   return { ok: true };
+}
+
+export async function configureFitnessAction(
+  _state: FitnessSetupActionState,
+  formData: FormData,
+): Promise<FitnessSetupActionState> {
+  const profile = normalizeFitnessProfile({
+    availableDays: formData.getAll("availableDays").map(String),
+    equipment: formData.getAll("equipment").map(String),
+    exercisesToAvoid: String(formData.get("exercisesToAvoid") ?? ""),
+    experience: String(formData.get("experience") ?? ""),
+    goal: String(formData.get("goal") ?? ""),
+    sessionLengthMinutes: Number(formData.get("sessionLengthMinutes")),
+  });
+  if (!profile) {
+    return {
+      message:
+        "Choose a goal, experience level, equipment, at least one day, and a session length.",
+      ok: false,
+    };
+  }
+
+  const { supabase, user } = await getAuthenticatedUser();
+  const preferences = await getDashboardPreferences(supabase, user.id);
+  const effectiveFrom = getDateInTimeZone(
+    new Date(),
+    preferences.regional.timeZone,
+  );
+  const { error } = await supabase.rpc("configure_fitness_plan", {
+    p_effective_from: effectiveFrom,
+    p_plan: buildReviewedFitnessPlan(profile),
+    p_profile: {
+      available_days: profile.availableDays,
+      equipment: profile.equipment,
+      exercises_to_avoid: profile.exercisesToAvoid,
+      experience: profile.experience,
+      goal: profile.goal,
+      session_length_minutes: profile.sessionLengthMinutes,
+      template_id: profile.templateId,
+    },
+  });
+
+  if (error) {
+    return {
+      message: "The Fitness setup could not be saved. Your choices are still here.",
+      ok: false,
+    };
+  }
+
+  revalidateFitness();
+  return {
+    message: "Training setup saved and the future plan was rebuilt.",
+    ok: true,
+  };
 }

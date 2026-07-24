@@ -6,6 +6,7 @@ import { getWeekDateKeys } from "@/lib/fitness";
 import {
   dashboardCardIds,
   defaultDashboardPreferences,
+  getDashboardPreferences,
   parseDashboardPreferences,
 } from "@/lib/preferences";
 import { getDateInTimeZone } from "@/lib/tasks";
@@ -85,7 +86,15 @@ export async function saveWeeklyReflectionAction(
   formData: FormData,
 ): Promise<WeeklyReflectionActionState> {
   const { supabase, user } = await getAuthenticatedUser();
-  const weekStart = getWeekDateKeys(getDateInTimeZone())[0];
+  const preferences = await getDashboardPreferences(supabase, user.id);
+  const today = getDateInTimeZone(
+    new Date(),
+    preferences.regional.timeZone,
+  );
+  const weekStart = getWeekDateKeys(
+    today,
+    preferences.regional.weekStartsOn,
+  )[0];
   const { error } = await supabase.from("weekly_reflections").upsert(
     {
       change_next_week: String(formData.get("changeNextWeek") ?? "")

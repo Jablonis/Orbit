@@ -63,6 +63,8 @@ export function QuickAdd() {
   const [query, setQuery] = useState("");
   const [recentId, setRecentId] = useState("");
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [searchRevision, setSearchRevision] = useState(0);
   const [view, setView] = useState<"commands" | "task">("commands");
   const dialog = useRef<HTMLDialogElement>(null);
   const optionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -83,6 +85,7 @@ export function QuickAdd() {
     setFrequencies(readJson<Record<string, number>>(frequencyStorageKey, {}));
     setActiveIndex(0);
     setEntityResults([]);
+    setSearchError("");
     setQuery("");
     setView("commands");
   }, []);
@@ -127,16 +130,21 @@ export function QuickAdd() {
     const controller = new AbortController();
     const timeout = window.setTimeout(async () => {
       setSearching(true);
+      setSearchError("");
       try {
         const response = await fetch(`/api/search?q=${encodeURIComponent(normalized)}`, {
           cache: "no-store",
           signal: controller.signal,
         });
         const payload = (await response.json()) as { results?: SearchResult[] };
-        if (response.ok) setEntityResults(payload.results ?? []);
+        if (!response.ok) throw new Error("Search request failed");
+        setEntityResults(payload.results ?? []);
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
           setEntityResults([]);
+          setSearchError(
+            "Orbit data search is unavailable. Local commands still work.",
+          );
         }
       } finally {
         if (!controller.signal.aborted) setSearching(false);
@@ -146,7 +154,7 @@ export function QuickAdd() {
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [open, query, view]);
+  }, [open, query, searchRevision, view]);
 
   const visibleActions = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -376,6 +384,7 @@ export function QuickAdd() {
                   setQuery(nextQuery);
                   if (nextQuery.trim().length < 2) {
                     setEntityResults([]);
+                    setSearchError("");
                     setSearching(false);
                   }
                   setActiveIndex(0);
@@ -387,6 +396,23 @@ export function QuickAdd() {
                 value={query}
               />
             </label>
+            {searchError ? (
+              <div
+                className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] bg-[color-mix(in_srgb,var(--danger)_8%,transparent)] px-3 py-2"
+                role="alert"
+              >
+                <p className="min-w-0 flex-1 text-[12px] leading-5 text-[var(--danger-text)]">
+                  {searchError}
+                </p>
+                <button
+                  className="min-h-11 rounded-[var(--radius-control)] px-3 text-[12px] font-bold text-white hover:bg-white/[0.07]"
+                  onClick={() => setSearchRevision((revision) => revision + 1)}
+                  type="button"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : null}
             <div className="mt-2 max-h-[min(390px,52vh)] overflow-y-auto" id="quick-add-options" role="listbox">
               {entityResults.length > 0 ? (
                 <p className="label-caps px-3 pb-1 pt-2 text-[var(--text-tertiary)]">Orbit results</p>
@@ -479,7 +505,7 @@ export function QuickAdd() {
                   </div>
                 );
               })}
-              {options.length === 0 ? (
+              {options.length === 0 && !searchError ? (
                 <div className="px-3 py-6 text-center">
                   <p className="text-[13px] font-semibold text-white">
                     {searching ? "Searching Orbit…" : "No matching result"}

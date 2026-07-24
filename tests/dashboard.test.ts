@@ -94,6 +94,20 @@ test("uses the selected timezone across a UTC day boundary", () => {
   assert.equal(getDateInTimeZone(instant, "America/Los_Angeles"), "2026-07-22");
 });
 
+test("uses summer DST offsets for every supported calendar timezone", () => {
+  const cases = [
+    ["UTC", "2026-07-01T00:30:00.000Z", "2026-07-01"],
+    ["Europe/Bratislava", "2026-06-30T22:30:00.000Z", "2026-07-01"],
+    ["Europe/London", "2026-06-30T23:30:00.000Z", "2026-07-01"],
+    ["America/New_York", "2026-07-01T03:30:00.000Z", "2026-06-30"],
+    ["America/Los_Angeles", "2026-07-01T06:30:00.000Z", "2026-06-30"],
+  ] as const;
+
+  for (const [timeZone, instant, expectedDate] of cases) {
+    assert.equal(getDateInTimeZone(instant, timeZone), expectedDate);
+  }
+});
+
 test("splits productivity chart paths at missing days without plunging to zero", () => {
   const paths = getProductivityChartPaths(
     [

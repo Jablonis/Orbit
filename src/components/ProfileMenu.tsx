@@ -1,8 +1,12 @@
 "use client";
 
-import type { MouseEvent, ReactNode } from "react";
-import { useEffect, useRef } from "react";
+import type { FormEvent, MouseEvent, ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { openOrbitSettingsEvent } from "@/components/OpenDashboardSettingsButton";
+import {
+  SettingsDirtyStateProvider,
+  useSettingsDirtyState,
+} from "@/components/SettingsDirtyState";
 import type { RegionalPreferences } from "@/lib/preferences";
 
 export function ProfileMenu({
@@ -14,7 +18,30 @@ export function ProfileMenu({
   profile?: RegionalPreferences;
   userEmail: string;
 }) {
+  return (
+    <SettingsDirtyStateProvider>
+      <ProfileMenuDialog profile={profile} userEmail={userEmail}>
+        {children}
+      </ProfileMenuDialog>
+    </SettingsDirtyStateProvider>
+  );
+}
+
+function ProfileMenuDialog({
+  children,
+  profile,
+  userEmail,
+}: {
+  children?: ReactNode;
+  profile?: RegionalPreferences;
+  userEmail: string;
+}) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const logoutFormRef = useRef<HTMLFormElement>(null);
+  const allowNextLogoutRef = useRef(false);
+  const afterDiscardRef = useRef<null | (() => void)>(null);
+  const [confirmingDismissal, setConfirmingDismissal] = useState(false);
+  const { dirty, discardChanges } = useSettingsDirtyState();
   const initial =
     profile?.initials ||
     profile?.displayName.trim().slice(0, 1).toUpperCase() ||
@@ -32,18 +59,61 @@ export function ProfileMenu({
       window.removeEventListener(openOrbitSettingsEvent, openFromCommand);
   }, []);
 
+  useEffect(() => {
+    if (!dirty) return;
+    const protectHardNavigation = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", protectHardNavigation);
+    return () =>
+      window.removeEventListener("beforeunload", protectHardNavigation);
+  }, [dirty]);
+
   function open() {
     if (dialogRef.current && !dialogRef.current.open) {
       dialogRef.current.showModal();
     }
   }
 
-  function close() {
+  function requestDismiss(afterDiscard?: () => void) {
+    if (dirty) {
+      afterDiscardRef.current = afterDiscard ?? null;
+      setConfirmingDismissal(true);
+      return;
+    }
     dialogRef.current?.close();
   }
 
   function closeFromBackdrop(event: MouseEvent<HTMLDialogElement>) {
-    if (event.target === event.currentTarget) close();
+    if (event.target === event.currentTarget) requestDismiss();
+  }
+
+  function keepEditing() {
+    afterDiscardRef.current = null;
+    setConfirmingDismissal(false);
+  }
+
+  function confirmDiscard() {
+    const afterDiscard = afterDiscardRef.current;
+    afterDiscardRef.current = null;
+    discardChanges();
+    setConfirmingDismissal(false);
+    dialogRef.current?.close();
+    afterDiscard?.();
+  }
+
+  function guardLogout(event: FormEvent<HTMLFormElement>) {
+    if (allowNextLogoutRef.current) {
+      allowNextLogoutRef.current = false;
+      return;
+    }
+    if (!dirty) return;
+    event.preventDefault();
+    requestDismiss(() => {
+      allowNextLogoutRef.current = true;
+      logoutFormRef.current?.requestSubmit();
+    });
   }
 
   return (
@@ -69,9 +139,62 @@ export function ProfileMenu({
       <dialog
         aria-labelledby="profile-settings-title"
         className="floating-panel modal-animate fixed inset-x-3 bottom-[calc(1rem+env(safe-area-inset-bottom))] top-auto m-0 max-h-[calc(100dvh-2rem)] w-auto max-w-none overflow-y-auto rounded-[var(--radius-panel)] p-0 text-left text-[var(--text-primary)] backdrop:bg-black/70 backdrop:backdrop-blur-[2px] md:inset-x-auto md:bottom-6 md:right-6 md:w-[min(580px,calc(100vw-3rem))]"
+        onCancel={(event) => {
+          event.preventDefault();
+          requestDismiss();
+        }}
         onClick={closeFromBackdrop}
+        onClose={() => {
+          setConfirmingDismissal(false);
+          afterDiscardRef.current = null;
+        }}
         ref={dialogRef}
       >
+        {confirmingDismissal ? (
+          <section
+            aria-labelledby="discard-settings-title"
+            aria-describedby="discard-settings-description"
+            className="grid min-h-[300px] content-center gap-5 p-6 sm:p-8"
+            role="alertdialog"
+          >
+            <div>
+              <p className="label-caps text-[var(--warning-text)]">
+                Unsaved settings
+              </p>
+              <h2
+                className="mt-2 text-[24px] font-semibold text-white"
+                id="discard-settings-title"
+              >
+                Discard unsaved changes?
+              </h2>
+              <p
+                className="mt-3 max-w-md text-[14px] leading-6 text-[var(--text-secondary)]"
+                id="discard-settings-description"
+              >
+                Your dashboard order, visibility, scoring, and regional changes
+                have not been saved.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                autoFocus
+                className="min-h-11 rounded-[var(--radius-control)] bg-white px-4 text-[13px] font-bold text-[var(--text-on-light)]"
+                onClick={keepEditing}
+                type="button"
+              >
+                Keep editing
+              </button>
+              <button
+                className="min-h-11 rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--danger)_10%,transparent)] px-4 text-[13px] font-semibold text-[var(--danger-text)]"
+                onClick={confirmDiscard}
+                type="button"
+              >
+                Discard changes
+              </button>
+            </div>
+          </section>
+        ) : (
+          <>
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--border-subtle)] bg-[var(--surface-1)]/92 px-5 py-4 backdrop-blur-xl sm:px-6">
           <div>
             <p className="label-caps text-[var(--accent-primary)]">Orbit settings</p>
@@ -82,7 +205,7 @@ export function ProfileMenu({
           <button
             aria-label="Close profile and settings"
             className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--border-subtle)] text-[20px] text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)] hover:text-white"
-            onClick={close}
+            onClick={() => requestDismiss()}
             type="button"
           >
             ×
@@ -144,7 +267,13 @@ export function ProfileMenu({
             </a>
           </section>
 
-          <form action="/auth/logout" className="border-t border-[var(--border-subtle)] pt-5" method="post">
+          <form
+            action="/auth/logout"
+            className="border-t border-[var(--border-subtle)] pt-5"
+            method="post"
+            onSubmit={guardLogout}
+            ref={logoutFormRef}
+          >
             <button
               className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] bg-[color-mix(in_srgb,var(--danger)_9%,transparent)] px-4 text-[13px] font-semibold text-[var(--danger-text)] transition hover:bg-[color-mix(in_srgb,var(--danger)_14%,transparent)]"
               type="submit"
@@ -154,6 +283,8 @@ export function ProfileMenu({
             </button>
           </form>
         </div>
+          </>
+        )}
       </dialog>
     </>
   );
