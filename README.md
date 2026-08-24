@@ -62,6 +62,13 @@ The migrations create and secure:
 All exposed user tables use RLS. Application reads also filter by the
 authenticated user.
 
+## Daily rings
+
+Today is shown as three activity rings — tasks, fitness, finance — in the Apple
+Fitness idiom: they fill from empty on every visit, keep sweeping past the goal,
+and the card states how many rings are closed. Ring geometry lives in
+`src/lib/activity-rings.ts`.
+
 ## Momentum
 
 Orbit tracks daily momentum as orbital altitude instead of a streak counter:

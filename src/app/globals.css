@@ -49,56 +49,15 @@
   --shadow-panel: 0 20px 45px -34px rgba(0, 0, 0, 0.9);
   --shadow-overlay: 0 28px 64px -28px rgba(0, 0, 0, 0.92);
   --ease-orbit: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-ring: cubic-bezier(0.32, 0.94, 0.35, 1);
+  --ring-tasks-from: #b31a63;
+  --ring-tasks-to: #ff5fae;
+  --ring-fitness-from: #5f8f0f;
+  --ring-fitness-to: #b6f24a;
+  --ring-finance-from: #2563c9;
+  --ring-finance-to: #7cc2ff;
   --duration-micro: 160ms;
   --duration-state: 280ms;
-}
-
-@keyframes ring-score-enter {
-  0% {
-    opacity: 0.35;
-    transform: scale(0.72);
-  }
-  65% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.ring-score-enter {
-  animation: ring-score-enter 520ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes momentum-orbit-drift {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes momentum-satellite-pulse {
-  0%,
-  100% {
-    opacity: 0.85;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.momentum-orbit-path {
-  animation: momentum-orbit-drift 48s linear infinite;
-  transform-origin: 120px 120px;
-  transition: r var(--duration-state) var(--ease-orbit);
-}
-
-.momentum-satellite {
-  animation: momentum-satellite-pulse 3.2s ease-in-out infinite;
 }
 
 @keyframes action-toast-enter {
@@ -508,12 +467,6 @@
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
-  }
-
-  .ring-score-enter,
-  .momentum-orbit-path,
-  .momentum-satellite {
-    animation: none;
   }
 }
 

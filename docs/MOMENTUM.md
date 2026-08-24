@@ -77,10 +77,29 @@ download. Nothing is uploaded; sharing is always an explicit user action.
 | --- | --- |
 | Engine (pure, unit tested) | `src/lib/momentum.ts` |
 | Share image renderer | `src/lib/day-card-canvas.ts` |
+| Ring geometry (pure, unit tested) | `src/lib/activity-rings.ts` |
+| Daily rings | `src/components/ActivityRings.tsx` |
 | Orbit visual | `src/components/MomentumOrbit.tsx` |
 | Share controls | `src/components/DayCardShare.tsx` |
 | Overview card | `MomentumCard` in `src/app/page.tsx` |
-| Tests | `tests/momentum.test.ts`, `tests/day-card.test.ts` |
+| Tests | `tests/momentum.test.ts`, `tests/day-card.test.ts`, `tests/activity-rings.test.ts` |
+
+## The visual language
+
+Both surfaces share one idiom, borrowed from Apple Fitness because it is the
+clearest way to show "how much of today is done" at a glance:
+
+- One thick ring per area, starting at twelve o'clock and sweeping clockwise,
+  with a rounded head and the ring's own colour at low opacity as its track.
+- Each ring fills from empty on every visit, outer ring first, 90 ms apart, on
+  a critically damped curve — no bounce, nothing that loops forever.
+- Past the goal the ring keeps sweeping over itself, and the head gets a shadow
+  so the overlap reads as depth.
+- Momentum uses the same ring for altitude, marks the tier floor across it, and
+  keeps the last fourteen days as a dial around the outside.
+
+Colour carries no meaning on its own: every ring is also stated as a number and
+a percentage in the legend.
 
 ## Deliberately not built yet
 

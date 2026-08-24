@@ -50,6 +50,7 @@ import {
   type OverviewTaskFilter,
   getOverviewHref,
 } from "@/lib/overview-query";
+import { getRingsSummary } from "@/lib/activity-rings";
 import { getProductivityChartPaths } from "@/lib/productivity-score";
 import {
   type GhostRace,
@@ -899,51 +900,59 @@ function DailyRingsCard({
 }: {
   dailyRings: ReturnType<typeof getDailyRings>;
 }) {
-  const activeAreas = Object.values(dailyRings).filter((area) => area.total > 0);
-  const completeAreas = activeAreas.filter((area) => area.percent >= 100).length;
+  const summary = getRingsSummary(
+    Object.values(dailyRings)
+      .filter((area) => area.total > 0)
+      .map((area) => area.percent),
+  );
+  const headline = summary.total === 0
+    ? "Nothing is planned yet today."
+    : summary.allClosed
+      ? "All rings closed."
+      : `${summary.closed} of ${summary.total} rings closed.`;
+
   return (
     <article className="content-panel overview-card-enter overview-delay-1 relative overflow-hidden rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-7">
-      <div className="relative grid gap-6 lg:grid-cols-[210px_1fr] lg:items-center">
-        <div className="rounded-[34px] border border-white/10 bg-[#101011]/75 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+      <div className="relative grid gap-6 sm:grid-cols-[minmax(180px,240px)_minmax(0,1fr)] sm:items-center">
+        <div className="mx-auto w-full max-w-[240px]">
           <ActivityRings
             finance={dailyRings.finance.percent}
             fitness={dailyRings.fitness.percent}
             tasks={dailyRings.tasks.percent}
           />
         </div>
-        <div>
-          <p className="label-caps text-[var(--text-secondary)]">Daily rings</p>
-          <h2 className="mt-3 text-[28px] font-semibold leading-[34px] text-white">
-            {activeAreas.length
-              ? `${completeAreas} of ${activeAreas.length} active areas complete.`
-              : "Today is clear so far."}
+        <div className="min-w-0">
+          <p className="label-caps text-[var(--text-secondary)]">Today</p>
+          <h2 className="mt-2 text-[26px] font-semibold leading-[32px] tracking-[-0.02em] text-white">
+            {headline}
           </h2>
-          <p className="mt-3 text-[14px] leading-6 text-[var(--text-secondary)]">
-            All three signals use today&apos;s Bratislava calendar date and start
-            fresh each morning.
-          </p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+          <div className="mt-5 grid max-w-md gap-1">
             <RingLegend
-              color="var(--accent-highlight)"
+              color="var(--ring-tasks-to)"
               href="/tasks"
               label="Tasks"
-              value={`${dailyRings.tasks.completed}/${dailyRings.tasks.total} today`}
+              percent={dailyRings.tasks.percent}
+              value={dailyRings.tasks.total
+                ? `${dailyRings.tasks.completed}/${dailyRings.tasks.total}`
+                : "None due"}
             />
             <RingLegend
-              color="var(--accent-primary)"
+              color="var(--ring-fitness-to)"
               href="/fitness"
               label="Fitness"
+              percent={dailyRings.fitness.percent}
               value={dailyRings.fitness.total
-                ? `${dailyRings.fitness.completed}/${dailyRings.fitness.total} today`
+                ? `${dailyRings.fitness.completed}/${dailyRings.fitness.total}`
                 : "Rest day"}
             />
             <RingLegend
-              color="var(--accent-info)"
+              color="var(--ring-finance-to)"
               href="/finance"
               label="Finance"
+              percent={dailyRings.finance.percent}
               value={dailyRings.finance.total
-                ? `${dailyRings.finance.completed}/${dailyRings.finance.total} cleared`
-                : "No entries today"}
+                ? `${dailyRings.finance.completed}/${dailyRings.finance.total}`
+                : "Nothing due"}
             />
           </div>
         </div>
@@ -1458,5 +1467,44 @@ function WeeklyReviewCard({ reflection, review }: { reflection: WeeklyReflection
 function ReviewMetric({ detail, label, value }: { detail: string; label: string; value: string }) { return <div className="border-b border-[var(--border-subtle)] p-4 last:border-b-0 sm:border-r xl:border-b-0 xl:last:border-r-0"><dt className="label-caps text-[var(--text-muted)]">{label}</dt><dd className="metric-value mt-2 text-[20px] font-semibold text-white">{value}</dd><p className="mt-1 text-[12px] text-[var(--text-muted)]">{detail}</p></div>; }
 function ChartLegend({ color, label }: { color: string; label: string }) { return <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />{label}</span>; }
 
-function RingLegend({ color, href, label, value }: { color: string; href: string; label: string; value: string }) { return <Link className="overview-interactive-card flex min-h-11 items-center justify-between rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-3 transition hover:bg-white/[0.05]" href={href}><span className="inline-flex items-center gap-2 text-[13px] font-semibold text-white"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />{label}</span><span className="text-[13px] font-semibold text-[var(--text-secondary)]">{value}</span><LinkPendingIndicator label={`Opening ${label}`} /></Link>; }
+function RingLegend({
+  color,
+  href,
+  label,
+  percent,
+  value,
+}: {
+  color: string;
+  href: string;
+  label: string;
+  percent: number;
+  value: string;
+}) {
+  return (
+    <Link
+      className="overview-interactive-card group flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-row)] px-3 py-2.5 transition hover:bg-white/[0.04]"
+      href={href}
+    >
+      <span className="flex min-w-0 items-center gap-2.5">
+        <span
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
+          style={{ backgroundColor: color }}
+        />
+        <span className="truncate text-[13px] font-semibold text-white">
+          {label}
+        </span>
+      </span>
+      <span className="flex shrink-0 items-baseline gap-2">
+        <span className="metric-value text-[17px] font-semibold" style={{ color }}>
+          {value}
+        </span>
+        <span className="metric-value w-10 text-right text-[12px] text-[var(--text-muted)]">
+          {percent}%
+        </span>
+      </span>
+      <LinkPendingIndicator label={`Opening ${label}`} />
+    </Link>
+  );
+}
+
 function MiniPill({ label, value }: { label: string; value: string }) { return <div className="rounded-[16px] border border-white/10 bg-[var(--surface-row)]/60 p-3"><p className="label-caps text-[var(--text-muted)]">{label}</p><p className="metric-value mt-2 text-[15px] font-semibold text-white">{value}</p></div>; }

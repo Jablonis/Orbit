@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { getRingGeometry } from "@/lib/activity-rings";
 
 type RingValues = {
   finance: number;
@@ -8,15 +9,57 @@ type RingValues = {
   tasks: number;
 };
 
+type RingDefinition = {
+  delay: number;
+  from: string;
+  key: keyof RingValues;
+  label: string;
+  radius: number;
+  to: string;
+};
+
+const STROKE = 21;
+const CENTER = 120;
+
+const rings: RingDefinition[] = [
+  {
+    delay: 0,
+    from: "var(--ring-tasks-from)",
+    key: "tasks",
+    label: "Tasks",
+    radius: 99,
+    to: "var(--ring-tasks-to)",
+  },
+  {
+    delay: 90,
+    from: "var(--ring-fitness-from)",
+    key: "fitness",
+    label: "Fitness",
+    radius: 72,
+    to: "var(--ring-fitness-to)",
+  },
+  {
+    delay: 180,
+    from: "var(--ring-finance-from)",
+    key: "finance",
+    label: "Finance",
+    radius: 45,
+    to: "var(--ring-finance-to)",
+  },
+];
+
+/**
+ * Daily rings in the Apple Fitness idiom: one thick ring per area, filled from
+ * empty on every visit, carried past the goal instead of stopping at it.
+ */
 export function ActivityRings({ finance, fitness, tasks }: RingValues) {
+  const instanceId = useId().replace(/:/g, "");
+  const target: RingValues = { finance, fitness, tasks };
   const [displayed, setDisplayed] = useState<RingValues>({
     finance: 0,
     fitness: 0,
     tasks: 0,
   });
-  const score = Math.round(
-    (displayed.finance + displayed.fitness + displayed.tasks) / 3,
-  );
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -27,67 +70,151 @@ export function ActivityRings({ finance, fitness, tasks }: RingValues) {
 
   return (
     <div
-      aria-label={`Daily progress: tasks ${tasks}%, fitness ${fitness}%, finance ${finance}%`}
-      className="relative grid aspect-square place-items-center"
+      aria-label={rings
+        .map((ring) => `${ring.label} ${Math.round(target[ring.key])}%`)
+        .join(", ")}
+      className="relative aspect-square w-full"
       role="img"
     >
-      <Ring color="var(--accent-highlight)" radius={90} stroke={16} value={displayed.tasks} />
-      <Ring color="var(--accent-primary)" radius={68} stroke={16} value={displayed.fitness} />
-      <Ring color="var(--accent-info)" radius={46} stroke={16} value={displayed.finance} />
-      <div
-        className="absolute grid h-20 w-20 place-items-center rounded-full bg-[var(--canvas)] text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
-        key={score}
-      >
-        <span className="ring-score-enter text-[24px] font-semibold text-white">
-          {score}
-        </span>
-      </div>
+      <svg className="h-full w-full" viewBox="0 0 240 240">
+        <defs>
+          {rings.map((ring) => (
+            <linearGradient
+              gradientTransform={`rotate(${
+                getRingGeometry(displayed[ring.key], ring.radius).capAngle
+              } 0.5 0.5)`}
+              id={`${instanceId}-${ring.key}`}
+              key={ring.key}
+              x1="0.5"
+              x2="0.5"
+              y1="1"
+              y2="0"
+            >
+              <stop offset="0%" stopColor={ring.from} />
+              <stop offset="100%" stopColor={ring.to} />
+            </linearGradient>
+          ))}
+          <filter height="300%" id="ring-cap-shadow" width="300%" x="-100%" y="-100%">
+            <feDropShadow
+              dx="0"
+              dy="0"
+              floodColor="#000"
+              floodOpacity="0.45"
+              stdDeviation="2.2"
+            />
+          </filter>
+        </defs>
+
+        {/* Rings start at twelve o'clock and sweep clockwise. */}
+        <g transform={`rotate(-90 ${CENTER} ${CENTER})`}>
+          {rings.map((ring) => (
+              <Ring
+              definition={ring}
+              instanceId={instanceId}
+              key={ring.key}
+              value={displayed[ring.key]}
+            />
+          ))}
+        </g>
+        {/* Caps live outside the rotated group so their own rotation composes
+            cleanly with a CSS transition. */}
+        {rings.map((ring) => (
+          <OvershootCap
+            definition={ring}
+            instanceId={instanceId}
+            key={ring.key}
+            value={displayed[ring.key]}
+          />
+        ))}
+      </svg>
     </div>
   );
 }
 
 function Ring({
-  color,
-  radius,
-  stroke,
+  definition,
+  instanceId,
   value,
 }: {
-  color: string;
-  radius: number;
-  stroke: number;
+  definition: RingDefinition;
+  instanceId: string;
   value: number;
 }) {
-  const circumference = 2 * Math.PI * radius;
-  const offset =
-    circumference -
-    (Math.max(0, Math.min(value, 100)) / 100) * circumference;
+  const geometry = getRingGeometry(value, definition.radius);
+  const gradient = `url(#${instanceId}-${definition.key})`;
+  const transition = `stroke-dashoffset 900ms var(--ease-ring) ${definition.delay}ms, transform 900ms var(--ease-ring) ${definition.delay}ms`;
 
   return (
-    <svg
-      aria-hidden="true"
-      className="absolute h-full w-full -rotate-90"
-      viewBox="0 0 220 220"
+    <g>
+      <circle
+        cx={CENTER}
+        cy={CENTER}
+        fill="none"
+        r={definition.radius}
+        stroke={definition.to}
+        strokeOpacity={0.15}
+        strokeWidth={STROKE}
+      />
+
+      {geometry.laps > 0 ? (
+        <circle
+          cx={CENTER}
+          cy={CENTER}
+          fill="none"
+          r={definition.radius}
+          stroke={gradient}
+          strokeWidth={STROKE}
+        />
+      ) : null}
+
+      <circle
+        cx={CENTER}
+        cy={CENTER}
+        fill="none"
+        r={definition.radius}
+        stroke={gradient}
+        strokeDasharray={geometry.circumference}
+        strokeDashoffset={geometry.strokeDashoffset}
+        strokeLinecap="round"
+        strokeWidth={STROKE}
+        style={{ transition }}
+      />
+    </g>
+  );
+}
+
+/**
+ * The head of a ring that has passed its goal, drawn over the closed ring with
+ * a shadow so the overlap reads as depth rather than a colour change.
+ */
+function OvershootCap({
+  definition,
+  instanceId,
+  value,
+}: {
+  definition: RingDefinition;
+  instanceId: string;
+  value: number;
+}) {
+  const geometry = getRingGeometry(value, definition.radius);
+  if (geometry.laps < 1) return null;
+
+  return (
+    <g
+      filter={`url(#${instanceId}-cap-shadow)`}
+      style={{
+        transform: `rotate(${geometry.capAngle}deg)`,
+        transformBox: "view-box",
+        transformOrigin: `${CENTER}px ${CENTER}px`,
+        transition: `transform 900ms var(--ease-ring) ${definition.delay}ms`,
+      }}
     >
       <circle
-        cx="110"
-        cy="110"
-        fill="none"
-        r={radius}
-        stroke="rgba(255,255,255,0.08)"
-        strokeWidth={stroke}
+        cx={CENTER}
+        cy={CENTER - definition.radius}
+        fill={definition.to}
+        r={STROKE / 2}
       />
-      <circle
-        className="transition-[stroke-dashoffset] duration-700 ease-out motion-reduce:transition-none"
-        cx="110"
-        cy="110"
-        fill="none"
-        r={radius}
-        stroke={color}
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-        strokeWidth={stroke}
-      />
-    </svg>
+    </g>
   );
 }
