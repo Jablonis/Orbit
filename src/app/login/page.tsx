@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { OrbitWordmark } from "@/components/BrandMark";
 import { getSafeReturnPath } from "@/lib/auth-return";
 import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
@@ -42,7 +44,9 @@ export default async function LoginPage({
     >
       <section className="glass-panel w-full max-w-[460px] rounded-[24px] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.32)]">
         <div className="mb-8">
-          <p className="label-caps text-[var(--accent-primary)]">Orbit</p>
+          <Link aria-label="About Orbit" className="inline-flex" href="/welcome">
+            <OrbitWordmark size={26} />
+          </Link>
           <h1 className="mt-3 text-[34px] font-semibold leading-[40px] text-white">
             Sign in to your dashboard
           </h1>

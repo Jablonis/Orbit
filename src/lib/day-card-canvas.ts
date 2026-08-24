@@ -22,9 +22,11 @@ export function drawDayCard(
 ) {
   const centerX = DAY_CARD_WIDTH / 2;
   const centerY = 580;
-  const coreRadius = 118;
-  const dialRadius = 330;
-  const orbitRadius = 150 + (clamp(props.altitude) / 100) * 150;
+  const ringRadius = 250;
+  const ringWidth = 46;
+  const dialRadius = ringRadius + ringWidth / 2 + 34;
+  const start = -Math.PI / 2;
+  const sweep = (clamp(props.altitude) / 100) * Math.PI * 2;
 
   context.fillStyle = "#0d0d0e";
   context.fillRect(0, 0, DAY_CARD_WIDTH, DAY_CARD_HEIGHT);
@@ -35,29 +37,49 @@ export function drawDayCard(
     60,
     centerX,
     centerY,
-    360,
+    380,
   );
-  glow.addColorStop(0, `${accent}2e`);
+  glow.addColorStop(0, `${accent}26`);
   glow.addColorStop(1, "#0d0d0e00");
   context.fillStyle = glow;
   context.fillRect(0, 0, DAY_CARD_WIDTH, DAY_CARD_HEIGHT);
 
-  // Last two weeks as a dial, matching the orbit visual in the app.
-  context.strokeStyle = "rgba(255,255,255,0.06)";
-  context.lineWidth = 2;
+  // The altitude ring, in the same idiom as the rings inside the app.
+  context.lineWidth = ringWidth;
+  context.strokeStyle = accent;
+  context.globalAlpha = 0.15;
   context.beginPath();
-  context.arc(centerX, centerY, dialRadius, 0, Math.PI * 2);
+  context.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
   context.stroke();
+  context.globalAlpha = 1;
 
+  if (sweep > 0) {
+    const gradient = context.createLinearGradient(
+      centerX - ringRadius,
+      centerY + ringRadius,
+      centerX + ringRadius,
+      centerY - ringRadius,
+    );
+    gradient.addColorStop(0, `${accent}73`);
+    gradient.addColorStop(1, accent);
+    context.strokeStyle = gradient;
+    context.lineCap = "round";
+    context.beginPath();
+    context.arc(centerX, centerY, ringRadius, start, start + sweep);
+    context.stroke();
+    context.lineCap = "butt";
+  }
+
+  // The last two weeks as a dial around the outside.
   props.trace.forEach((score, index) => {
-    const angle = (index / props.trace.length) * Math.PI * 2 - Math.PI / 2;
+    const angle = (index / props.trace.length) * Math.PI * 2 + start;
     const reached = score >= 50;
-    const length = 10 + (clamp(score) / 100) * 44;
+    const length = 8 + (clamp(score) / 100) * 34;
     context.strokeStyle = reached ? accent : "rgba(255,255,255,0.22)";
     context.globalAlpha = reached
       ? 0.4 + (index / props.trace.length) * 0.6
-      : 0.8;
-    context.lineWidth = 9;
+      : 0.75;
+    context.lineWidth = 8;
     context.lineCap = "round";
     context.beginPath();
     context.moveTo(
@@ -71,41 +93,15 @@ export function drawDayCard(
     context.stroke();
   });
   context.globalAlpha = 1;
-
-  context.strokeStyle = accent;
-  context.globalAlpha = 0.75;
-  context.lineWidth = 5;
-  context.beginPath();
-  context.arc(centerX, centerY, orbitRadius, 0, Math.PI * 2);
-  context.stroke();
-  context.globalAlpha = 1;
-
-  context.fillStyle = accent;
-  context.beginPath();
-  context.arc(
-    centerX + orbitRadius * Math.cos(-Math.PI * 0.78),
-    centerY + orbitRadius * Math.sin(-Math.PI * 0.78),
-    14,
-    0,
-    Math.PI * 2,
-  );
-  context.fill();
-
-  context.fillStyle = "#151516";
-  context.beginPath();
-  context.arc(centerX, centerY, coreRadius, 0, Math.PI * 2);
-  context.fill();
-  context.strokeStyle = "rgba(255,255,255,0.12)";
-  context.lineWidth = 2;
-  context.stroke();
+  context.lineCap = "butt";
 
   context.textAlign = "center";
   context.fillStyle = "#f7f7f5";
-  context.font = "700 104px ui-sans-serif, system-ui, -apple-system, sans-serif";
-  context.fillText(String(Math.round(props.altitude)), centerX, centerY + 22);
+  context.font = "700 132px ui-sans-serif, system-ui, -apple-system, sans-serif";
+  context.fillText(String(Math.round(props.altitude)), centerX, centerY + 26);
   context.font = "600 24px ui-sans-serif, system-ui, sans-serif";
-  context.fillStyle = "#9ea2a4";
-  context.fillText("ALTITUDE", centerX, centerY + 66);
+  context.fillStyle = "#8d9092";
+  context.fillText("ALTITUDE", centerX, centerY + 76);
 
   context.textAlign = "left";
   context.fillStyle = accent;

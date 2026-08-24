@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { OrbitMark } from "@/components/BrandMark";
 import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { QuickAdd } from "@/components/QuickAdd";
@@ -35,7 +36,7 @@ export function AppNavigation({
       <nav className="fixed left-0 top-0 z-40 hidden h-screen w-[112px] border-r border-[var(--border-subtle)] bg-[var(--surface-nav)]/90 backdrop-blur-2xl md:block">
         <div className="flex h-full flex-col items-center justify-between px-4 py-6">
           <Link className="flex flex-col items-center gap-2" href="/">
-            <LogoMark />
+            <OrbitMark className="text-[var(--accent-primary)]" size={34} />
             <span className="text-[13px] font-semibold text-white">Orbit</span>
             <LinkPendingIndicator label="Loading Overview" />
           </Link>
@@ -112,27 +113,6 @@ function Svg({
       viewBox="0 0 24 24"
     >
       {children}
-    </svg>
-  );
-}
-
-function LogoMark() {
-  return (
-    <svg className="h-9 w-9 text-white" fill="none" viewBox="0 0 36 36">
-      <path
-        d="M18 4 30 11v14l-12 7-12-7V11L18 4Z"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="2.5"
-      />
-      <path
-        d="M18 11 24 14.5v7L18 25l-6-3.5v-7L18 11Z"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="2.5"
-      />
-      <path d="M18 11v7l6-3.5" stroke="currentColor" strokeWidth="2.5" />
-      <path d="M18 18v7" stroke="currentColor" strokeWidth="2.5" />
     </svg>
   );
 }

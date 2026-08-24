@@ -8,7 +8,7 @@
     { "name": "desktop", "width": 1440, "height": 1000 }
   ],
   "zoomLevels": [1, 2],
-  "routes": ["/", "/tasks", "/fitness", "/finance", "/login", "/ui-lab"],
+  "routes": ["/", "/welcome", "/tasks", "/fitness", "/finance", "/login", "/ui-lab"],
   "dataStates": ["empty", "light", "typical", "dense", "error", "stale", "long-content"],
   "interactionStates": [
     "keyboard-focus",

@@ -17,6 +17,7 @@ function fakeContext(): Recorder {
   const arcs: number[] = [];
   const context = {
     arc: (_x: number, _y: number, radius: number) => arcs.push(radius),
+    createLinearGradient: () => ({ addColorStop: () => {} }),
     beginPath: () => {},
     createRadialGradient: () => ({ addColorStop: () => {} }),
     fill: () => {},

@@ -62,6 +62,14 @@ The migrations create and secure:
 All exposed user tables use RLS. Application reads also filter by the
 authenticated user.
 
+## The public landing page
+
+Signed-out visitors at `/` are sent to `/welcome`, a public page that explains
+the momentum mechanic with charts drawn by the real engine, shows the ring
+system, and states pricing honestly. Shared links render the branded preview in
+`src/app/opengraph-image.tsx`. The brand system — voice, mark, colour, motion —
+is documented in `docs/BRAND.md`.
+
 ## Daily rings
 
 Today is shown as three activity rings — tasks, fitness, finance — in the Apple
