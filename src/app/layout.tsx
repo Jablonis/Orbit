@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -18,6 +18,24 @@ export const metadata: Metadata = {
     template: "%s · Orbit",
   },
   description: "Personal operating system dashboard.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Orbit",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+    icon: [
+      { sizes: "192x192", type: "image/png", url: "/icon-192.png" },
+      { sizes: "512x512", type: "image/png", url: "/icon-512.png" },
+    ],
+  },
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0d0d0e",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

@@ -4,7 +4,9 @@ import type { CSSProperties, ReactNode } from "react";
 import { ActivityRings } from "@/components/ActivityRings";
 import { AppNavigation } from "@/components/AppNavigation";
 import { DashboardCustomizer } from "@/components/DashboardCustomizer";
+import { DayCardShare } from "@/components/DayCardShare";
 import { EmptyState } from "@/components/EmptyState";
+import { MomentumOrbit } from "@/components/MomentumOrbit";
 import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { OpenDashboardSettingsButton } from "@/components/OpenDashboardSettingsButton";
@@ -49,6 +51,17 @@ import {
   getOverviewHref,
 } from "@/lib/overview-query";
 import { getProductivityChartPaths } from "@/lib/productivity-score";
+import {
+  type GhostRace,
+  type Momentum,
+  type MomentumRecords,
+  type StreakState,
+  getDayCard,
+  getGhostRace,
+  getMomentum,
+  getMomentumRecords,
+  getStreak,
+} from "@/lib/momentum";
 import {
   type Task,
   formatRelativeTaskDate,
@@ -159,6 +172,28 @@ export default async function Home({
     today,
     calendar,
   );
+  const momentumRange = rescoreProductivity(
+    getProductivityRange(
+      taskHistory,
+      completions,
+      sessions,
+      fitnessPlanHistory,
+      today,
+      30,
+      calendar,
+    ),
+    enabledDomains,
+    preferences.scoring,
+  );
+  const momentum = getMomentum(momentumRange.current, today);
+  const streak = getStreak(momentumRange.current, today);
+  const momentumRecords = getMomentumRecords(momentumRange.current, today);
+  const ghost = getGhostRace(
+    weeklyProductivity.current,
+    weeklyProductivity.previous,
+    today,
+  );
+  const dayCard = getDayCard({ date: today, ghost, momentum, streak });
   const briefMode = params.brief === "weekly" ? "weekly" : "daily";
   const filter = getTaskFilter(params.tasks);
   const overviewQuery: OverviewQueryState = {
@@ -236,6 +271,16 @@ export default async function Home({
     ),
     fitness: (
       <FitnessTodayCard key="fitness" training={fitnessStats.todayTraining} />
+    ),
+    momentum: (
+      <MomentumCard
+        dayCard={dayCard}
+        ghost={ghost}
+        key="momentum"
+        momentum={momentum}
+        records={momentumRecords}
+        streak={streak}
+      />
     ),
     review: (
       <WeeklyReviewCard key="review" reflection={reflection} review={review} />
@@ -655,6 +700,196 @@ function SectionHeading({
         <h2 className="mt-1 text-[22px] font-semibold text-white" id={id}>{title}</h2>
       </div>
       <p className="max-w-xl text-[13px] leading-5 text-[var(--text-secondary)]">{detail}</p>
+    </div>
+  );
+}
+
+function MomentumCard({
+  dayCard,
+  ghost,
+  momentum,
+  records,
+  streak,
+}: {
+  dayCard: ReturnType<typeof getDayCard>;
+  ghost: GhostRace;
+  momentum: Momentum;
+  records: MomentumRecords;
+  streak: StreakState;
+}) {
+  const holdLine =
+    momentum.holdScore === null
+      ? `${momentum.tier.name} cannot be held with a single day. Start the climb back today.`
+      : momentum.holdScore === 0
+        ? `${momentum.tier.name} holds even on an empty day. Momentum is doing the work.`
+        : `Finish today at ${momentum.holdScore}% to stay in ${momentum.tier.name}.`;
+  const climbLine =
+    momentum.nextTier && momentum.nextTierScore !== null
+      ? `${momentum.nextTierScore}% today reaches ${momentum.nextTier.name}.`
+      : momentum.nextTier
+        ? `${momentum.nextTier.name} is more than one day away — keep stacking.`
+        : "You are at the top tier. Everything now is about staying there.";
+  const ghostTotal = Math.max(ghost.current, ghost.previous, 1);
+  const statusLabel =
+    momentum.status === "climbing"
+      ? "Climbing"
+      : momentum.status === "decaying"
+        ? "Decaying"
+        : "Holding";
+
+  return (
+    <article className="content-panel overview-card-enter overview-delay-1 relative overflow-hidden rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-12 xl:p-6">
+      <div className="grid gap-6 lg:grid-cols-[minmax(220px,300px)_minmax(0,1fr)] lg:items-center">
+        <div
+          aria-label={`Orbit altitude ${momentum.altitude} of 100, tier ${momentum.tier.name}, projected ${momentum.projected} after today.`}
+          className="relative mx-auto w-full max-w-[300px]"
+          role="img"
+        >
+          <MomentumOrbit
+            altitude={momentum.altitude}
+            projected={momentum.projected}
+            series={momentum.series}
+            tier={momentum.tier}
+          />
+          <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
+            <div>
+              <p className="metric-value text-[40px] font-semibold leading-none text-white">
+                {momentum.projected}
+              </p>
+              <p className="label-caps mt-1 text-[var(--text-muted)]">Altitude</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="label-caps text-[var(--text-secondary)]">Momentum</p>
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] px-2.5 py-1 text-[11px] font-semibold text-white"
+              style={{ color: momentum.tier.color }}
+            >
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: momentum.tier.color }}
+              />
+              {statusLabel}
+            </span>
+          </div>
+          <h2 className="mt-3 text-[28px] font-semibold leading-[34px] text-white">
+            {momentum.tier.name}
+          </h2>
+          <p className="mt-2 text-[14px] leading-6 text-[var(--text-secondary)]">
+            {momentum.tier.blurb}
+          </p>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-black/20 p-4">
+              <p className="label-caps text-[var(--text-muted)]">Today decides</p>
+              <p className="mt-2 text-[15px] font-semibold leading-6 text-white">
+                {holdLine}
+              </p>
+              <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
+                {climbLine}
+              </p>
+            </div>
+            <div className="rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-black/20 p-4">
+              <p className="label-caps text-[var(--text-muted)]">Days in orbit</p>
+              <p className="metric-value mt-2 text-[24px] font-semibold text-white">
+                {streak.streak}
+                <span className="ml-2 text-[13px] font-normal text-[var(--text-secondary)]">
+                  best {streak.bestStreak}
+                </span>
+              </p>
+              <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
+                {streak.secureToday
+                  ? "Today is already an orbit day."
+                  : `${streak.scoreToSecureToday}% more today keeps the run alive.`}
+                {streak.gracedDates.length > 0
+                  ? " One missed day is being carried as an aerobrake."
+                  : ""}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-black/20 p-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="label-caps text-[var(--text-muted)]">
+                Ghost of last week
+              </p>
+              <p className="text-[12px] text-[var(--text-secondary)]">
+                {ghost.verdict}
+              </p>
+            </div>
+            <div className="mt-3 space-y-2">
+              <GhostBar
+                color="var(--accent-primary)"
+                label="This week"
+                total={ghostTotal}
+                value={ghost.current}
+              />
+              <GhostBar
+                color="rgba(255,255,255,0.28)"
+                label="Last week"
+                total={ghostTotal}
+                value={ghost.previous}
+              />
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <MiniPill label="Peak altitude" value={`${records.bestAltitude}`} />
+            <MiniPill label="Best day" value={`${records.bestDay}%`} />
+            <MiniPill
+              label="Orbit days"
+              value={`${records.orbitDays}/${records.windowDays}`}
+            />
+            <MiniPill
+              label="7-day change"
+              value={`${momentum.weekChange >= 0 ? "+" : ""}${momentum.weekChange}`}
+            />
+          </div>
+
+          <DayCardShare
+            altitude={dayCard.altitude}
+            date={dayCard.date}
+            ghost={dayCard.ghost}
+            metrics={dayCard.metrics}
+            tierColor={dayCard.tier.color}
+            tierName={dayCard.tier.name}
+            trace={momentum.series.slice(-14).map((point) => point.altitude)}
+          />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function GhostBar({
+  color,
+  label,
+  total,
+  value,
+}: {
+  color: string;
+  label: string;
+  total: number;
+  value: number;
+}) {
+  const percent = Math.round((Math.max(0, value) / Math.max(1, total)) * 100);
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-20 shrink-0 text-[12px] text-[var(--text-secondary)]">
+        {label}
+      </span>
+      <span className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+        <span
+          className="block h-full rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
+          style={{ backgroundColor: color, width: `${percent}%` }}
+        />
+      </span>
+      <span className="metric-value w-10 shrink-0 text-right text-[12px] font-semibold text-white">
+        {value}
+      </span>
     </div>
   );
 }

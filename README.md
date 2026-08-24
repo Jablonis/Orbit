@@ -62,6 +62,23 @@ The migrations create and secure:
 All exposed user tables use RLS. Application reads also filter by the
 authenticated user.
 
+## Momentum
+
+Orbit tracks daily momentum as orbital altitude instead of a streak counter:
+each day either lifts the orbit or lets it decay by 15 %. The Overview shows
+the current tier, the exact score needed today to hold it, days in orbit, and a
+running race against the same week seven days ago. The day can be exported as a
+shareable PNG rendered entirely on the device. The mechanics and formulas are
+documented in `docs/MOMENTUM.md`.
+
+## Install on a phone
+
+Orbit ships a web manifest and icons, so it installs as a standalone app:
+
+1. Open the deployment in Safari or Chrome on the phone.
+2. Choose Share → Add to Home Screen (iOS) or Install app (Android).
+3. Launch it from the home screen; it opens without browser chrome.
+
 ## Main workflows
 
 - Tasks can be created, edited, completed, reopened, archived, and restored.
@@ -100,6 +117,8 @@ After deployment, verify:
 5. Finance CSV export and archive/undo.
 6. Overview preferences and weekly-reflection persistence.
 7. Keyboard navigation, reduced motion, 200% zoom, and supported mobile widths.
+8. Momentum card: altitude, tier, hold score, days in orbit, ghost race, and
+   day-card export on a phone.
 
 ## Vercel deployment
 
