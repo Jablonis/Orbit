@@ -37,18 +37,18 @@ export function AppNavigation({
         <div className="flex h-full flex-col items-center justify-between px-4 py-6">
           <Link className="flex flex-col items-center gap-2" href="/">
             <OrbitMark className="text-[var(--accent-primary)]" size={34} />
-            <span className="text-[13px] font-semibold text-white">Orbit</span>
+            <span className="text-[13px] font-semibold text-[var(--text-primary)]">Orbit</span>
             <LinkPendingIndicator label="Loading Overview" />
           </Link>
 
-          <div className="flex w-full flex-col items-stretch gap-2 rounded-[24px] border border-[var(--border-subtle)] bg-[var(--surface-1)] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.035),0_18px_42px_rgba(0,0,0,0.28)]">
+          <div className="flex w-full flex-col items-stretch gap-2 rounded-[var(--radius-panel)] border border-[var(--border-subtle)] bg-[var(--surface-1)] p-2 shadow-[inset_0_1px_0_rgba(244, 235, 221,0.035),0_18px_42px_rgba(0,0,0,0.28)]">
             {navItems.map((item) => (
               <Link
                 aria-current={active === item.key ? "page" : undefined}
-                className={`relative flex min-h-[64px] flex-col items-center justify-center gap-1 overflow-hidden rounded-[18px] px-2 py-2 text-[12px] font-semibold transition duration-150 ${
+                className={`relative flex min-h-[64px] flex-col items-center justify-center gap-1 overflow-hidden rounded-[var(--radius-row)] px-2 py-2 text-[12px] font-semibold transition duration-150 ${
                   active === item.key
-                    ? "bg-white/[0.08] text-white"
-                    : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-white"
+                    ? "bg-[rgba(244,235,221,0.08)] text-[var(--text-primary)]"
+                    : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
                 }`}
                 href={item.href}
                 key={item.key}
@@ -67,14 +67,14 @@ export function AppNavigation({
         </div>
       </nav>
 
-      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-4 border-t border-[var(--border-subtle)] bg-[#181819]/92 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl md:hidden">
+      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-4 border-t border-[var(--border-subtle)] bg-[var(--surface-nav)]/92 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl md:hidden">
         {navItems.map((item) => (
           <Link
             aria-current={active === item.key ? "page" : undefined}
-            className={`relative flex min-w-0 flex-col items-center justify-center rounded-[16px] p-2 text-[12px] font-semibold transition duration-150 ${
+            className={`relative flex min-w-0 flex-col items-center justify-center rounded-[var(--radius-row)] p-2 text-[12px] font-semibold transition duration-150 ${
               active === item.key
-                ? "bg-white/[0.08] text-white"
-                : "text-[var(--text-secondary)] hover:bg-white/10 hover:text-white"
+                ? "bg-[rgba(244,235,221,0.08)] text-[var(--text-primary)]"
+                : "text-[var(--text-secondary)] hover:bg-[rgba(244,235,221,0.1)] hover:text-[var(--text-primary)]"
             }`}
             href={item.href}
             key={item.key}

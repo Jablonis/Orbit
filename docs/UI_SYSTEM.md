@@ -1,5 +1,10 @@
 # Orbit UI System
 
+Orbit is drawn as an instrument: warm bone type on a warm near-black canvas,
+hairline edges instead of heavy panels, machined corners, and technical mono
+labels. Colour appears only as small tinted areas — a ring, an eyebrow, a
+single action button — and never as a large fill or a gradient across a panel.
+
 This document defines the reusable UI contract for Orbit. It complements the
 product roadmap in the local-only `design.md`; it is intentionally tracked with
 the code so new routes inherit the same rules.
@@ -49,21 +54,36 @@ should consume that file once an authenticated screenshot baseline is approved.
 
 ## Semantic tokens
 
-Tokens live in `src/app/globals.css`.
+Tokens live in `src/app/globals.css`. Nothing in the product may introduce a
+raw hex value for a meaning that already has a token.
 
-- Canvas and surfaces: `--canvas`, `--surface-*`, `--surface-overlay`,
-  `--surface-scrim`.
-- Borders: `--border-subtle`, `--border-strong`, `--border-focus`.
-- Text: `--text-primary`, `--text-secondary`, `--text-tertiary`,
-  `--text-inverse`.
+### Palette
+
+| Token | Value | Role |
+| --- | --- | --- |
+| `--canvas` | `#100f0d` | Warm near-black behind everything |
+| `--surface-1` … `--surface-selected` | `#171410` → `#2a241c` | Five warm steps of separation |
+| `--text-primary` | `#f4ebdd` | Bone. Never pure white |
+| `--text-secondary` / `--text-tertiary` / `--text-muted` | `#c3b9ab` / `#9a9086` / `#7c736a` | Warm greys, in that order of quiet |
+| `--border-subtle` / `--border-strong` | bone at 9% / 18% | Every edge is a bone hairline |
+| `--grid-line` | bone at 3.5% | The 72 px instrument grid |
+| `--accent-primary` | `#a3e635` | The single action colour |
+| `--accent-highlight` / `--accent-info` / `--accent-focus` | `#ff4fa3` / `#60a5fa` / `#8b7bd8` | Tasks / finance / review |
+| `--ring-*-from` / `--ring-*-to` | per domain | Ring gradients, dark to bright along the sweep |
+
+### Geometry
+
+Corners are machined, not soft: `--radius-control` 2 px, `--radius-row` 4 px,
+`--radius-panel` 6 px, `--radius-overlay` 8 px. Pills and dots stay at 999 px.
+`--control-height` is 44 px and is a floor, not a suggestion.
+
+### Other roles
+
 - Status: `--success`, `--warning`, `--danger`, `--accent-info`.
 - Data: `--data-series-1` through `--data-series-5`.
-- Geometry: `--radius-*`, `--control-height`, `--space-card`.
-- Motion: `--ease-orbit`, `--duration-micro`, `--duration-state`.
-- Elevation: `--shadow-panel`, `--shadow-overlay`.
-
-New components must use a semantic role instead of introducing another hex
-value for an existing meaning.
+- Motion: `--ease-orbit`, `--ease-ring`, `--duration-micro`, `--duration-state`.
+- Elevation: `--shadow-panel`, `--shadow-overlay` — wide, soft, and heavily
+  negative-spread. Depth comes from hairlines first, shadow second.
 
 ## Typography
 
@@ -73,9 +93,10 @@ value for an existing meaning.
 | Card title | `.card-title` | 18–20 px, 600 |
 | Body | `.body-copy` | 14 px / 24 px |
 | Metadata | `.metadata-copy` | 12 px / 18 px minimum |
-| Uppercase label | `.label-caps` | 12 px / 18 px, short secondary labels only |
+| Uppercase label | `.label-caps` | Geist Mono, 12 px, 0.12em tracking — the only shouting in the product |
 | Numeric datum | `.metric-value` | tabular figures |
-| Editorial statement | `.editorial-display` | Brief/reflection only |
+| Editorial statement | `.editorial-display` | Brief and reflection only |
+| Landing wordmark | `.display-mega` | Uppercase, 115% stretch, one per page |
 
 Essential content must never render below 12 px. Instructions, errors, and
 actionable labels should normally be 13–14 px.

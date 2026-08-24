@@ -328,7 +328,7 @@ export default async function Home({
         <header className="overview-intro-enter mb-6 flex flex-col gap-4 pr-14 sm:flex-row sm:items-end sm:justify-between md:pr-0">
           <div>
             <p className="label-caps text-[var(--accent-primary)]">Overview</p>
-            <h1 className="page-title mt-2 text-white">
+            <h1 className="page-title mt-2 text-[var(--text-primary)]">
               Your day, clearly.
             </h1>
             <p className="mt-2 max-w-2xl text-[14px] leading-6 text-[var(--text-secondary)]">
@@ -475,7 +475,7 @@ function BriefHero({
             <p className="label-caps text-[var(--accent-primary)]">
               {phase.eyebrow} · {dateLabel}
             </p>
-            <h2 className="editorial-display mt-3 max-w-3xl text-[32px] leading-[37px] text-white sm:text-[42px] sm:leading-[47px]" id="brief-title">
+            <h2 className="editorial-display mt-3 max-w-3xl text-[32px] leading-[37px] text-[var(--text-primary)] sm:text-[42px] sm:leading-[47px]" id="brief-title">
               {phase.greeting}. {phase.prompt}
             </h2>
             <p className="mt-3 text-[14px] leading-6 text-[var(--text-secondary)]">
@@ -485,7 +485,7 @@ function BriefHero({
 
           <div className="mt-6 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-black/20 p-4 sm:p-5">
             <p className="label-caps text-[var(--text-tertiary)]">Next clear move</p>
-            <p className="mt-2 text-[18px] font-semibold leading-6 text-white sm:text-[20px]">
+            <p className="mt-2 text-[18px] font-semibold leading-6 text-[var(--text-primary)] sm:text-[20px]">
               {nextTask?.title ?? (training.day.sport !== "rest" ? training.title : "Your schedule is clear")}
             </p>
             <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
@@ -541,8 +541,8 @@ function BriefPeriodLink({ active, href, label }: { active: boolean; href: strin
       aria-current={active ? "page" : undefined}
       className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 text-[12px] font-semibold transition ${
         active
-          ? "bg-white text-[#171718] shadow-sm"
-          : "text-[var(--text-secondary)] hover:bg-white/[0.06] hover:text-white"
+          ? "bg-[var(--text-primary)] text-[var(--text-inverse)] shadow-sm"
+          : "text-[var(--text-secondary)] hover:bg-[rgba(244,235,221,0.06)] hover:text-[var(--text-primary)]"
       }`}
       href={href}
       scroll={false}
@@ -582,7 +582,7 @@ function WeeklyBriefBody({
       <div className="flex min-w-0 flex-col justify-between">
         <div>
           <p className="label-caps text-[var(--accent-focus)]">Week through {dateLabel}</p>
-          <h2 className="editorial-display mt-3 max-w-3xl text-[32px] leading-[37px] text-white sm:text-[42px] sm:leading-[47px]" id="brief-title">
+          <h2 className="editorial-display mt-3 max-w-3xl text-[32px] leading-[37px] text-[var(--text-primary)] sm:text-[42px] sm:leading-[47px]" id="brief-title">
             {review.score}% weekly rhythm. {weeklyDirection}
           </h2>
           <p className="mt-3 text-[14px] leading-6 text-[var(--text-secondary)]">
@@ -592,13 +592,13 @@ function WeeklyBriefBody({
 
         <div className="mt-6 rounded-[var(--radius-row)] border border-[var(--accent-focus)]/20 bg-[var(--accent-focus)]/[0.07] p-4 sm:p-5">
           <p className="label-caps text-[var(--accent-focus)]">Best weekly leverage</p>
-          <p className="mt-2 text-[18px] font-semibold leading-6 text-white sm:text-[20px]">{leverage}</p>
+          <p className="mt-2 text-[18px] font-semibold leading-6 text-[var(--text-primary)] sm:text-[20px]">{leverage}</p>
           <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
             Net cashflow {formatCurrency(review.income - review.expenses)} · {review.savingsRate}% savings rate
           </p>
           {showWeeklyReview ? (
             <Link
-              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] bg-white px-5 text-[13px] font-bold text-[#171718] transition hover:brightness-105"
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] bg-[var(--text-primary)] px-5 text-[13px] font-bold text-[var(--text-inverse)] transition hover:brightness-105"
               href="#weekly-review"
             >
               Open weekly review
@@ -642,7 +642,7 @@ function HeroSignal({
 }) {
   return (
     <Link
-      className="overview-interactive-card group flex min-h-32 flex-col justify-between rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-4 transition duration-150 hover:border-[var(--border-strong)] hover:bg-white/[0.045]"
+      className="overview-interactive-card group flex min-h-32 flex-col justify-between rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.025)] p-4 transition duration-150 hover:border-[var(--border-strong)] hover:bg-[rgba(244,235,221,0.045)]"
       href={href}
     >
       <div>
@@ -658,7 +658,7 @@ function HeroSignal({
         <LinkPendingIndicator label={`Opening ${label}`} />
       </div>
       <div>
-        <p className="truncate text-[15px] font-semibold text-white">{value}</p>
+        <p className="truncate text-[15px] font-semibold text-[var(--text-primary)]">{value}</p>
         <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">{detail}</p>
       </div>
     </Link>
@@ -698,7 +698,7 @@ function SectionHeading({
     <div className="overview-heading-enter section-datum flex flex-col gap-2 border-t border-[var(--border-subtle)] pt-4 sm:flex-row sm:items-end sm:justify-between sm:gap-5">
       <div>
         <p className="label-caps text-[var(--text-tertiary)]">{eyebrow}</p>
-        <h2 className="mt-1 text-[22px] font-semibold text-white" id={id}>{title}</h2>
+        <h2 className="mt-1 text-[22px] font-semibold text-[var(--text-primary)]" id={id}>{title}</h2>
       </div>
       <p className="max-w-xl text-[13px] leading-5 text-[var(--text-secondary)]">{detail}</p>
     </div>
@@ -754,7 +754,7 @@ function MomentumCard({
           />
           <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
             <div>
-              <p className="metric-value text-[40px] font-semibold leading-none text-white">
+              <p className="metric-value text-[40px] font-semibold leading-none text-[var(--text-primary)]">
                 {momentum.projected}
               </p>
               <p className="label-caps mt-1 text-[var(--text-muted)]">Altitude</p>
@@ -766,7 +766,7 @@ function MomentumCard({
           <div className="flex flex-wrap items-center gap-2">
             <p className="label-caps text-[var(--text-secondary)]">Momentum</p>
             <span
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] px-2.5 py-1 text-[11px] font-semibold text-white"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-primary)]"
               style={{ color: momentum.tier.color }}
             >
               <span
@@ -776,7 +776,7 @@ function MomentumCard({
               {statusLabel}
             </span>
           </div>
-          <h2 className="mt-3 text-[28px] font-semibold leading-[34px] text-white">
+          <h2 className="mt-3 text-[28px] font-semibold leading-[34px] text-[var(--text-primary)]">
             {momentum.tier.name}
           </h2>
           <p className="mt-2 text-[14px] leading-6 text-[var(--text-secondary)]">
@@ -786,7 +786,7 @@ function MomentumCard({
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-black/20 p-4">
               <p className="label-caps text-[var(--text-muted)]">Today decides</p>
-              <p className="mt-2 text-[15px] font-semibold leading-6 text-white">
+              <p className="mt-2 text-[15px] font-semibold leading-6 text-[var(--text-primary)]">
                 {holdLine}
               </p>
               <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
@@ -795,7 +795,7 @@ function MomentumCard({
             </div>
             <div className="rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-black/20 p-4">
               <p className="label-caps text-[var(--text-muted)]">Days in orbit</p>
-              <p className="metric-value mt-2 text-[24px] font-semibold text-white">
+              <p className="metric-value mt-2 text-[24px] font-semibold text-[var(--text-primary)]">
                 {streak.streak}
                 <span className="ml-2 text-[13px] font-normal text-[var(--text-secondary)]">
                   best {streak.bestStreak}
@@ -829,7 +829,7 @@ function MomentumCard({
                 value={ghost.current}
               />
               <GhostBar
-                color="rgba(255,255,255,0.28)"
+                color="rgba(244, 235, 221,0.28)"
                 label="Last week"
                 total={ghostTotal}
                 value={ghost.previous}
@@ -882,13 +882,13 @@ function GhostBar({
       <span className="w-20 shrink-0 text-[12px] text-[var(--text-secondary)]">
         {label}
       </span>
-      <span className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+      <span className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[rgba(244,235,221,0.06)]">
         <span
           className="block h-full rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
           style={{ backgroundColor: color, width: `${percent}%` }}
         />
       </span>
-      <span className="metric-value w-10 shrink-0 text-right text-[12px] font-semibold text-white">
+      <span className="metric-value w-10 shrink-0 text-right text-[12px] font-semibold text-[var(--text-primary)]">
         {value}
       </span>
     </div>
@@ -923,7 +923,7 @@ function DailyRingsCard({
         </div>
         <div className="min-w-0">
           <p className="label-caps text-[var(--text-secondary)]">Today</p>
-          <h2 className="mt-2 text-[26px] font-semibold leading-[32px] tracking-[-0.02em] text-white">
+          <h2 className="mt-2 text-[26px] font-semibold leading-[32px] tracking-[-0.02em] text-[var(--text-primary)]">
             {headline}
           </h2>
           <div className="mt-5 grid max-w-md gap-1">
@@ -971,7 +971,7 @@ function FinanceSummaryCard({
   return (
     <article className="content-panel overview-card-enter overview-delay-2 rounded-[var(--radius-panel)] p-4 xl:col-span-5 xl:p-5">
       <p className="label-caps text-[var(--accent-info)]">{pinnedFinance.label}</p>
-      <p className="metric-value mt-3 text-[28px] font-semibold text-white xl:mt-4 xl:text-[34px]">
+      <p className="metric-value mt-3 text-[28px] font-semibold text-[var(--text-primary)] xl:mt-4 xl:text-[34px]">
         {formatCurrency(pinnedFinance.value)}
       </p>
       <p className="mt-2 text-[14px] leading-6 text-[var(--text-secondary)]">
@@ -1029,7 +1029,7 @@ function FitnessTodayCard({
       <div className="relative flex items-start justify-between gap-3">
         <div>
           <p className="label-caps text-[var(--accent-primary)]">Fitness today</p>
-          <h2 className="mt-3 text-[24px] font-semibold leading-[30px] text-white xl:mt-4 xl:text-[30px] xl:leading-[36px]">
+          <h2 className="mt-3 text-[24px] font-semibold leading-[30px] text-[var(--text-primary)] xl:mt-4 xl:text-[30px] xl:leading-[36px]">
             {training.title}
           </h2>
         </div>
@@ -1043,7 +1043,7 @@ function FitnessTodayCard({
               className={`grid h-12 w-12 place-items-center rounded-full border text-[18px] font-bold transition ${
                 training.day.log.completed
                   ? "border-[var(--accent-primary)]/45 bg-[var(--accent-primary)] text-[var(--surface-nav)]"
-                  : "border-white/15 bg-[var(--surface-nav)] text-transparent hover:border-[var(--accent-primary)]/60 hover:text-[var(--accent-primary)]"
+                  : "border-[rgba(244,235,221,0.15)] bg-[var(--surface-nav)] text-transparent hover:border-[var(--accent-primary)]/60 hover:text-[var(--accent-primary)]"
               }`}
               pendingLabel="…"
             >
@@ -1058,8 +1058,8 @@ function FitnessTodayCard({
       <p className="relative mt-2 text-[12px] font-semibold text-[var(--accent-primary)]">
         {training.day.log.completed ? "Marked done" : canComplete ? "Ready to log" : "Recovery day"}
       </p>
-      <div className="relative mt-3 rounded-[16px] border border-white/10 bg-[var(--surface-row)]/60 p-3 xl:mt-4 xl:rounded-[18px] xl:p-4">
-        <p className="text-[13px] leading-5 text-white xl:text-[14px] xl:leading-6">
+      <div className="relative mt-3 rounded-[var(--radius-row)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)]/60 p-3 xl:mt-4 xl:rounded-[var(--radius-row)] xl:p-4">
+        <p className="text-[13px] leading-5 text-[var(--text-primary)] xl:text-[14px] xl:leading-6">
           {training.focus}
         </p>
       </div>
@@ -1117,7 +1117,7 @@ function QuickTasksCard({
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="label-caps text-[var(--accent-highlight)]">Quick tasks</p>
-          <h2 className="mt-2 text-[26px] font-semibold text-white">What matters next</h2>
+          <h2 className="mt-2 text-[26px] font-semibold text-[var(--text-primary)]">What matters next</h2>
           {pinnedCategory ? (
             <p className="mt-1 text-[12px] font-semibold text-[var(--highlight-text)]">
               Pinned · {pinnedCategory}
@@ -1131,8 +1131,8 @@ function QuickTasksCard({
           <Link
             className={`inline-flex min-h-11 items-center rounded-full px-3 py-1.5 text-[12px] font-semibold capitalize ${
               value === filter
-                ? "bg-white text-[var(--text-on-light)]"
-                : "border border-white/10 text-[var(--text-secondary)]"
+                ? "bg-[var(--text-primary)] text-[var(--text-on-light)]"
+                : "border border-[rgba(244,235,221,0.1)] text-[var(--text-secondary)]"
             }`}
             href={getOverviewHref(overviewQuery, { tasks: value })}
             key={value}
@@ -1149,7 +1149,7 @@ function QuickTasksCard({
         {quickTasks.map((task, index) => (
           <form
             action={toggleTaskAction}
-            className="overview-row-enter grid grid-cols-[44px_1fr_auto] items-center gap-3 rounded-[16px] border border-white/10 bg-[var(--surface-row)]/55 p-3 transition hover:border-white/20 hover:bg-[#262626]/70"
+            className="overview-row-enter grid grid-cols-[44px_1fr_auto] items-center gap-3 rounded-[var(--radius-row)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)]/55 p-3 transition hover:border-[rgba(244,235,221,0.2)] hover:bg-[var(--surface-hover)]/70"
             key={task.id}
             style={{ animationDelay: `${240 + index * 55}ms` }}
           >
@@ -1160,21 +1160,21 @@ function QuickTasksCard({
               className={`grid h-11 w-11 place-items-center rounded-full border text-[14px] font-bold transition ${
                 task.completed
                   ? "border-[var(--accent-primary)]/45 bg-[var(--accent-primary)] text-[var(--surface-nav)]"
-                  : "border-white/15 bg-[var(--surface-nav)] text-transparent hover:border-[var(--accent-primary)]/60 hover:text-[var(--accent-primary)]"
+                  : "border-[rgba(244,235,221,0.15)] bg-[var(--surface-nav)] text-transparent hover:border-[var(--accent-primary)]/60 hover:text-[var(--accent-primary)]"
               }`}
               pendingLabel="…"
             >
               ✓
             </PendingSubmitButton>
             <div className="min-w-0">
-              <p className={`truncate text-[14px] font-semibold ${task.completed ? "text-[var(--text-muted)] line-through" : "text-white"}`}>
+              <p className={`truncate text-[14px] font-semibold ${task.completed ? "text-[var(--text-muted)] line-through" : "text-[var(--text-primary)]"}`}>
                 {task.title}
               </p>
-              <p className={`mt-0.5 text-[12px] ${getTaskDayStatus(task, today, timeZone) === "overdue" ? "text-[#ff9f9f]" : "text-[var(--text-secondary)]"}`}>
+              <p className={`mt-0.5 text-[12px] ${getTaskDayStatus(task, today, timeZone) === "overdue" ? "text-[var(--danger)]" : "text-[var(--text-secondary)]"}`}>
                 {task.category} · {formatRelativeTaskDate(task, today, timeZone)}
               </p>
             </div>
-            <span className="rounded-full border border-white/10 px-2.5 py-1 text-[12px] font-semibold text-[var(--text-secondary)]">
+            <span className="rounded-full border border-[rgba(244,235,221,0.1)] px-2.5 py-1 text-[12px] font-semibold text-[var(--text-secondary)]">
               {task.priority}
             </span>
           </form>
@@ -1203,7 +1203,7 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
   return (
     <article className="content-panel overview-card-enter overview-delay-5 rounded-[var(--radius-panel)] p-4 sm:p-5">
       <div className="mb-5 flex items-start justify-between gap-3">
-        <div><p className="label-caps text-[var(--accent-info)]">Cashflow</p><h2 className="mt-2 text-[22px] font-semibold text-white">Monthly movement</h2></div>
+        <div><p className="label-caps text-[var(--accent-info)]">Cashflow</p><h2 className="mt-2 text-[22px] font-semibold text-[var(--text-primary)]">Monthly movement</h2></div>
         <Link className="inline-flex min-h-11 shrink-0 items-center text-[12px] font-semibold text-[var(--accent-primary)]" href="/finance">Open<LinkPendingIndicator label="Opening Finance" /></Link>
       </div>
       <p className="mb-4 text-[12px] leading-[18px] text-[var(--text-secondary)]">
@@ -1218,13 +1218,13 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
         {monthlyCashflow.map((month, index) => (
           <div
             aria-label={`${month.month}: income ${formatCurrency(month.income)}, expenses ${formatCurrency(month.expense)}, net ${formatCurrency(month.income - month.expense)}`}
-            className="flex min-w-0 flex-1 flex-col items-center gap-2 rounded-[10px] focus-visible:bg-white/[0.04]"
+            className="flex min-w-0 flex-1 flex-col items-center gap-2 rounded-[var(--radius-control)] focus-visible:bg-[rgba(244,235,221,0.04)]"
             key={month.month}
             role="group"
             tabIndex={0}
             title={`${month.month}: ${formatCurrency(month.income - month.expense)} net`}
           >
-            <div className="flex w-full flex-1 items-end justify-center gap-1 rounded-[14px] border border-white/10 bg-[var(--surface-1)] px-1.5 pb-2">
+            <div className="flex w-full flex-1 items-end justify-center gap-1 rounded-[var(--radius-control)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-1)] px-1.5 pb-2">
               <div className="overview-bar-enter w-full max-w-6 rounded-t-[8px] bg-[var(--accent-primary)]" style={{ animationDelay: `${180 + index * 55}ms`, height: `${(month.income / max) * 100}%` }} />
               <div className="overview-bar-enter w-full max-w-6 rounded-t-[8px] bg-[var(--accent-info)]/55" style={{ animationDelay: `${230 + index * 55}ms`, height: `${(month.expense / max) * 100}%` }} />
             </div>
@@ -1243,14 +1243,14 @@ function CashflowChart({ monthlyCashflow }: { monthlyCashflow: Array<{ expense: 
       )}
       <div className="mt-4 flex gap-4 text-[12px] font-semibold text-[var(--text-secondary)]"><ChartLegend color="var(--accent-primary)" label="Income" /><ChartLegend color="var(--accent-info)" label="Expense" /></div>
       {monthlyCashflow.length > 0 ? (
-        <details className="mt-4 border-t border-white/10 pt-3">
+        <details className="mt-4 border-t border-[rgba(244,235,221,0.1)] pt-3">
           <summary className="cursor-pointer text-[12px] font-semibold text-[var(--accent-primary)]">
             Accessible cashflow summary
           </summary>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-left text-[12px]">
               <thead className="text-[var(--text-tertiary)]"><tr><th className="pb-2">Month</th><th>Income</th><th>Expense</th></tr></thead>
-              <tbody>{monthlyCashflow.map((month) => <tr className="border-t border-white/[0.06]" key={month.month}><td className="py-2 text-white">{month.month}</td><td>{formatCurrency(month.income)}</td><td>{formatCurrency(month.expense)}</td></tr>)}</tbody>
+              <tbody>{monthlyCashflow.map((month) => <tr className="border-t border-[rgba(244,235,221,0.06)]" key={month.month}><td className="py-2 text-[var(--text-primary)]">{month.month}</td><td>{formatCurrency(month.income)}</td><td>{formatCurrency(month.expense)}</td></tr>)}</tbody>
             </table>
           </div>
         </details>
@@ -1314,7 +1314,7 @@ function ProductivityChart({ current, enabledDomains, overviewQuery, previous, r
   );
   return (
     <article className="content-panel overview-card-enter overview-delay-6 rounded-[var(--radius-panel)] p-4 sm:p-5">
-      <div><p className="label-caps text-[var(--accent-highlight)]">Productivity</p><h2 className="mt-2 text-[22px] font-semibold text-white">Reliable {rangeDays}-day score</h2></div>
+      <div><p className="label-caps text-[var(--accent-highlight)]">Productivity</p><h2 className="mt-2 text-[22px] font-semibold text-[var(--text-primary)]">Reliable {rangeDays}-day score</h2></div>
       <p className="mt-3 text-[12px] font-semibold text-[var(--text-secondary)]">
         {!hasEnabledDomains
           ? "Choose at least one score domain to calculate productivity."
@@ -1335,7 +1335,7 @@ function ProductivityChart({ current, enabledDomains, overviewQuery, previous, r
             : [...enabledDomains, domain];
           return (
             <Link
-              className={`inline-flex min-h-11 items-center rounded-full px-3 py-1 text-[12px] font-semibold capitalize ${enabled ? "bg-white text-[var(--text-on-light)]" : "border border-white/10 text-[var(--text-muted)]"}`}
+              className={`inline-flex min-h-11 items-center rounded-full px-3 py-1 text-[12px] font-semibold capitalize ${enabled ? "bg-[var(--text-primary)] text-[var(--text-on-light)]" : "border border-[rgba(244,235,221,0.1)] text-[var(--text-muted)]"}`}
               href={getOverviewHref(overviewQuery, {
                 domains: nextDomains.length ? nextDomains.join(",") : "none",
               })}
@@ -1353,7 +1353,7 @@ function ProductivityChart({ current, enabledDomains, overviewQuery, previous, r
         <div className="absolute inset-x-0 top-0 h-[130px]">
           <svg aria-hidden="true" className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 600 130">
             {[12, 62, 112].map((y) => (
-              <line key={y} stroke="rgba(255,255,255,0.07)" vectorEffect="non-scaling-stroke" x1="20" x2="580" y1={y} y2={y} />
+              <line key={y} stroke="rgba(244, 235, 221,0.07)" vectorEffect="non-scaling-stroke" x1="20" x2="580" y1={y} y2={y} />
             ))}
             {previousPaths.map((path, index) => (
               <path
@@ -1393,7 +1393,7 @@ function ProductivityChart({ current, enabledDomains, overviewQuery, previous, r
               title={`${point.label}: ${point.score}%`}
             >
               <span
-                className={`overview-chart-point rounded-full border-2 border-[var(--surface-1)] shadow-[0_0_0_1px_rgba(255,255,255,0.14)] group-focus-visible:ring-2 group-focus-visible:ring-[var(--accent-primary)] group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-[var(--surface-1)] ${
+                className={`overview-chart-point rounded-full border-2 border-[var(--surface-1)] shadow-[0_0_0_1px_rgba(244, 235, 221,0.14)] group-focus-visible:ring-2 group-focus-visible:ring-[var(--accent-primary)] group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-[var(--surface-1)] ${
                   point.date === today
                     ? "h-4 w-4 bg-[var(--accent-primary)]"
                     : "h-3 w-3 bg-[var(--accent-highlight)]"
@@ -1417,17 +1417,17 @@ function ProductivityChart({ current, enabledDomains, overviewQuery, previous, r
         </div>
       </div>
       <div className="mt-2 flex gap-4 text-[12px] font-semibold text-[var(--text-secondary)]"><ChartLegend color="var(--accent-highlight)" label={`Last ${rangeDays} days`} /><ChartLegend color="rgba(196,199,200,0.45)" label={`Previous ${rangeDays} days`} /></div>
-      <details className="mt-4 border-t border-white/10 pt-3">
+      <details className="mt-4 border-t border-[rgba(244,235,221,0.1)] pt-3">
         <summary className="cursor-pointer text-[12px] font-semibold text-[var(--accent-primary)]">Accessible score summary</summary>
-        <div className="mt-3 overflow-x-auto"><table className="w-full text-left text-[12px]"><thead className="text-[var(--text-muted)]"><tr><th className="pb-2">Day</th><th>Score</th><th>Tasks</th><th>Training</th><th>Focus</th></tr></thead><tbody>{current.map((point) => <tr className="border-t border-white/[0.06]" key={point.date}><td className="py-2 text-white">{point.label}</td><td>{point.score === null ? "—" : `${point.score}%`}</td><td>{point.future ? "—" : `${point.completedTasks}/${point.plannedTasks}`}</td><td>{point.future ? "—" : `${point.completedFitness}/${point.plannedFitness}`}</td><td>{point.future ? "—" : `${point.focusMinutes} min`}</td></tr>)}</tbody></table></div>
+        <div className="mt-3 overflow-x-auto"><table className="w-full text-left text-[12px]"><thead className="text-[var(--text-muted)]"><tr><th className="pb-2">Day</th><th>Score</th><th>Tasks</th><th>Training</th><th>Focus</th></tr></thead><tbody>{current.map((point) => <tr className="border-t border-[rgba(244,235,221,0.06)]" key={point.date}><td className="py-2 text-[var(--text-primary)]">{point.label}</td><td>{point.score === null ? "—" : `${point.score}%`}</td><td>{point.future ? "—" : `${point.completedTasks}/${point.plannedTasks}`}</td><td>{point.future ? "—" : `${point.completedFitness}/${point.plannedFitness}`}</td><td>{point.future ? "—" : `${point.focusMinutes} min`}</td></tr>)}</tbody></table></div>
       </details>
         </>
       ) : (
         <div
-          className="mt-4 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] px-4 py-8 text-center"
+          className="mt-4 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.025)] px-4 py-8 text-center"
           role="status"
         >
-          <p className="text-[14px] font-semibold text-white">No score domains selected</p>
+          <p className="text-[14px] font-semibold text-[var(--text-primary)]">No score domains selected</p>
           <p className="mt-2 text-[12px] leading-5 text-[var(--text-secondary)]">
             Enable one of the domains above to restore the chart and comparison.
           </p>
@@ -1448,9 +1448,9 @@ function WeeklyReviewCard({ reflection, review }: { reflection: WeeklyReflection
   const scoreChange = review.score - review.previousScore;
   return (
     <article className="content-panel overview-card-enter overview-delay-7 scroll-mt-6 rounded-[var(--radius-panel)] p-5 sm:col-span-2 xl:col-span-12 xl:p-6" id="weekly-review">
-      <div className="flex flex-col gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div><p className="label-caps text-[var(--accent-focus)]">Weekly review</p><h2 className="editorial-display mt-2 text-[32px] leading-tight text-white">Close the loop</h2></div>
-        <p className={`text-[13px] font-semibold ${scoreChange >= 0 ? "text-[var(--accent-primary)]" : "text-[#ff9f9f]"}`}>{scoreChange >= 0 ? "+" : ""}{scoreChange} points vs last week</p>
+      <div className="flex flex-col gap-3 border-b border-[rgba(244,235,221,0.1)] pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div><p className="label-caps text-[var(--accent-focus)]">Weekly review</p><h2 className="editorial-display mt-2 text-[32px] leading-tight text-[var(--text-primary)]">Close the loop</h2></div>
+        <p className={`text-[13px] font-semibold ${scoreChange >= 0 ? "text-[var(--accent-primary)]" : "text-[var(--danger)]"}`}>{scoreChange >= 0 ? "+" : ""}{scoreChange} points vs last week</p>
       </div>
       <dl className="mt-5 grid overflow-hidden border-y border-[var(--border-subtle)] sm:grid-cols-2 xl:grid-cols-5">
         <ReviewMetric label="Tasks" value={`${review.completedTasks}/${review.plannedTasks}`} detail={`${review.overdueCarried} overdue carried`} />
@@ -1464,7 +1464,7 @@ function WeeklyReviewCard({ reflection, review }: { reflection: WeeklyReflection
   );
 }
 
-function ReviewMetric({ detail, label, value }: { detail: string; label: string; value: string }) { return <div className="border-b border-[var(--border-subtle)] p-4 last:border-b-0 sm:border-r xl:border-b-0 xl:last:border-r-0"><dt className="label-caps text-[var(--text-muted)]">{label}</dt><dd className="metric-value mt-2 text-[20px] font-semibold text-white">{value}</dd><p className="mt-1 text-[12px] text-[var(--text-muted)]">{detail}</p></div>; }
+function ReviewMetric({ detail, label, value }: { detail: string; label: string; value: string }) { return <div className="border-b border-[var(--border-subtle)] p-4 last:border-b-0 sm:border-r xl:border-b-0 xl:last:border-r-0"><dt className="label-caps text-[var(--text-muted)]">{label}</dt><dd className="metric-value mt-2 text-[20px] font-semibold text-[var(--text-primary)]">{value}</dd><p className="mt-1 text-[12px] text-[var(--text-muted)]">{detail}</p></div>; }
 function ChartLegend({ color, label }: { color: string; label: string }) { return <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />{label}</span>; }
 
 function RingLegend({
@@ -1482,7 +1482,7 @@ function RingLegend({
 }) {
   return (
     <Link
-      className="overview-interactive-card group flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-row)] px-3 py-2.5 transition hover:bg-white/[0.04]"
+      className="overview-interactive-card group flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-row)] px-3 py-2.5 transition hover:bg-[rgba(244,235,221,0.04)]"
       href={href}
     >
       <span className="flex min-w-0 items-center gap-2.5">
@@ -1490,7 +1490,7 @@ function RingLegend({
           className="h-2.5 w-2.5 shrink-0 rounded-full"
           style={{ backgroundColor: color }}
         />
-        <span className="truncate text-[13px] font-semibold text-white">
+        <span className="truncate text-[13px] font-semibold text-[var(--text-primary)]">
           {label}
         </span>
       </span>
@@ -1507,4 +1507,4 @@ function RingLegend({
   );
 }
 
-function MiniPill({ label, value }: { label: string; value: string }) { return <div className="rounded-[16px] border border-white/10 bg-[var(--surface-row)]/60 p-3"><p className="label-caps text-[var(--text-muted)]">{label}</p><p className="metric-value mt-2 text-[15px] font-semibold text-white">{value}</p></div>; }
+function MiniPill({ label, value }: { label: string; value: string }) { return <div className="rounded-[var(--radius-row)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)]/60 p-3"><p className="label-caps text-[var(--text-muted)]">{label}</p><p className="metric-value mt-2 text-[15px] font-semibold text-[var(--text-primary)]">{value}</p></div>; }

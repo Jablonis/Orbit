@@ -23,7 +23,7 @@ export function ActionToast({
         className={`action-toast floating-panel pointer-events-auto flex w-full items-center justify-between gap-4 rounded-[var(--radius-row)] px-4 py-3 text-[13px] shadow-2xl ${
           tone === "error"
             ? "border-[color-mix(in_srgb,var(--danger)_34%,transparent)] text-[var(--danger-text)]"
-            : "text-white"
+            : "text-[var(--text-primary)]"
         }`}
         role={tone === "error" ? "alert" : "status"}
       >
@@ -32,7 +32,7 @@ export function ActionToast({
             aria-hidden="true"
             className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[12px] font-bold ${
               tone === "error"
-                ? "bg-[var(--danger)] text-[#3b0908]"
+                ? "bg-[var(--danger)] text-[var(--text-inverse)]"
                 : tone === "loading"
                   ? "bg-[var(--accent-info)]/15 text-[var(--info-text)]"
                   : "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"

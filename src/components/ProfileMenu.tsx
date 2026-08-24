@@ -120,7 +120,7 @@ function ProfileMenuDialog({
     <>
       <button
         aria-label="Open profile and settings"
-        className="fixed bottom-6 left-[34px] z-50 hidden h-11 w-11 place-items-center overflow-hidden rounded-full border border-[var(--border-strong)] bg-[conic-gradient(from_140deg,var(--accent-highlight),var(--accent-info),var(--accent-primary),var(--accent-highlight))] text-[12px] font-bold text-[#101011] shadow-[0_14px_34px_rgba(0,0,0,0.38)] transition duration-150 hover:scale-[1.04] md:grid"
+        className="fixed bottom-6 left-[34px] z-50 hidden h-11 w-11 place-items-center overflow-hidden rounded-full border border-[var(--border-strong)] bg-[conic-gradient(from_140deg,var(--accent-highlight),var(--accent-info),var(--accent-primary),var(--accent-highlight))] text-[12px] font-bold text-[var(--canvas)] shadow-[0_14px_34px_rgba(0,0,0,0.38)] transition duration-150 hover:scale-[1.04] md:grid"
         onClick={open}
         title={userEmail}
         type="button"
@@ -162,7 +162,7 @@ function ProfileMenuDialog({
                 Unsaved settings
               </p>
               <h2
-                className="mt-2 text-[24px] font-semibold text-white"
+                className="mt-2 text-[24px] font-semibold text-[var(--text-primary)]"
                 id="discard-settings-title"
               >
                 Discard unsaved changes?
@@ -204,7 +204,7 @@ function ProfileMenuDialog({
           </div>
           <button
             aria-label="Close profile and settings"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--border-subtle)] text-[20px] text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)] hover:text-white"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--border-subtle)] text-[20px] text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
             onClick={() => requestDismiss()}
             type="button"
           >
@@ -218,17 +218,17 @@ function ProfileMenuDialog({
               Account
             </p>
             <div className="mt-3 flex items-center gap-3">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--surface-hover)] text-[13px] font-bold text-white">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--surface-hover)] text-[13px] font-bold text-[var(--text-primary)]">
                 {initial}
               </div>
               <div className="min-w-0">
                 <p className="text-[13px] text-[var(--text-tertiary)]">Signed in as</p>
                 {profile?.displayName ? (
-                  <p className="truncate text-[15px] font-semibold text-white">
+                  <p className="truncate text-[15px] font-semibold text-[var(--text-primary)]">
                     {profile.displayName}
                   </p>
                 ) : null}
-                <p className="truncate text-[14px] font-semibold text-white">{userEmail}</p>
+                <p className="truncate text-[14px] font-semibold text-[var(--text-primary)]">{userEmail}</p>
                 {profile ? (
                   <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
                     {profile.timeZone} · {profile.currency}
@@ -259,7 +259,7 @@ function ProfileMenuDialog({
               reflection records.
             </p>
             <a
-              className="mt-3 inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-[var(--border-strong)] px-4 text-[13px] font-semibold text-white"
+              className="mt-3 inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-[var(--border-strong)] px-4 text-[13px] font-semibold text-[var(--text-primary)]"
               download
               href="/api/export"
             >

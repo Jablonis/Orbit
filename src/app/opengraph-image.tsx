@@ -14,7 +14,7 @@ export default function OpengraphImage() {
       <div
         style={{
           alignItems: "center",
-          background: "#0d0d0e",
+          background: "#100f0d",
           display: "flex",
           height: "100%",
           padding: "72px",
@@ -56,10 +56,11 @@ export default function OpengraphImage() {
             </div>
             <div
               style={{
-                color: "#f7f7f5",
-                fontSize: "34px",
+                color: "#f4ebdd",
+                fontSize: "32px",
                 fontWeight: 700,
-                letterSpacing: "-0.03em",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
               }}
             >
               Orbit
@@ -68,7 +69,7 @@ export default function OpengraphImage() {
 
           <div
             style={{
-              color: "#f7f7f5",
+              color: "#f4ebdd",
               fontSize: "76px",
               fontWeight: 600,
               letterSpacing: "-0.04em",
@@ -80,7 +81,7 @@ export default function OpengraphImage() {
           </div>
           <div
             style={{
-              color: "#c4c7c8",
+              color: "#c3b9ab",
               fontSize: "30px",
               lineHeight: 1.4,
               marginTop: "28px",

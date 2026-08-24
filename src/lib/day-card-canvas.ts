@@ -15,6 +15,17 @@ export type DayCardContent = {
 export const DAY_CARD_WIDTH = 1080;
 export const DAY_CARD_HEIGHT = 1350;
 
+const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
+const SANS = "ui-sans-serif, system-ui, -apple-system, sans-serif";
+
+/** Letter spacing is not in every engine; ignore it where it is missing. */
+function withTracking(context: CanvasRenderingContext2D, value: string) {
+  if ("letterSpacing" in context) {
+    (context as CanvasRenderingContext2D & { letterSpacing: string })
+      .letterSpacing = value;
+  }
+}
+
 export function drawDayCard(
   context: CanvasRenderingContext2D,
   props: DayCardContent,
@@ -28,7 +39,7 @@ export function drawDayCard(
   const start = -Math.PI / 2;
   const sweep = (clamp(props.altitude) / 100) * Math.PI * 2;
 
-  context.fillStyle = "#0d0d0e";
+  context.fillStyle = "#100f0d";
   context.fillRect(0, 0, DAY_CARD_WIDTH, DAY_CARD_HEIGHT);
 
   const glow = context.createRadialGradient(
@@ -40,7 +51,7 @@ export function drawDayCard(
     380,
   );
   glow.addColorStop(0, `${accent}26`);
-  glow.addColorStop(1, "#0d0d0e00");
+  glow.addColorStop(1, "#100f0d00");
   context.fillStyle = glow;
   context.fillRect(0, 0, DAY_CARD_WIDTH, DAY_CARD_HEIGHT);
 
@@ -75,7 +86,7 @@ export function drawDayCard(
     const angle = (index / props.trace.length) * Math.PI * 2 + start;
     const reached = score >= 50;
     const length = 8 + (clamp(score) / 100) * 34;
-    context.strokeStyle = reached ? accent : "rgba(255,255,255,0.22)";
+    context.strokeStyle = reached ? accent : "rgba(244, 235, 221,0.22)";
     context.globalAlpha = reached
       ? 0.4 + (index / props.trace.length) * 0.6
       : 0.75;
@@ -96,29 +107,31 @@ export function drawDayCard(
   context.lineCap = "butt";
 
   context.textAlign = "center";
-  context.fillStyle = "#f7f7f5";
-  context.font = "700 132px ui-sans-serif, system-ui, -apple-system, sans-serif";
+  context.fillStyle = "#f4ebdd";
+  context.font = `700 132px ${SANS}`;
   context.fillText(String(Math.round(props.altitude)), centerX, centerY + 26);
-  context.font = "600 24px ui-sans-serif, system-ui, sans-serif";
-  context.fillStyle = "#8d9092";
-  context.fillText("ALTITUDE", centerX, centerY + 76);
+  withTracking(context, "0.18em");
+  context.font = `600 20px ${MONO}`;
+  context.fillStyle = "#7c736a";
+  context.fillText("ALTITUDE", centerX + 4, centerY + 76);
 
   context.textAlign = "left";
-  context.fillStyle = accent;
-  context.font = "700 30px ui-sans-serif, system-ui, sans-serif";
+  context.fillStyle = "#f4ebdd";
+  context.font = `700 30px ${SANS}`;
   context.fillText("ORBIT", 90, 130);
-  context.fillStyle = "#8d9092";
-  context.font = "500 28px ui-sans-serif, system-ui, sans-serif";
-  context.fillText(props.date, 90, 178);
+  context.font = `500 22px ${MONO}`;
+  context.fillStyle = "#7c736a";
+  context.fillText(props.date.toUpperCase(), 90, 176);
+  withTracking(context, "0em");
 
-  context.fillStyle = "#f7f7f5";
-  context.font = "700 74px ui-sans-serif, system-ui, sans-serif";
+  context.fillStyle = "#f4ebdd";
+  context.font = `700 74px ${SANS}`;
   context.fillText(props.tierName, 90, 1030);
-  context.fillStyle = "#c4c7c8";
-  context.font = "500 32px ui-sans-serif, system-ui, sans-serif";
+  context.fillStyle = "#c3b9ab";
+  context.font = `500 30px ${SANS}`;
   context.fillText(props.ghost.slice(0, 64), 90, 1084);
 
-  context.strokeStyle = "rgba(255,255,255,0.08)";
+  context.strokeStyle = "rgba(244, 235, 221,0.08)";
   context.lineWidth = 2;
   context.beginPath();
   context.moveTo(90, 1140);
@@ -128,11 +141,13 @@ export function drawDayCard(
   const columnWidth = (DAY_CARD_WIDTH - 180) / Math.max(1, props.metrics.length);
   props.metrics.forEach((metric, index) => {
     const x = 90 + columnWidth * index;
-    context.fillStyle = "#8d9092";
-    context.font = "600 24px ui-sans-serif, system-ui, sans-serif";
+    withTracking(context, "0.16em");
+    context.fillStyle = "#7c736a";
+    context.font = `600 20px ${MONO}`;
     context.fillText(metric.label.toUpperCase(), x, 1210);
-    context.fillStyle = "#f7f7f5";
-    context.font = "700 52px ui-sans-serif, system-ui, sans-serif";
+    withTracking(context, "0em");
+    context.fillStyle = "#f4ebdd";
+    context.font = `700 52px ${SANS}`;
     context.fillText(metric.value, x, 1272);
   });
 }

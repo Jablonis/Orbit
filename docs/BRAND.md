@@ -56,14 +56,17 @@ small version of the interface.
 ## Colour
 
 The product palette is the brand palette; there is no separate marketing set.
+It is warm on purpose — bone type on a warm near-black reads as paper and
+instrument rather than as another cold dashboard.
 
 | Token | Value | Role |
 | --- | --- | --- |
-| `--canvas` | `#0d0d0e` | Everything sits on near-black |
+| `--canvas` | `#100f0d` | Everything sits on warm near-black |
+| `--text-primary` | `#f4ebdd` | Bone. Pure white is never used |
 | `--accent-primary` | `#a3e635` | The one action colour, used sparingly |
-| `--ring-tasks-to` | `#ff5fae` | Tasks |
-| `--ring-fitness-to` | `#b6f24a` | Fitness |
-| `--ring-finance-to` | `#7cc2ff` | Finance |
+| `--ring-tasks-to` | `#ff4fa3` | Tasks |
+| `--ring-fitness-to` | `#a3e635` | Fitness |
+| `--ring-finance-to` | `#60a5fa` | Finance |
 | Tier colours | `--danger` → `--accent-highlight` | Momentum tiers, low to high |
 
 Colour never carries meaning alone: every ring, tier and verdict is also
@@ -71,11 +74,23 @@ stated in words or numbers.
 
 ## Typography
 
-- System sans (Geist) for the interface; numbers always tabular.
-- The serif display face (`.editorial-display`) is reserved for one statement
-  per screen — the landing headlines and the daily brief. It is the closest
-  thing Orbit has to a signature, so it stops working if it is everywhere.
+- System sans (Geist) for structure; numbers always tabular.
+- **Geist Mono for every label**: eyebrows, axis ticks, chapter codes, figure
+  captions. Uppercase, 12 px, 0.12em tracking. This is the detail that makes
+  Orbit read as an instrument rather than a web page.
+- The landing sets the name at `.display-mega` — uppercase, 115% stretch, one
+  per page. The wordmark is the artwork; there is no illustration behind it.
+- The serif (`.editorial-display`) is reserved for one statement per screen.
 - Tracking tightens as type grows and never goes positive above 20 px.
+
+## Form
+
+- Corners are machined: 2 px on controls, 4 px on rows, 6 px on panels. Nothing
+  in Orbit is pill-shaped except a dot or a genuine pill.
+- Edges are bone hairlines at 9% and 18%. Depth comes from hairlines, a 72 px
+  grid that fades before it reaches an edge, and one very soft shadow — never
+  from a glowing border or a coloured panel.
+- Sections are separated by a full-width hairline, not by cards inside cards.
 
 ## Motion
 

@@ -19,7 +19,7 @@ export default async function ResetPasswordPage({
     >
       <section className="surface-overlay w-full max-w-[460px] rounded-[var(--radius-panel)] p-6 shadow-[var(--shadow-overlay)]">
         <p className="label-caps text-[var(--accent-primary)]">Orbit recovery</p>
-        <h1 className="mt-3 text-[32px] font-semibold text-white">
+        <h1 className="mt-3 text-[32px] font-semibold text-[var(--text-primary)]">
           Choose a new password
         </h1>
         <p className="mb-6 mt-3 text-[14px] leading-6 text-[var(--text-secondary)]">

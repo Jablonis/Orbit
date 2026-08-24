@@ -20,12 +20,12 @@ export function RouteError({
       id="main-content"
       tabIndex={-1}
     >
-      <section className="glass-panel w-full max-w-lg rounded-[28px] p-7 text-center sm:p-9">
+      <section className="glass-panel w-full max-w-lg rounded-[var(--radius-panel)] p-7 text-center sm:p-9">
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[var(--danger)]/25 bg-[var(--danger)]/10 text-[22px] text-[var(--danger-text)]">
           !
         </div>
-        <p className="label-caps mt-6 text-[#ff9fca]">Orbit paused</p>
-        <h1 className="mt-3 text-[28px] font-semibold text-white">
+        <p className="label-caps mt-6 text-[var(--highlight-text)]">Orbit paused</p>
+        <h1 className="mt-3 text-[28px] font-semibold text-[var(--text-primary)]">
           This page couldn&apos;t load.
         </h1>
         <p className="mt-3 text-[14px] leading-6 text-[var(--text-secondary)]">
@@ -34,14 +34,14 @@ export function RouteError({
         </p>
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <button
-            className="min-h-11 rounded-full bg-white px-5 py-2.5 text-[13px] font-bold text-[var(--text-on-light)]"
+            className="min-h-11 rounded-full bg-[var(--text-primary)] px-5 py-2.5 text-[13px] font-bold text-[var(--text-on-light)]"
             onClick={unstable_retry}
             type="button"
           >
             Try again
           </button>
           <Link
-            className="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.04] px-5 py-2.5 text-[13px] font-semibold text-white"
+            className="inline-flex min-h-11 items-center rounded-full border border-[rgba(244,235,221,0.1)] bg-[rgba(244,235,221,0.04)] px-5 py-2.5 text-[13px] font-semibold text-[var(--text-primary)]"
             href="/"
           >
             Go to Overview

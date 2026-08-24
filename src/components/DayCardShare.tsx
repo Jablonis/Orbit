@@ -94,7 +94,7 @@ export function DayCardShare(props: DayCardShareProps) {
     <div className="mt-4">
       <div className="flex flex-wrap gap-2">
         <button
-          className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-white/[0.04] px-4 text-[13px] font-semibold text-white transition hover:bg-white/[0.08] disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[rgba(244,235,221,0.04)] px-4 text-[13px] font-semibold text-[var(--text-primary)] transition hover:bg-[rgba(244,235,221,0.08)] disabled:opacity-60"
           disabled={busy}
           onClick={() => void run("share")}
           type="button"
@@ -102,7 +102,7 @@ export function DayCardShare(props: DayCardShareProps) {
           Share day card
         </button>
         <button
-          className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border-subtle)] px-4 text-[13px] font-semibold text-[var(--text-secondary)] transition hover:text-white disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border-subtle)] px-4 text-[13px] font-semibold text-[var(--text-secondary)] transition hover:text-[var(--text-primary)] disabled:opacity-60"
           disabled={busy}
           onClick={() => void run("save")}
           type="button"

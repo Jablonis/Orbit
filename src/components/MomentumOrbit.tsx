@@ -118,7 +118,7 @@ export function MomentumOrbit({
       />
       {nextFloorMark === null ? null : (
         <line
-          stroke="rgba(255,255,255,0.35)"
+          stroke="rgba(244, 235, 221,0.35)"
           strokeDasharray="2 3"
           strokeWidth={2}
           x1={nextFloorMark.inner.x}
@@ -138,7 +138,7 @@ export function MomentumOrbit({
         return (
           <line
             key={point.date}
-            stroke={reached ? tier.color : "rgba(255,255,255,0.22)"}
+            stroke={reached ? tier.color : "rgba(244, 235, 221,0.22)"}
             strokeLinecap="round"
             strokeOpacity={reached ? 0.4 + (index / TRACE_DAYS) * 0.6 : 0.7}
             strokeWidth={3}

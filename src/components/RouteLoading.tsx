@@ -17,15 +17,15 @@ export function RouteLoading({ label = "Loading Orbit" }: { label?: string }) {
       tabIndex={-1}
     >
       <span aria-hidden="true" className="route-loading-progress" />
-      <div className="fixed left-0 top-0 hidden h-screen w-[112px] border-r border-white/10 bg-[var(--surface-nav)]/86 md:block" />
+      <div className="fixed left-0 top-0 hidden h-screen w-[112px] border-r border-[rgba(244,235,221,0.1)] bg-[var(--surface-nav)]/86 md:block" />
       <section className="page-container py-7">
         <div className="skeleton-shimmer h-3 w-28 rounded-full bg-[var(--accent-primary)]/20" />
-        <div className="skeleton-shimmer mt-4 h-11 w-full max-w-lg rounded-[16px] bg-white/10" />
-        <div className="skeleton-shimmer mt-3 h-4 w-full max-w-2xl rounded-full bg-white/[0.06]" />
+        <div className="skeleton-shimmer mt-4 h-11 w-full max-w-lg rounded-[var(--radius-row)] bg-[rgba(244,235,221,0.1)]" />
+        <div className="skeleton-shimmer mt-3 h-4 w-full max-w-2xl rounded-full bg-[rgba(244,235,221,0.06)]" />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-12">
           {skeletonCardClasses.map((spanClass, index) => (
             <div
-              className={`content-panel skeleton-shimmer h-48 rounded-[24px] bg-white/[0.025] sm:col-span-2 ${spanClass}`}
+              className={`content-panel skeleton-shimmer h-48 rounded-[var(--radius-panel)] bg-[rgba(244,235,221,0.025)] sm:col-span-2 ${spanClass}`}
               key={`${spanClass}-${index}`}
             />
           ))}

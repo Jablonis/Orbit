@@ -9,7 +9,7 @@ export default function NotFound() {
     >
       <section className="content-panel w-full max-w-xl rounded-[var(--radius-panel)] p-7 text-center sm:p-10">
         <p className="label-caps text-[var(--accent-info)]">404 · Off course</p>
-        <h1 className="editorial-display mt-4 text-[38px] leading-tight text-white sm:text-[48px]">
+        <h1 className="editorial-display mt-4 text-[38px] leading-tight text-[var(--text-primary)] sm:text-[48px]">
           This orbit does not exist.
         </h1>
         <p className="mx-auto mt-4 max-w-md text-[14px] leading-6 text-[var(--text-secondary)]">

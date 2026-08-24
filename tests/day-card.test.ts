@@ -57,7 +57,7 @@ test("the day card renders the orbit, the tier, and every metric", () => {
   assert.ok(recorder.texts.includes("65"));
   assert.ok(recorder.texts.includes("ALTITUDE"));
   assert.ok(recorder.texts.includes("STREAK"));
-  assert.ok(recorder.texts.includes("24 August 2026"));
+  assert.ok(recorder.texts.includes("24 AUGUST 2026"));
   assert.ok(recorder.arcs.some((radius) => radius > 100));
 });
 
