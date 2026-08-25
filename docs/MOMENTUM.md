@@ -71,18 +71,39 @@ social backend to maintain.
 ghost verdict entirely on the device, then offers the native share sheet or a
 download. Nothing is uploaded; sharing is always an explicit user action.
 
+## The weekly recap
+
+A day is the unit Orbit scores; a week is the unit people talk about. On the
+first three days after a week ends, Orbit closes it: how many of the seven days
+held orbit, the best day, what the altitude did across the week, and one line
+comparing it to the week before. It is shown once as a moment (`WeekSealed`,
+remembered per week per device) and then stays available as a dashboard card
+until the next week ends.
+
+The recap is derived from the same thirty days of productivity points the
+Overview already loads for momentum — there is no recap table, nothing to
+regenerate, and nothing that can disagree with the days themselves. `Best week
+yet` is only claimed against whole weeks inside that window, and a tie leaves
+the record with the earlier week.
+
+`RecapShare` renders the week as a 1080 × 1350 PNG on the device, in the same
+way as the day card.
+
 ## Where the code lives
 
 | Concern | File |
 | --- | --- |
 | Engine (pure, unit tested) | `src/lib/momentum.ts` |
-| Share image renderer | `src/lib/day-card-canvas.ts` |
+| Weekly recap (pure, unit tested) | `src/lib/recap.ts` |
+| Share image renderers | `src/lib/day-card-canvas.ts`, `src/lib/recap-canvas.ts` |
+| Share plumbing (render, share sheet, download) | `src/lib/share-image.ts` |
 | Ring geometry (pure, unit tested) | `src/lib/activity-rings.ts` |
 | Daily rings | `src/components/ActivityRings.tsx` |
 | Orbit visual | `src/components/MomentumOrbit.tsx` |
-| Share controls | `src/components/DayCardShare.tsx` |
+| Share controls | `src/components/DayCardShare.tsx`, `src/components/RecapShare.tsx` |
+| The week closing | `src/components/WeekSealed.tsx` |
 | Overview card | `MomentumCard` in `src/app/page.tsx` |
-| Tests | `tests/momentum.test.ts`, `tests/day-card.test.ts`, `tests/activity-rings.test.ts` |
+| Tests | `tests/momentum.test.ts`, `tests/recap.test.ts`, `tests/day-card.test.ts`, `tests/activity-rings.test.ts` |
 
 ## The visual language
 

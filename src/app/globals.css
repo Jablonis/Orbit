@@ -372,6 +372,23 @@
   }
 }
 
+/* The week closing: each day grows in turn, left to right. */
+@keyframes week-sealed-grow {
+  from { transform: scaleY(0); }
+  to { transform: none; }
+}
+
+.week-sealed-bar {
+  animation: week-sealed-grow 620ms var(--ease-ring) both;
+  transform-origin: bottom;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .week-sealed-bar {
+    animation: none;
+  }
+}
+
 /* ---------- Controls ---------- */
 
 .field-input {

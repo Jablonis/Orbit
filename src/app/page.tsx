@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { DayCardShare } from "@/components/DayCardShare";
 import { DayComplete } from "@/components/DayComplete";
+import { RecapShare } from "@/components/RecapShare";
+import { WeekSealed } from "@/components/WeekSealed";
 import {
   AnalyticsCard,
   FinanceCard,
   FitnessCard,
   MilestonesCard,
   MomentumCard,
+  RecapCard,
   ReviewCard,
   RingsCard,
   SetupCard,
@@ -50,6 +53,7 @@ import type {
   OverviewTaskFilter,
 } from "@/lib/overview-query";
 import { getPinnedFinanceMetric } from "@/lib/finance-metric";
+import { getRecapWeek, getWeekRecap } from "@/lib/recap";
 import {
   getEarnedToday,
   getMilestones,
@@ -192,6 +196,16 @@ export default async function Home({
     today,
   );
   const dayCard = getDayCard({ date: today, ghost, momentum, streak });
+  // Last week, out of the thirty days already loaded for momentum: no extra
+  // query, and no recap table to fall out of sync with the days themselves.
+  const recapWeek = getRecapWeek(today, calendar.weekStartsOn);
+  const recap = getWeekRecap({
+    fresh: recapWeek.fresh,
+    locale: calendar.locale,
+    points: momentumRange.current,
+    weekEnd: recapWeek.weekEnd,
+    weekStart: recapWeek.weekStart,
+  });
   const setup = getSetupState({
     fitnessConfigured,
     hasOrbitDay: momentumRange.current.some(
@@ -300,6 +314,7 @@ export default async function Home({
       <ReviewCard key="review" reflection={reflection} review={review} />
     ),
     milestones: <MilestonesCard key="milestones" milestones={milestones} />,
+    recap: recap ? <RecapCard key="recap" recap={recap} /> : null,
     rings: (
       <RingsCard
         dailyRings={dailyRings}
@@ -328,7 +343,12 @@ export default async function Home({
   const visibleCards = preferences.cardOrder.filter(
     (card) => !preferences.hiddenCards.includes(card),
   );
-  const trendCardIds: DashboardCardId[] = ["analytics", "milestones", "review"];
+  const trendCardIds: DashboardCardId[] = [
+    "analytics",
+    "milestones",
+    "recap",
+    "review",
+  ];
   const todayCards = visibleCards.filter(
     (card) => !trendCardIds.includes(card),
   );
@@ -385,6 +405,23 @@ export default async function Home({
               trace={momentum.series.slice(-14).map((point) => point.altitude)}
             />
           </DayComplete>
+        ) : null}
+
+        {recap && recap.fresh ? (
+          <WeekSealed recap={recap}>
+            <RecapShare
+              altitudeChange={recap.altitudeChange}
+              days={recap.days}
+              headline={recap.headline}
+              isBestWeek={recap.isBestWeek}
+              label={recap.label}
+              stats={recap.stats}
+              tierColor={recap.tier.color}
+              tierName={recap.tier.name}
+              verdict={recap.verdict}
+              weekStart={recap.weekStart}
+            />
+          </WeekSealed>
         ) : null}
 
         <SetupCard setup={setup} />

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ActivityRings } from "@/components/ActivityRings";
 import { DayCardShare } from "@/components/DayCardShare";
+import { RecapShare } from "@/components/RecapShare";
 import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { MomentumOrbit } from "@/components/MomentumOrbit";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
@@ -30,6 +31,7 @@ import type {
   StreakState,
   getDayCard,
 } from "@/lib/momentum";
+import type { WeekRecap } from "@/lib/recap";
 import type {
   OverviewQueryState,
   OverviewTaskFilter,
@@ -1004,5 +1006,93 @@ export function MilestonesCard({ milestones }: { milestones: Milestone[] }) {
         ))}
       </ul>
     </TintPanel>
+  );
+}
+
+export function RecapCard({ recap }: { recap: WeekRecap }) {
+  return (
+    <TintPanel className="flex flex-col gap-5" system="plum">
+      <CardHeading
+        action={
+          recap.isBestWeek ? (
+            <Badge className="bg-plum text-white" variant="plum">
+              Best week yet
+            </Badge>
+          ) : (
+            <Badge className="bg-card" variant="muted">
+              {recap.label}
+            </Badge>
+          )
+        }
+        eyebrow="Last week"
+        title={recap.headline}
+      />
+
+      <p className="-mt-2 text-[13px] text-muted-foreground">{recap.verdict}</p>
+
+      <RecapWeekBars days={recap.days} />
+
+      <dl className="grid grid-cols-3 gap-2">
+        {recap.stats.map((stat) => (
+          <div className="rounded-xl bg-card p-3" key={stat.label}>
+            <dt className="label-caps text-muted-foreground">{stat.label}</dt>
+            <dd className="metric-value mt-1 text-[20px] font-bold">
+              {stat.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[13px] text-muted-foreground">
+          {recap.tier.name} ·{" "}
+          <span className="font-semibold text-foreground">
+            {recap.altitudeChange >= 0 ? "+" : "−"}
+            {Math.abs(recap.altitudeChange)}
+          </span>{" "}
+          altitude across the week
+        </p>
+        <RecapShare
+          altitudeChange={recap.altitudeChange}
+          days={recap.days}
+          headline={recap.headline}
+          isBestWeek={recap.isBestWeek}
+          label={recap.label}
+          stats={recap.stats}
+          tierColor={recap.tier.color}
+          tierName={recap.tier.name}
+          verdict={recap.verdict}
+          weekStart={recap.weekStart}
+        />
+      </div>
+    </TintPanel>
+  );
+}
+
+/** The seven days of the finished week, lit where the day held orbit. */
+export function RecapWeekBars({ days }: { days: WeekRecap["days"] }) {
+  return (
+    <ol className="flex items-end gap-1.5 sm:gap-2" aria-label="Last week by day">
+      {days.map((day) => (
+        <li className="flex min-w-0 flex-1 flex-col items-center gap-2" key={day.date}>
+          <div className="flex h-28 w-full max-w-[46px] items-end rounded-full bg-card">
+            <div
+              className={`w-full rounded-full ${
+                day.inOrbit ? "bg-plum" : "bg-muted-foreground/25"
+              }`}
+              style={{ height: `${Math.max(6, Math.min(100, day.score))}%` }}
+              title={`${day.label}: ${day.score}%`}
+            />
+          </div>
+          <span
+            className={`label-caps ${
+              day.inOrbit ? "text-plum-ink" : "text-muted-foreground"
+            }`}
+          >
+            {day.label.slice(0, 2)}
+          </span>
+        </li>
+      ))}
+    </ol>
   );
 }

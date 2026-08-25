@@ -3,11 +3,11 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  DAY_CARD_HEIGHT,
-  DAY_CARD_WIDTH,
-  type DayCardContent,
-  drawDayCard,
-} from "@/lib/day-card-canvas";
+  RECAP_CARD_HEIGHT,
+  RECAP_CARD_WIDTH,
+  type RecapCardContent,
+  drawRecapCard,
+} from "@/lib/recap-canvas";
 import {
   type ShareAction,
   renderToBlob,
@@ -15,15 +15,13 @@ import {
   shareImage,
 } from "@/lib/share-image";
 
-export type DayCardShareProps = DayCardContent & {
+export type RecapShareProps = RecapCardContent & {
   tierColor: string;
+  weekStart: string;
 };
 
-/**
- * Turns the current orbit into a portrait PNG worth posting. Everything is
- * drawn locally; no image ever leaves the device unless the user shares it.
- */
-export function DayCardShare(props: DayCardShareProps) {
+/** Turns the finished week into a portrait PNG worth sending to someone. */
+export function RecapShare(props: RecapShareProps) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const accentRef = useRef("");
@@ -38,9 +36,9 @@ export function DayCardShare(props: DayCardShareProps) {
     setStatus("");
     try {
       const blob = await renderToBlob({
-        draw: (context) => drawDayCard(context, props, accent()),
-        height: DAY_CARD_HEIGHT,
-        width: DAY_CARD_WIDTH,
+        draw: (context) => drawRecapCard(context, props, accent()),
+        height: RECAP_CARD_HEIGHT,
+        width: RECAP_CARD_WIDTH,
       });
       if (!blob) {
         setStatus("This browser cannot render the card image.");
@@ -50,8 +48,8 @@ export function DayCardShare(props: DayCardShareProps) {
         await shareImage({
           action,
           blob,
-          fileName: `orbit-${props.date}.png`,
-          text: `${props.tierName} · altitude ${props.altitude}`,
+          fileName: `orbit-week-${props.weekStart}.png`,
+          text: `${props.headline} ${props.verdict}`,
         }),
       );
     } catch (error) {
@@ -66,10 +64,10 @@ export function DayCardShare(props: DayCardShareProps) {
   };
 
   return (
-    <div className="mt-4">
+    <div>
       <div className="flex flex-wrap gap-2">
         <Button disabled={busy} onClick={() => void run("share")} type="button">
-          Share day card
+          Share the week
         </Button>
         <Button
           disabled={busy}
