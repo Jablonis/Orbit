@@ -11,7 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { SystemDot, TintPanel } from "@/components/ui/tint-panel";
+import { CountUp } from "@/components/CountUp";
 import { getRingsSummary } from "@/lib/activity-rings";
+import { getClosingLines } from "@/lib/progression";
 import type { getEarnedToday } from "@/lib/progression";
 import type { Milestone, SetupState } from "@/lib/progression";
 import type {
@@ -104,6 +106,7 @@ export function RingsCard({
     : summary.allClosed
       ? "All rings closed."
       : `${summary.closed} of ${summary.total} rings closed.`;
+  const closing = getClosingLines(dailyRings)[0] ?? null;
   const action = nextTask
     ? { href: "/tasks", label: "Open next task" }
     : training.day.sport !== "rest" && !training.day.log.completed
@@ -138,6 +141,11 @@ export function RingsCard({
             <p className="mt-2 text-[26px] font-bold leading-8 tracking-[-0.03em]">
               {headline}
             </p>
+            {closing ? (
+              <p className="mt-1.5 text-[14px] font-semibold text-[var(--ink,var(--muted-foreground))]">
+                {closing.text}
+              </p>
+            ) : null}
           </div>
           <dl className="flex flex-wrap gap-2">
             <RingChip
@@ -256,7 +264,7 @@ export function MomentumCard({
           <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
             <div>
               <p className="metric-value display-figure text-[36px]">
-                {momentum.projected}
+                <CountUp value={momentum.projected} />
               </p>
               <p className="label-caps mt-1 text-[var(--ink,var(--muted-foreground))]">Altitude</p>
             </div>

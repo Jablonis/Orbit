@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  getClosingLines,
   getEarnedToday,
   getMilestones,
   getSetupState,
@@ -114,4 +115,29 @@ test("today is only celebrated when it is actually earned", () => {
   });
   assert.equal(closed.allClosed, true);
   assert.equal(closed.headline, "Every ring closed.");
+});
+
+test("the closing lines name the last mile, nearest ring first", () => {
+  const lines = getClosingLines({
+    finance: { completed: 0, percent: 0, total: 3 },
+    fitness: { completed: 0, percent: 0, total: 1 },
+    tasks: { completed: 5, percent: 71, total: 7 },
+  });
+
+  assert.deepEqual(
+    lines.map((line) => line.system),
+    ["fitness", "tasks", "finance"],
+  );
+  assert.equal(lines[0].text, "One session from closing fitness.");
+  assert.equal(lines[1].text, "2 tasks from closing tasks.");
+});
+
+test("a closed or empty ring has nothing left to say", () => {
+  const lines = getClosingLines({
+    finance: { completed: 0, percent: 0, total: 0 },
+    fitness: { completed: 1, percent: 100, total: 1 },
+    tasks: { completed: 7, percent: 100, total: 7 },
+  });
+
+  assert.deepEqual(lines, []);
 });

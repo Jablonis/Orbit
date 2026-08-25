@@ -342,6 +342,36 @@
   }
 }
 
+/* ---------- The day-sealed moment ---------- */
+
+@keyframes day-complete-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes day-complete-sweep {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+.day-complete {
+  animation: day-complete-in 420ms var(--ease-orbit) both;
+}
+
+.day-complete-arc {
+  animation: day-complete-sweep 760ms var(--ease-ring) 120ms both;
+}
+
+.day-complete-arc-2 { animation-delay: 240ms; }
+.day-complete-arc-3 { animation-delay: 360ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .day-complete-arc {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
 /* ---------- Controls ---------- */
 
 .field-input {

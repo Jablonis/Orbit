@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { DayCardShare } from "@/components/DayCardShare";
+import { DayComplete } from "@/components/DayComplete";
 import {
   AnalyticsCard,
   FinanceCard,
@@ -365,6 +367,25 @@ export default async function Home({
           </div>
           <OpenDashboardSettingsButton />
         </header>
+
+        {earnedToday.allClosed ? (
+          <DayComplete
+            altitude={momentum.projected}
+            date={today}
+            streak={streak.streak}
+            tier={momentum.tier.name}
+          >
+            <DayCardShare
+              altitude={dayCard.altitude}
+              date={dayCard.date}
+              ghost={dayCard.ghost}
+              metrics={dayCard.metrics}
+              tierColor={dayCard.tier.color}
+              tierName={dayCard.tier.name}
+              trace={momentum.series.slice(-14).map((point) => point.altitude)}
+            />
+          </DayComplete>
+        ) : null}
 
         <SetupCard setup={setup} />
 
