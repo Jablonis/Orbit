@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ActivityRings } from "@/components/ActivityRings";
 import { OrbitMark } from "@/components/BrandMark";
+import { OrbitInstrument } from "@/components/landing/OrbitInstrument";
+import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/Reveal";
 import { MomentumOrbit } from "@/components/MomentumOrbit";
 import { createClient } from "@/lib/supabase/server";
@@ -167,32 +169,32 @@ function Hero({ primary }: { primary: { href: string; label: string } }) {
     <section className="relative overflow-hidden border-b border-border">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(150deg,var(--plum-tint)_0%,var(--tasks-tint)_46%,var(--finance-tint)_100%)] opacity-70"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(155deg,var(--plum-tint)_0%,var(--tasks-tint)_48%,var(--finance-tint)_100%)] opacity-75"
       />
 
-      <div className="landing-container relative flex min-h-[80vh] flex-col justify-between pb-10 pt-14 sm:pt-16">
-        <h1 className="display-mega text-foreground">Orbit</h1>
-
-        <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:items-end">
-          <div>
-            <p className="label-caps text-muted-foreground">
-              A personal operating system
-            </p>
-            <p className="mt-5 max-w-xl text-[19px] leading-8 text-foreground sm:text-[22px] sm:leading-9">
-              Your day has an altitude. Tasks, training and money become one
-              number that climbs when you show up and decays when you don’t.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link className="ui-button ui-button--primary px-6" href={primary.href}>
-                {primary.label}
-              </Link>
-              <Link className="ui-button ui-button--secondary px-6" href="#mechanic">
-                See the system
-              </Link>
-            </div>
+      <div className="landing-container relative grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)]">
+        <div>
+          <p className="label-caps text-muted-foreground">
+            A personal operating system
+          </p>
+          <h1 className="display-mega mt-6 text-foreground">
+            Your day has an altitude.
+          </h1>
+          <p className="mt-7 max-w-xl text-[18px] leading-8 text-muted-foreground sm:text-[20px] sm:leading-9">
+            Tasks, training and money become one number that climbs when you
+            show up and decays when you don’t. No streak to reset, nothing that
+            reaches zero.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-3">
+            <Button asChild size="lg">
+              <Link href={primary.href}>{primary.label}</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="#mechanic">See the system</Link>
+            </Button>
           </div>
 
-          <dl className="grid grid-cols-3 gap-3">
+          <dl className="mt-10 grid max-w-md grid-cols-3 gap-3">
             <HeroFigure label="Altitude" value={String(altitude)} />
             <HeroFigure label="Tier" value={tier.name.split(" ")[0]} />
             <HeroFigure
@@ -202,14 +204,7 @@ function Hero({ primary }: { primary: { href: string; label: string } }) {
           </dl>
         </div>
 
-        <div className="mt-10 flex items-end justify-between gap-6">
-          <p className="label-caps text-muted-foreground">
-            ORB-01 · Tasks / Fitness / Finance
-          </p>
-          <p className="label-caps hidden text-muted-foreground sm:block">
-            Scroll ↓
-          </p>
-        </div>
+        <OrbitInstrument />
       </div>
     </section>
   );
@@ -259,14 +254,14 @@ function SystemsSection() {
         noise.
       </p>
 
-      <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)] lg:items-center">
-        <div className="mx-auto w-full max-w-[300px]">
+      <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)] lg:items-start">
+        <div className="pin-figure mx-auto w-full max-w-[300px]">
           <ActivityRings finance={100} fitness={100} tasks={72} />
         </div>
         <div className="border-t border-border">
           {channels.map((channel) => (
             <article
-              className="grid gap-3 border-b border-border py-6 sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-6"
+              className="grid gap-3 border-b border-border py-10 sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-6"
               key={channel.code}
             >
               <div className="flex items-center gap-2.5 sm:pt-1.5">
