@@ -7,6 +7,7 @@ export const dashboardCardIds = [
   "finance",
   "tasks",
   "analytics",
+  "milestones",
   "review",
 ] as const;
 
@@ -14,6 +15,7 @@ export const dashboardCardLabels: Record<DashboardCardId, string> = {
   analytics: "Analytics",
   finance: "Finance summary",
   fitness: "Fitness today",
+  milestones: "Milestones",
   momentum: "Momentum orbit",
   review: "Weekly review",
   rings: "Daily rings",

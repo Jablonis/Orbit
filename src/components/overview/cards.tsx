@@ -12,6 +12,8 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { SystemDot, TintPanel } from "@/components/ui/tint-panel";
 import { getRingsSummary } from "@/lib/activity-rings";
+import type { getEarnedToday } from "@/lib/progression";
+import type { Milestone, SetupState } from "@/lib/progression";
 import type {
   WeeklyReflection,
   WeeklyReview,
@@ -79,12 +81,14 @@ export function CardHeading({
 
 export function RingsCard({
   dailyRings,
+  earned,
   nextTask,
   today,
   timeZone,
   training,
 }: {
   dailyRings: ReturnType<typeof getDailyRings>;
+  earned: ReturnType<typeof getEarnedToday>;
   nextTask?: Task;
   today: string;
   timeZone: string;
@@ -109,7 +113,7 @@ export function RingsCard({
   return (
     <TintPanel
       className="settle-in settle-1 flex flex-col gap-6 lg:col-span-2"
-      system="neutral"
+      system={earned.allClosed ? "fitness" : "neutral"}
     >
       <div className="grid gap-6 sm:grid-cols-[minmax(0,180px)_minmax(0,1fr)] sm:items-center">
         <div className="mx-auto w-full max-w-[180px]">
@@ -121,7 +125,16 @@ export function RingsCard({
         </div>
         <div className="flex flex-col gap-5">
           <div>
-            <p className="label-caps text-muted-foreground">Today</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="label-caps text-[var(--ink,var(--muted-foreground))]">
+                Today
+              </p>
+              {earned.headline ? (
+                <Badge variant={earned.allClosed ? "fitness" : "muted"}>
+                  {earned.headline}
+                </Badge>
+              ) : null}
+            </div>
             <p className="mt-2 text-[26px] font-bold leading-8 tracking-[-0.03em]">
               {headline}
             </p>
@@ -848,5 +861,140 @@ export function WeekStrip({
         })}
       </ol>
     </section>
+  );
+}
+
+/**
+ * The cold start. Shown only while an account still has something to set up,
+ * so it disappears for good once Orbit is actually running.
+ */
+export function SetupCard({ setup }: { setup: SetupState }) {
+  if (setup.complete || !setup.next) return null;
+
+  return (
+    <TintPanel className="settle-in flex flex-col gap-5" system="plum">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="label-caps text-[var(--ink)]">Set up your Orbit</p>
+          <p className="mt-2 text-[20px] font-bold tracking-[-0.02em]">
+            {setup.next.label}
+          </p>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            {setup.next.detail}
+          </p>
+        </div>
+        <Button asChild>
+          <Link href={setup.next.href}>
+            Do it now
+            <LinkPendingIndicator label={setup.next.label} />
+          </Link>
+        </Button>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <span className="label-caps text-[var(--ink)]">
+            {setup.done} of {setup.steps.length} done
+          </span>
+          <span className="metric-value text-[13px] font-semibold">
+            {setup.percent}%
+          </span>
+        </div>
+        <Progress
+          aria-label={`Setup ${setup.percent} percent complete`}
+          indicatorClassName="bg-plum"
+          value={setup.percent}
+        />
+        <ol className="grid gap-2 sm:grid-cols-2">
+          {setup.steps.map((step) => (
+            <li
+              className="flex items-center gap-2.5 rounded-xl bg-card/70 p-3"
+              key={step.id}
+            >
+              <span
+                aria-hidden="true"
+                className={`grid size-5 shrink-0 place-items-center rounded-full ${
+                  step.done
+                    ? "bg-plum text-white"
+                    : "border-2 border-plum/30"
+                }`}
+              >
+                {step.done ? <CheckGlyph /> : null}
+              </span>
+              <span
+                className={`text-[13px] font-semibold ${
+                  step.done ? "text-muted-foreground line-through" : ""
+                }`}
+              >
+                {step.label}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </TintPanel>
+  );
+}
+
+/**
+ * What the account has earned, and the one thing it is closest to earning.
+ * Records are the part of a habit app people actually revisit.
+ */
+export function MilestonesCard({ milestones }: { milestones: Milestone[] }) {
+  const earned = milestones.filter((item) => item.achieved);
+  const next = milestones.filter((item) => !item.achieved);
+
+  return (
+    <TintPanel className="flex flex-col gap-5" system="neutral">
+      <CardHeading
+        action={
+          <Badge variant="fitness">
+            {earned.length}/{milestones.length}
+          </Badge>
+        }
+        eyebrow="Milestones"
+        title={
+          earned.length === 0
+            ? "Nothing earned yet — the first one is close."
+            : `${earned.length} earned.`
+        }
+      />
+
+      <ul className="grid gap-2 sm:grid-cols-2">
+        {[...earned, ...next].map((item) => (
+          <li
+            className={`flex items-center gap-3 rounded-xl p-3 ${
+              item.achieved ? "bg-fitness-tint" : "bg-muted"
+            }`}
+            key={item.id}
+          >
+            <span
+              aria-hidden="true"
+              className={`grid size-8 shrink-0 place-items-center rounded-full ${
+                item.achieved
+                  ? "bg-fitness text-white"
+                  : "bg-card text-muted-foreground"
+              }`}
+            >
+              {item.achieved ? (
+                <CheckGlyph />
+              ) : (
+                <span className="metric-value text-[11px] font-semibold">
+                  {Math.round(item.progress * 100)}
+                </span>
+              )}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[13px] font-semibold">
+                {item.label}
+              </span>
+              <span className="block truncate text-[12px] text-muted-foreground">
+                {item.detail}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </TintPanel>
   );
 }

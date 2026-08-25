@@ -4,9 +4,11 @@ import {
   AnalyticsCard,
   FinanceCard,
   FitnessCard,
+  MilestonesCard,
   MomentumCard,
   ReviewCard,
   RingsCard,
+  SetupCard,
   TasksCard,
   WeekStrip,
   greeting,
@@ -47,10 +49,16 @@ import type {
 } from "@/lib/overview-query";
 import { getPinnedFinanceMetric } from "@/lib/finance-metric";
 import {
+  getEarnedToday,
+  getMilestones,
+  getSetupState,
+} from "@/lib/progression";
+import {
   getDayCard,
   getGhostRace,
   getMomentum,
   getMomentumRecords,
+  ORBIT_DAY_SCORE,
   getStreak,
 } from "@/lib/momentum";
 import {
@@ -182,6 +190,27 @@ export default async function Home({
     today,
   );
   const dayCard = getDayCard({ date: today, ghost, momentum, streak });
+  const setup = getSetupState({
+    fitnessConfigured,
+    hasOrbitDay: momentumRange.current.some(
+      (point) => (point.score ?? 0) >= ORBIT_DAY_SCORE,
+    ),
+    taskCount: taskHistory.length,
+    transactionCount: transactions.length,
+  });
+  const milestones = getMilestones({
+    bestAltitude: momentumRecords.bestAltitude,
+    bestDay: momentumRecords.bestDay,
+    bestStreak: streak.bestStreak,
+    orbitDays: momentumRecords.orbitDays,
+  });
+  const earnedToday = getEarnedToday({
+    ringsClosed: Object.values(dailyRings).filter(
+      (area) => area.total > 0 && area.percent >= 100,
+    ).length,
+    ringsTotal: Object.values(dailyRings).filter((area) => area.total > 0).length,
+    todayScore: momentum.todayScore,
+  });
   const briefMode = params.brief === "weekly" ? "weekly" : "daily";
   const filter = getTaskFilter(params.tasks);
   const overviewQuery: OverviewQueryState = {
@@ -268,9 +297,11 @@ export default async function Home({
     review: (
       <ReviewCard key="review" reflection={reflection} review={review} />
     ),
+    milestones: <MilestonesCard key="milestones" milestones={milestones} />,
     rings: (
       <RingsCard
         dailyRings={dailyRings}
+        earned={earnedToday}
         key="rings"
         nextTask={nextTask}
         today={today}
@@ -295,12 +326,11 @@ export default async function Home({
   const visibleCards = preferences.cardOrder.filter(
     (card) => !preferences.hiddenCards.includes(card),
   );
+  const trendCardIds: DashboardCardId[] = ["analytics", "milestones", "review"];
   const todayCards = visibleCards.filter(
-    (card) => card !== "analytics" && card !== "review",
+    (card) => !trendCardIds.includes(card),
   );
-  const trendCards = visibleCards.filter(
-    (card) => card === "analytics" || card === "review",
-  );
+  const trendCards = visibleCards.filter((card) => trendCardIds.includes(card));
   const dateLabel = new Intl.DateTimeFormat(preferences.regional.locale, {
     day: "numeric",
     month: "long",
@@ -335,6 +365,8 @@ export default async function Home({
           </div>
           <OpenDashboardSettingsButton />
         </header>
+
+        <SetupCard setup={setup} />
 
         <WeekStrip points={weeklyProductivity.current} today={today} />
 
