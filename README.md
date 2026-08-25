@@ -26,6 +26,23 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 `NEXT_PUBLIC_SUPABASE_ANON_KEY` remains supported for older projects. Never put a
 service-role or secret key in a client-visible environment variable.
 
+The evening reminder needs four more, all server-side except the public VAPID
+key:
+
+```bash
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
+VAPID_PRIVATE_KEY=your-vapid-private-key
+VAPID_SUBJECT=mailto:you@example.com
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+CRON_SECRET=a-long-random-string
+```
+
+Generate the VAPID pair once with `npx web-push generate-vapid-keys`. The
+private key, the service-role key and the cron secret must never appear in a
+`NEXT_PUBLIC_*` variable — that ships them to the browser. The service-role key
+exists for one job: the scheduled sender has to read every account's reminder
+settings, which row-level security correctly forbids.
+
 Start the application:
 
 ```bash
@@ -69,6 +86,18 @@ the momentum mechanic with charts drawn by the real engine, shows the ring
 system, and states pricing honestly. Shared links render the branded preview in
 `src/app/opengraph-image.tsx`. The brand system — voice, mark, colour, motion —
 is documented in `docs/BRAND.md`.
+
+## The evening reminder
+
+Orbit can send one notification in the evening carrying the score today still
+needs — "Finish today at 49 %". It is off until you turn it on in dashboard
+settings, it never arrives on a day already in orbit, and it arrives once:
+`/api/push/send` runs hourly, works out who is at their chosen local hour, and
+claims the day with an insert before it sends. Subscriptions that a push service
+reports as gone (404 or 410) are deleted immediately.
+
+On iPhone, Safari only allows notifications for an app added to the home
+screen; the setting says so rather than failing silently.
 
 ## Daily rings
 

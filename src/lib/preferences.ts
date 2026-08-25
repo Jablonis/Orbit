@@ -1,4 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  type ReminderPreferences,
+  defaultReminderPreferences,
+  parseReminderPreferences,
+} from "@/lib/reminders";
 
 export const dashboardCardIds = [
   "momentum",
@@ -61,6 +66,7 @@ export type CalendarPreferences = Pick<
 
 export type DashboardPreferences = {
   cardOrder: DashboardCardId[];
+  reminders: ReminderPreferences;
   density: DashboardDensity;
   hiddenCards: DashboardCardId[];
   pinnedFinanceMetric: PinnedFinanceMetric;
@@ -86,6 +92,7 @@ export const defaultDashboardPreferences: DashboardPreferences = {
   pinnedFinanceMetric: "balance",
   pinnedTaskCategory: "",
   rangeDays: 7,
+  reminders: defaultReminderPreferences,
   regional: {
     currency: "EUR",
     displayName: "",
@@ -178,6 +185,7 @@ export function parseDashboardPreferences(
         ? record.pinnedTaskCategory.trim().slice(0, 80)
         : "",
     rangeDays: record.rangeDays === 30 ? 30 : 7,
+    reminders: parseReminderPreferences(record.reminders),
     regional: {
       currency: currencies.includes(regional.currency as RegionalPreferences["currency"])
         ? (regional.currency as RegionalPreferences["currency"])
