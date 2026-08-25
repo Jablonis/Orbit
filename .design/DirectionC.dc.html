@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800;900&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Archivo', system-ui, sans-serif; }
+    a { color: #2536FF; } a:hover { color: #1A26CC; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  </style>
+</helmet>
+
+<div style="width: 760px; min-height: 1000px; background: #F5F3EE; color: #101014; box-sizing: border-box; display: flex; flex-direction: column">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 22px 28px; border-bottom: 2px solid #101014">
+    <span style="font-size: 17px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase">Orbit</span>
+    <span class="mono" style="font-size: 11px; letter-spacing: 0.08em">FRI 24 JUL · ORB-01</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 2px solid #101014">
+    <div style="background: #FF5A3C; color: #FFF6F3; padding: 22px 20px; border-right: 2px solid #101014">
+      <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em">TASKS</p>
+      <p style="margin: 10px 0 0; font-size: 52px; font-weight: 900; line-height: 0.9; letter-spacing: -0.03em">5/7</p>
+      <p style="margin: 8px 0 0; font-size: 12px; font-weight: 500">71% · two left</p>
+    </div>
+    <div style="background: #D9FF3D; color: #101014; padding: 22px 20px; border-right: 2px solid #101014">
+      <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em">FITNESS</p>
+      <p style="margin: 10px 0 0; font-size: 52px; font-weight: 900; line-height: 0.9; letter-spacing: -0.03em">1/1</p>
+      <p style="margin: 8px 0 0; font-size: 12px; font-weight: 500">Closed · 60 min</p>
+    </div>
+    <div style="background: #2536FF; color: #EEF0FF; padding: 22px 20px">
+      <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em">FINANCE</p>
+      <p style="margin: 10px 0 0; font-size: 52px; font-weight: 900; line-height: 0.9; letter-spacing: -0.03em">2/2</p>
+      <p style="margin: 8px 0 0; font-size: 12px; font-weight: 500">Cleared today</p>
+    </div>
+  </div>
+
+  <div style="padding: 28px; border-bottom: 2px solid #101014; display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 24px; align-items: center">
+    <div>
+      <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #55534E">ALTITUDE</p>
+      <p style="margin: 8px 0 0; font-size: 130px; font-weight: 900; line-height: 0.82; letter-spacing: -0.05em">62</p>
+      <p style="margin: 14px 0 0; font-size: 17px; font-weight: 600; max-width: 380px; text-wrap: pretty">Mid orbit. Finish today at 49% to hold it.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <div style="display: flex; align-items: flex-end; gap: 4px; height: 120px">
+        <div style="flex-grow: 1; height: 46%; background: #101014"></div>
+        <div style="flex-grow: 1; height: 62%; background: #101014"></div>
+        <div style="flex-grow: 1; height: 12%; background: #C9C6BC"></div>
+        <div style="flex-grow: 1; height: 58%; background: #101014"></div>
+        <div style="flex-grow: 1; height: 71%; background: #101014"></div>
+        <div style="flex-grow: 1; height: 49%; background: #101014"></div>
+        <div style="flex-grow: 1; height: 88%; background: #FF5A3C"></div>
+      </div>
+      <p class="mono" style="margin: 6px 0 0; font-size: 10px; letter-spacing: 0.08em; color: #55534E">LAST 7 DAYS</p>
+    </div>
+  </div>
+
+  <div style="padding: 24px 28px; border-bottom: 2px solid #101014">
+    <p class="mono" style="margin: 0 0 14px; font-size: 11px; letter-spacing: 0.1em; color: #55534E">NEXT · 3 DUE</p>
+    <div style="display: flex; flex-direction: column; gap: 0">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-top: 1px solid #101014">
+        <span style="font-size: 16px; font-weight: 600">Draft the Q3 planning memo</span>
+        <span class="mono" style="font-size: 11px; letter-spacing: 0.06em; color: #55534E">2HR · TODAY</span>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-top: 1px solid #101014">
+        <span style="font-size: 16px; font-weight: 600">Reply about the lease</span>
+        <span class="mono" style="font-size: 11px; letter-spacing: 0.06em; color: #55534E">ROLLED</span>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-top: 1px solid #101014; border-bottom: 1px solid #101014">
+        <span style="font-size: 16px; font-weight: 600; color: #8A877E; text-decoration: line-through">Book the physio</span>
+        <span class="mono" style="font-size: 11px; letter-spacing: 0.06em; color: #8A877E">DONE</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 24px 28px; display: flex; align-items: center; gap: 10px">
+    <span style="display: inline-flex; align-items: center; height: 44px; padding: 0 20px; background: #101014; color: #F5F3EE; font-size: 13px; font-weight: 700; letter-spacing: 0.02em">LOG A SESSION</span>
+    <span style="display: inline-flex; align-items: center; height: 44px; padding: 0 20px; background: transparent; border: 2px solid #101014; font-size: 13px; font-weight: 700; letter-spacing: 0.02em">ADD TASK</span>
+    <span style="display: inline-flex; align-items: center; height: 44px; padding: 0 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; color: #55534E">SHARE ↗</span>
+  </div>
+
+  <div style="margin-top: auto; padding: 20px 28px; border-top: 2px solid #101014; display: flex; flex-direction: column; gap: 10px">
+    <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #55534E">C · BLOCKS — PALETTE</p>
+    <div style="display: flex; gap: 6px">
+      <div style="flex-grow: 1; height: 44px; background: #F5F3EE; border: 2px solid #101014"></div>
+      <div style="flex-grow: 1; height: 44px; background: #FF5A3C"></div>
+      <div style="flex-grow: 1; height: 44px; background: #D9FF3D"></div>
+      <div style="flex-grow: 1; height: 44px; background: #2536FF"></div>
+      <div style="flex-grow: 1; height: 44px; background: #101014"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

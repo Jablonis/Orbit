@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Space Grotesk', system-ui, sans-serif; }
+    a { color: #8B6BFF; } a:hover { color: #A48BFF; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  </style>
+</helmet>
+
+<div style="width: 760px; min-height: 1000px; background: #0A0A0F; color: #F2F2F7; padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke="#7C5CFF" stroke-width="2" stroke-opacity="0.35"></circle>
+        <path d="M12 3a9 9 0 0 1 8.5 6" stroke="#22D3EE" stroke-width="2" stroke-linecap="round"></path>
+        <circle cx="12" cy="12" r="3.6" fill="#7C5CFF"></circle>
+      </svg>
+      <span style="font-size: 16px; font-weight: 700; letter-spacing: -0.01em">Orbit</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px">
+      <span class="mono" style="font-size: 11px; color: #8E8EA0; letter-spacing: 0.04em">FRI 24 JUL</span>
+      <div style="width: 30px; height: 30px; border-radius: 999px; background: linear-gradient(140deg, #7C5CFF, #22D3EE); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #0A0A0F">PJ</div>
+    </div>
+  </div>
+
+  <div style="position: relative; border-radius: 18px; padding: 24px; background: radial-gradient(120% 140% at 12% 0%, rgba(124,92,255,0.22), rgba(10,10,15,0) 58%), #12121A; border: 1px solid rgba(255,255,255,0.08); display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 24px; align-items: center">
+    <div style="width: 168px; height: 168px">
+      <svg viewBox="0 0 168 168" width="168" height="168" aria-hidden="true">
+        <defs>
+          <linearGradient id="nb-tasks" x1="0" x2="1" y1="1" y2="0">
+            <stop offset="0%" stop-color="#7B1E4B"></stop><stop offset="100%" stop-color="#FF4D8D"></stop>
+          </linearGradient>
+          <linearGradient id="nb-fit" x1="0" x2="1" y1="1" y2="0">
+            <stop offset="0%" stop-color="#0B6B4F"></stop><stop offset="100%" stop-color="#34E39B"></stop>
+          </linearGradient>
+          <linearGradient id="nb-fin" x1="0" x2="1" y1="1" y2="0">
+            <stop offset="0%" stop-color="#0E5C74"></stop><stop offset="100%" stop-color="#22D3EE"></stop>
+          </linearGradient>
+        </defs>
+        <g transform="rotate(-90 84 84)">
+          <circle cx="84" cy="84" r="70" fill="none" stroke="rgba(255,77,141,0.16)" stroke-width="15"></circle>
+          <circle cx="84" cy="84" r="70" fill="none" stroke="url(#nb-tasks)" stroke-width="15" stroke-linecap="round" stroke-dasharray="439.8" stroke-dashoffset="123"></circle>
+          <circle cx="84" cy="84" r="51" fill="none" stroke="rgba(52,227,155,0.16)" stroke-width="15"></circle>
+          <circle cx="84" cy="84" r="51" fill="none" stroke="url(#nb-fit)" stroke-width="15" stroke-linecap="round" stroke-dasharray="320.4" stroke-dashoffset="0"></circle>
+          <circle cx="84" cy="84" r="32" fill="none" stroke="rgba(34,211,238,0.16)" stroke-width="15"></circle>
+          <circle cx="84" cy="84" r="32" fill="none" stroke="url(#nb-fin)" stroke-width="15" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="100"></circle>
+        </g>
+      </svg>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div>
+        <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #8E8EA0">TODAY</p>
+        <p style="margin: 6px 0 0; font-size: 27px; font-weight: 600; letter-spacing: -0.02em">2 of 3 rings closed.</p>
+      </div>
+      <div style="display: grid; gap: 8px">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #FF4D8D"></span>Tasks</span>
+          <span class="mono" style="font-size: 13px; color: #FF4D8D">5 / 7</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #34E39B"></span>Fitness</span>
+          <span class="mono" style="font-size: 13px; color: #34E39B">1 / 1</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 13px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #22D3EE"></span>Finance</span>
+          <span class="mono" style="font-size: 13px; color: #22D3EE">2 / 2</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+    <div style="border-radius: 18px; padding: 20px; background: #12121A; border: 1px solid rgba(255,255,255,0.08)">
+      <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #8E8EA0">ALTITUDE</p>
+      <p style="margin: 10px 0 0; font-size: 46px; font-weight: 600; letter-spacing: -0.04em; line-height: 1; background: linear-gradient(100deg, #7C5CFF, #22D3EE); -webkit-background-clip: text; background-clip: text; color: transparent">62</p>
+      <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px">
+        <span style="display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; background: rgba(124,92,255,0.16); color: #A48BFF; font-size: 11px; font-weight: 600">Mid orbit</span>
+        <span style="font-size: 12px; color: #8E8EA0">+4 this week</span>
+      </div>
+      <div style="margin-top: 16px; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden">
+        <div style="width: 62%; height: 100%; background: linear-gradient(90deg, #7C5CFF, #22D3EE)"></div>
+      </div>
+      <p style="margin: 10px 0 0; font-size: 12px; color: #8E8EA0">Finish today at 49% to hold it.</p>
+    </div>
+
+    <div style="border-radius: 18px; padding: 20px; background: #12121A; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #8E8EA0">NEXT</p>
+        <span style="font-size: 12px; color: #8E8EA0">3 due</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 11px; border-radius: 12px; background: rgba(255,255,255,0.04)">
+          <span style="width: 16px; height: 16px; border: 1.5px solid #4C4B5C; border-radius: 6px"></span>
+          <span style="font-size: 13px">Draft the Q3 planning memo</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 11px; border-radius: 12px; background: rgba(255,255,255,0.04)">
+          <span style="width: 16px; height: 16px; border: 1.5px solid #4C4B5C; border-radius: 6px"></span>
+          <span style="font-size: 13px">Reply about the lease</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 11px; border-radius: 12px; background: rgba(52,227,155,0.08)">
+          <span style="width: 16px; height: 16px; border-radius: 6px; background: #34E39B; display: grid; place-items: center">
+            <svg viewBox="0 0 12 12" width="10" height="10" fill="none" aria-hidden="true"><path d="M2.5 6.2 4.8 8.5 9.5 3.8" stroke="#07130E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </span>
+          <span style="font-size: 13px; color: #6F6E80; text-decoration: line-through">Book the physio</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 10px">
+    <span style="display: inline-flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 12px; background: linear-gradient(100deg, #7C5CFF, #9B6BFF); color: #FFFFFF; font-size: 13px; font-weight: 600">Log a session</span>
+    <span style="display: inline-flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); font-size: 13px; font-weight: 600">Add task</span>
+    <span style="display: inline-flex; align-items: center; height: 40px; padding: 0 14px; border-radius: 12px; font-size: 13px; font-weight: 600; color: #8E8EA0">Share day card</span>
+  </div>
+
+  <div style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; display: flex; flex-direction: column; gap: 10px">
+    <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #8E8EA0">B · NOCTURNE — PALETTE</p>
+    <div style="display: flex; gap: 8px">
+      <div style="flex-grow: 1; height: 44px; border-radius: 10px; background: #0A0A0F; border: 1px solid rgba(255,255,255,0.08)"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 10px; background: #12121A; border: 1px solid rgba(255,255,255,0.08)"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 10px; background: #7C5CFF"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 10px; background: #22D3EE"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 10px; background: #FF4D8D"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 10px; background: #34E39B"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 10px; background: #F2F2F7"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
