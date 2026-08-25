@@ -94,7 +94,7 @@ export function DayCardShare(props: DayCardShareProps) {
     <div className="mt-4">
       <div className="flex flex-wrap gap-2">
         <button
-          className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[rgba(244,235,221,0.04)] px-4 text-[13px] font-semibold text-[var(--text-primary)] transition hover:bg-[rgba(244,235,221,0.08)] disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-input bg-[rgba(244,235,221,0.04)] px-4 text-[13px] font-semibold text-foreground transition hover:bg-[rgba(244,235,221,0.08)] disabled:opacity-60"
           disabled={busy}
           onClick={() => void run("share")}
           type="button"
@@ -102,7 +102,7 @@ export function DayCardShare(props: DayCardShareProps) {
           Share day card
         </button>
         <button
-          className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border-subtle)] px-4 text-[13px] font-semibold text-[var(--text-secondary)] transition hover:text-[var(--text-primary)] disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-4 text-[13px] font-semibold text-muted-foreground transition hover:text-foreground disabled:opacity-60"
           disabled={busy}
           onClick={() => void run("save")}
           type="button"
@@ -110,7 +110,7 @@ export function DayCardShare(props: DayCardShareProps) {
           Save PNG
         </button>
       </div>
-      <p aria-live="polite" className="mt-2 min-h-4 text-[12px] text-[var(--text-muted)]">
+      <p aria-live="polite" className="mt-2 min-h-4 text-[12px] text-muted-foreground">
         {status}
       </p>
     </div>

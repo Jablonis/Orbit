@@ -20,10 +20,10 @@ export function ActionToast({
     >
       <div
         aria-live={tone === "error" ? "assertive" : "polite"}
-        className={`action-toast floating-panel pointer-events-auto flex w-full items-center justify-between gap-4 rounded-[var(--radius-row)] px-4 py-3 text-[13px] shadow-2xl ${
+        className={`action-toast rounded-2xl bg-popover shadow-[0_24px_60px_-30px_rgba(27,26,31,0.35)] pointer-events-auto flex w-full items-center justify-between gap-4 rounded-xl px-4 py-3 text-[13px] shadow-2xl ${
           tone === "error"
-            ? "border-[color-mix(in_srgb,var(--danger)_34%,transparent)] text-[var(--danger-text)]"
-            : "text-[var(--text-primary)]"
+            ? "border-[color-mix(in_srgb,var(--destructive)_34%,transparent)] text-destructive"
+            : "text-foreground"
         }`}
         role={tone === "error" ? "alert" : "status"}
       >
@@ -32,10 +32,10 @@ export function ActionToast({
             aria-hidden="true"
             className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[12px] font-bold ${
               tone === "error"
-                ? "bg-[var(--danger)] text-[var(--text-inverse)]"
+                ? "bg-destructive text-primary-foreground"
                 : tone === "loading"
-                  ? "bg-[var(--accent-info)]/15 text-[var(--info-text)]"
-                  : "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"
+                  ? "bg-finance/15 text-finance-ink"
+                  : "bg-primary text-primary-foreground"
             }`}
           >
             {tone === "loading" ? (

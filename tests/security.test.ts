@@ -9,15 +9,33 @@ function read(path: string) {
 
 test("production CSP requires a per-request script nonce", () => {
   const policy = getContentSecurityPolicy("orbit-test-nonce", "production");
+  const scriptSrc = policy.match(/script-src[^;]+/)?.[0] ?? "";
 
   assert.match(
     policy,
     /script-src 'self' 'nonce-orbit-test-nonce' 'strict-dynamic'/,
   );
-  assert.doesNotMatch(
-    policy.match(/script-src[^;]+/)?.[0] ?? "",
-    /'unsafe-inline'/,
-  );
+  assert.doesNotMatch(scriptSrc, /'unsafe-inline'/);
+  assert.doesNotMatch(scriptSrc, /'unsafe-eval'/);
+});
+
+test("every interactive route stays dynamic, because the CSP nonce demands it", () => {
+  // A prerendered page is built before the request that carries the nonce, so
+  // 'strict-dynamic' refuses its scripts and it renders without JavaScript.
+  for (const route of [
+    "src/app/page.tsx",
+    "src/app/welcome/page.tsx",
+    "src/app/tasks/page.tsx",
+    "src/app/fitness/page.tsx",
+    "src/app/finance/page.tsx",
+    "src/app/login/page.tsx",
+  ]) {
+    assert.match(
+      read(route),
+      /export const dynamic = "force-dynamic"/,
+      `${route} must opt out of static prerendering`,
+    );
+  }
 });
 
 test("fitness plan history is owner-scoped and unavailable to anonymous clients", () => {

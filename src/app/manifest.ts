@@ -6,7 +6,7 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    background_color: "#100f0d",
+    background_color: "#fbf9f7",
     description:
       "Personal operating system for tasks, training, money, and daily momentum.",
     display: "standalone",
@@ -30,6 +30,6 @@ export default function manifest(): MetadataRoute.Manifest {
       { name: "Finance", url: "/finance" },
     ],
     start_url: "/",
-    theme_color: "#100f0d",
+    theme_color: "#fbf9f7",
   };
 }

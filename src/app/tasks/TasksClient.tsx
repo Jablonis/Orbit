@@ -289,17 +289,17 @@ export function TasksClient({
     <section className="page-container py-8">
       <header className="mb-8 flex items-end justify-between gap-5 pr-14 md:pr-0">
         <div>
-          <p className="label-caps text-[var(--accent-info)]">Task system</p>
-          <h1 className="page-title mt-2 text-[var(--text-primary)]">
+          <p className="label-caps text-finance">Task system</p>
+          <h1 className="page-title mt-2 text-foreground">
             Today&apos;s work
           </h1>
-          <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[var(--text-secondary)]">
+          <p className="mt-3 max-w-2xl text-[14px] leading-6 text-muted-foreground">
             Focus on what is due now. Unfinished work rolls forward; future work
             stays out of the way.
           </p>
         </div>
         <button
-          className="hidden min-h-11 shrink-0 rounded-[var(--radius-control)] bg-[var(--accent-primary)] px-4 text-[13px] font-bold text-[var(--text-on-accent)] max-xl:block"
+          className="hidden min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[13px] font-bold text-primary-foreground max-xl:block"
           onClick={() => {
             setEditing(null);
             setEstimateMode("1hr");
@@ -315,7 +315,7 @@ export function TasksClient({
       <section className="grid gap-6 xl:grid-cols-[390px_1fr]">
         <dialog
           aria-labelledby="task-editor-title"
-          className="content-panel fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[90] m-0 max-h-[calc(100dvh-7rem)] w-auto max-w-none overflow-y-auto rounded-[var(--radius-panel)] p-5 text-[var(--text-primary)] backdrop:bg-black/65 backdrop:backdrop-blur-[2px] sm:p-6 xl:sticky xl:inset-x-auto xl:bottom-auto xl:top-6 xl:col-start-1 xl:row-start-1 xl:w-full xl:max-h-none xl:self-start xl:overflow-visible"
+          className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[90] m-0 max-h-[calc(100dvh-7rem)] w-auto max-w-none overflow-y-auto rounded-2xl p-5 text-foreground backdrop:bg-black/65 backdrop:backdrop-blur-[2px] sm:p-6 xl:sticky xl:inset-x-auto xl:bottom-auto xl:top-6 xl:col-start-1 xl:row-start-1 xl:w-full xl:max-h-none xl:self-start xl:overflow-visible"
           id="new-task"
           onCancel={(event) => {
             if (window.matchMedia("(min-width: 1280px)").matches) {
@@ -338,14 +338,14 @@ export function TasksClient({
         >
           <div className="flex items-center justify-between gap-3">
             <p
-              className="label-caps text-[var(--text-secondary)]"
+              className="label-caps text-muted-foreground"
               id="task-editor-title"
             >
               {editing ? "Edit task" : "New task"}
             </p>
             <button
               aria-label="Close task form"
-              className="grid h-11 w-11 place-items-center rounded-full border border-[var(--border-subtle)] text-[20px] text-[var(--text-secondary)] xl:hidden"
+              className="grid h-11 w-11 place-items-center rounded-full border border-border text-[20px] text-muted-foreground xl:hidden"
               onClick={() => setFormOpen(false)}
               type="button"
             >
@@ -382,7 +382,7 @@ export function TasksClient({
                 ))}
               </datalist>
               {categorySuggestions.length > 0 ? (
-                <span className="text-[12px] leading-4 text-[var(--text-muted)]">
+                <span className="text-[12px] leading-4 text-muted-foreground">
                   Type a new category or choose one of your most used suggestions.
                 </span>
               ) : null}
@@ -456,14 +456,14 @@ export function TasksClient({
             </Field>
             <div className="flex gap-3">
               <PendingSubmitButton
-                className="flex-1 rounded-[var(--radius-control)] bg-white px-4 py-3 text-[13px] font-semibold text-[var(--text-on-light)]"
+                className="flex-1 rounded-xl bg-white px-4 py-3 text-[13px] font-semibold text-foreground"
                 pendingLabel={editing ? "Saving…" : "Creating…"}
               >
                 {editing ? "Save changes" : "Create task"}
               </PendingSubmitButton>
               {editing ? (
                 <button
-                  className="rounded-[var(--radius-control)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)] px-4 py-3 text-[13px] font-semibold text-[var(--text-secondary)]"
+                  className="rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted px-4 py-3 text-[13px] font-semibold text-muted-foreground"
                   onClick={() => {
                     setEditing(null);
                     setEstimateMode("1hr");
@@ -479,7 +479,7 @@ export function TasksClient({
             {taskSaveNotice ? (
               <p
                 aria-live="polite"
-                className={taskSaveNotice.error ? "text-[13px] text-[var(--danger)]" : "text-[13px] text-[var(--accent-primary)]"}
+                className={taskSaveNotice.error ? "text-[13px] text-destructive" : "text-[13px] text-primary"}
                 role={taskSaveNotice.error ? "alert" : "status"}
               >
                 {taskSaveNotice.message}
@@ -489,19 +489,19 @@ export function TasksClient({
         </dialog>
 
         <section className="space-y-6 xl:col-start-2 xl:row-start-1">
-          <dl className="content-panel grid overflow-hidden rounded-[var(--radius-panel)] sm:grid-cols-4">
-            <Metric label="Active" value={stats.activeTasksCount} tone="text-[var(--text-primary)]" />
-            <Metric label="Done" value={stats.completedTasksCount} tone="text-[var(--accent-primary)]" />
-            <Metric label="Hard" value={stats.hardTasksCount} tone="text-[var(--warning)]" />
-            <Metric label="Focus min" value={stats.totalEstimateMinutes} tone="text-[var(--accent-info)]" />
+          <dl className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] grid overflow-hidden rounded-2xl sm:grid-cols-4">
+            <Metric label="Active" value={stats.activeTasksCount} tone="text-foreground" />
+            <Metric label="Done" value={stats.completedTasksCount} tone="text-primary" />
+            <Metric label="Hard" value={stats.hardTasksCount} tone="text-warning" />
+            <Metric label="Focus min" value={stats.totalEstimateMinutes} tone="text-finance" />
           </dl>
           <section
             aria-labelledby="task-view-controls"
-            className="content-panel rounded-[var(--radius-panel)] p-4 sm:p-5"
+            className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-4 sm:p-5"
           >
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
               <label className="grid min-w-0 flex-1 gap-2">
-                <span className="label-caps text-[var(--text-secondary)]" id="task-view-controls">
+                <span className="label-caps text-muted-foreground" id="task-view-controls">
                   Search tasks
                 </span>
                 <input
@@ -564,13 +564,13 @@ export function TasksClient({
                 <option value="title">Title</option>
               </TaskFilterSelect>
             </div>
-            <div className="mt-3 flex min-h-11 flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-3">
-              <p aria-live="polite" className="text-[12px] text-[var(--text-secondary)]">
+            <div className="mt-3 flex min-h-11 flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+              <p aria-live="polite" className="text-[12px] text-muted-foreground">
                 Showing {filteredTasks.length} of {displayTasks.length} tasks. View state is stored in the URL.
               </p>
               {filtersActive ? (
                 <button
-                  className="min-h-11 rounded-[var(--radius-control)] px-3 text-[12px] font-semibold text-[var(--accent-primary)] hover:bg-[rgba(244,235,221,0.05)]"
+                  className="min-h-11 rounded-xl px-3 text-[12px] font-semibold text-primary hover:bg-[rgba(244,235,221,0.05)]"
                   onClick={clearFilters}
                   type="button"
                 >
@@ -579,20 +579,20 @@ export function TasksClient({
               ) : null}
             </div>
           </section>
-          <div className="content-panel rounded-[var(--radius-panel)] p-5">
+          <div className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-5">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <p className="label-caps text-[var(--text-secondary)]">Active queue</p>
-                <h2 className="mt-2 text-[24px] font-semibold text-[var(--text-primary)]">
+                <p className="label-caps text-muted-foreground">Active queue</p>
+                <h2 className="mt-2 text-[24px] font-semibold text-foreground">
                   {activeTasks.length} open tasks
                 </h2>
               </div>
-              <span className="metric-value text-[12px] font-semibold text-[var(--success-text)]">
+              <span className="metric-value text-[12px] font-semibold text-fitness-ink">
                 {stats.completionPercent}% done
               </span>
             </div>
-            <div className="mb-5 flex flex-col gap-3 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.025)] p-3 lg:flex-row lg:items-end">
-              <label className="flex min-h-11 items-center gap-3 px-1 text-[12px] font-semibold text-[var(--text-primary)]">
+            <div className="mb-5 flex flex-col gap-3 rounded-xl border border-border bg-[rgba(244,235,221,0.025)] p-3 lg:flex-row lg:items-end">
+              <label className="flex min-h-11 items-center gap-3 px-1 text-[12px] font-semibold text-foreground">
                 <input
                   checked={allVisibleSelected}
                   onChange={() =>
@@ -607,22 +607,22 @@ export function TasksClient({
                 Select visible ({selectedTaskIds.length} selected)
               </label>
               <div className="flex flex-1 flex-wrap gap-2 lg:justify-end">
-                <button className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-[var(--text-primary)] disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("complete")} type="button">Complete</button>
-                <button className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-[var(--text-primary)] disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("reopen")} type="button">Reopen</button>
+                <button className="min-h-11 rounded-xl border border-input px-3 text-[12px] font-semibold text-foreground disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("complete")} type="button">Complete</button>
+                <button className="min-h-11 rounded-xl border border-input px-3 text-[12px] font-semibold text-foreground disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("reopen")} type="button">Reopen</button>
                 <label className="flex items-center gap-2">
                   <span className="sr-only">Bulk reschedule date</span>
                   <input className="field-input min-h-11 w-[150px]" min={today} onChange={(event) => setBulkDate(event.target.value)} type="date" value={bulkDate} />
                 </label>
-                <button className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-[var(--text-primary)] disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("reschedule")} type="button">Reschedule</button>
-                <button className="min-h-11 rounded-[var(--radius-control)] border border-[var(--danger)]/25 bg-[var(--danger)]/10 px-3 text-[12px] font-semibold text-[var(--danger-text)] disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("archive")} type="button">Archive</button>
+                <button className="min-h-11 rounded-xl border border-input px-3 text-[12px] font-semibold text-foreground disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("reschedule")} type="button">Reschedule</button>
+                <button className="min-h-11 rounded-xl border border-[var(--destructive)]/25 bg-destructive/10 px-3 text-[12px] font-semibold text-destructive disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("archive")} type="button">Archive</button>
               </div>
             </div>
             <div className="task-queue-axis grid gap-6">
               {taskGroups.map((group) => group.tasks.length > 0 ? (
                 <section aria-labelledby={`task-group-${group.key}`} className="relative pl-7" key={group.key}>
                   <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-[13px] font-semibold text-[var(--text-primary)]" id={`task-group-${group.key}`}>{group.label}</h3>
-                    <span className="metric-value text-[12px] text-[var(--text-tertiary)]">{group.tasks.length}</span>
+                    <h3 className="text-[13px] font-semibold text-foreground" id={`task-group-${group.key}`}>{group.label}</h3>
+                    <span className="metric-value text-[12px] text-muted-foreground">{group.tasks.length}</span>
                   </div>
                   <div className="grid gap-3">
                     {group.tasks.map((task) => (
@@ -651,7 +651,7 @@ export function TasksClient({
                 <EmptyState
                   action={(
                     <button
-                      className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[rgba(244,235,221,0.045)] px-4 text-[12px] font-semibold text-[var(--text-primary)]"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border border-input bg-[rgba(244,235,221,0.045)] px-4 text-[12px] font-semibold text-foreground"
                       onClick={() => {
                         setEditing(null);
                         setEstimateMode("1hr");
@@ -672,8 +672,8 @@ export function TasksClient({
               ) : null}
 
               {completedTasks.length > 0 ? (
-                <details className="border-t border-[var(--border-subtle)] pt-4">
-                  <summary className="cursor-pointer text-[13px] font-semibold text-[var(--text-secondary)]">
+                <details className="border-t border-border pt-4">
+                  <summary className="cursor-pointer text-[13px] font-semibold text-muted-foreground">
                     Completed today · {completedTasks.length}
                   </summary>
                   <div className="mt-3 grid gap-3">
@@ -700,22 +700,22 @@ export function TasksClient({
               ) : null}
             </div>
           </div>
-          <details className="content-panel rounded-[var(--radius-panel)] p-5">
-            <summary className="cursor-pointer text-[14px] font-semibold text-[var(--text-primary)]">
+          <details className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-5">
+            <summary className="cursor-pointer text-[14px] font-semibold text-foreground">
               Archive and history · {archivedTasks.length}
             </summary>
-            <p className="mt-2 text-[12px] leading-5 text-[var(--text-secondary)]">
+            <p className="mt-2 text-[12px] leading-5 text-muted-foreground">
               Archived tasks stay available here and keep their completion history.
             </p>
             <div className="mt-4 grid gap-2">
               {archivedTasks.map((task) => (
-                <div className="flex flex-col gap-3 rounded-[var(--radius-row)] border border-[var(--border-subtle)] p-3 sm:flex-row sm:items-center" key={task.id}>
+                <div className="flex flex-col gap-3 rounded-xl border border-border p-3 sm:flex-row sm:items-center" key={task.id}>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{task.title}</p>
-                    <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">{task.category} · {task.completed ? "Completed" : "Open when archived"}</p>
+                    <p className="truncate text-[13px] font-semibold text-foreground">{task.title}</p>
+                    <p className="mt-1 text-[12px] text-muted-foreground">{task.category} · {task.completed ? "Completed" : "Open when archived"}</p>
                   </div>
                   <button
-                    className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-[var(--text-primary)]"
+                    className="min-h-11 rounded-xl border border-input px-3 text-[12px] font-semibold text-foreground"
                     onClick={async () => {
                       const result = await restoreTaskAction(task.id);
                       if (result.ok) router.refresh();
@@ -727,7 +727,7 @@ export function TasksClient({
                 </div>
               ))}
               {archivedTasks.length === 0 ? (
-                <p className="py-3 text-[12px] text-[var(--text-tertiary)]">No archived tasks.</p>
+                <p className="py-3 text-[12px] text-muted-foreground">No archived tasks.</p>
               ) : null}
             </div>
           </details>
@@ -737,7 +737,7 @@ export function TasksClient({
         <ActionToast
           action={(
             <button
-              className="min-h-11 shrink-0 px-2 font-bold text-[var(--accent-primary)]"
+              className="min-h-11 shrink-0 px-2 font-bold text-primary"
               disabled={undoPending}
               onClick={() => void undoArchive()}
               type="button"
@@ -777,7 +777,7 @@ function TaskRow({
 
   return (
     <article
-      className={`task-state-enter group scroll-mt-24 grid gap-4 rounded-[var(--radius-row)] border p-4 lg:grid-cols-[1fr_auto] ${tone.card}`}
+      className={`task-state-enter group scroll-mt-24 grid gap-4 rounded-xl border p-4 lg:grid-cols-[1fr_auto] ${tone.card}`}
       id={`task-${task.id}`}
     >
       <div className="min-w-0">
@@ -793,7 +793,7 @@ function TaskRow({
             {tone.label}
           </span>
         </div>
-        <p className="mt-2 text-[12px] leading-[18px] text-[var(--text-secondary)]">
+        <p className="mt-2 text-[12px] leading-[18px] text-muted-foreground">
           {task.category} · {formatTaskTime(task)} · {taskComplexityLabels[task.complexity]} · {taskPriorityLabels[task.priority]}
           {task.dueDate ? (
             <>
@@ -810,10 +810,10 @@ function TaskRow({
         </p>
         {task.note ? (
           <details className="mt-2">
-            <summary className="min-h-11 cursor-pointer py-2 text-[12px] font-semibold text-[var(--text-secondary)]">
+            <summary className="min-h-11 cursor-pointer py-2 text-[12px] font-semibold text-muted-foreground">
               View note
             </summary>
-            <p className="whitespace-pre-wrap pb-1 text-[12px] leading-5 text-[var(--text-tertiary)]">
+            <p className="whitespace-pre-wrap pb-1 text-[12px] leading-5 text-muted-foreground">
               {task.note}
             </p>
           </details>
@@ -825,7 +825,7 @@ function TaskRow({
           <input name="completed" type="hidden" value={String(!task.completed)} />
           <PendingSubmitButton
             ariaLabel={task.completed ? "Reopen task" : "Complete task"}
-            className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[var(--surface-hover)] px-3 text-[12px] font-semibold text-[var(--text-primary)]"
+            className="min-h-11 rounded-xl border border-input bg-secondary px-3 text-[12px] font-semibold text-foreground"
             pendingLabel="Saving…"
           >
             {task.completed ? "Reopen" : "Done"}
@@ -833,7 +833,7 @@ function TaskRow({
         </form>
         <div className="flex gap-2 opacity-100 transition duration-150 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
           <button
-            className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-subtle)] px-3 text-[12px] font-semibold text-[var(--text-secondary)]"
+            className="min-h-11 rounded-xl border border-border px-3 text-[12px] font-semibold text-muted-foreground"
             onClick={onEdit}
             type="button"
           >
@@ -849,7 +849,7 @@ function TaskRow({
             }}
             onSuccess={onArchived}
             title="Archive this task?"
-            triggerClassName="min-h-11 rounded-[var(--radius-control)] border border-[var(--danger)]/25 bg-[var(--danger)]/10 px-3 text-[12px] font-semibold text-[var(--danger-text)]"
+            triggerClassName="min-h-11 rounded-xl border border-[var(--destructive)]/25 bg-destructive/10 px-3 text-[12px] font-semibold text-destructive"
             triggerLabel="Archive"
           />
         </div>
@@ -871,7 +871,7 @@ function TaskFilterSelect({
 }) {
   return (
     <label className="grid min-w-[132px] gap-2">
-      <span className="label-caps text-[var(--text-secondary)]">{label}</span>
+      <span className="label-caps text-muted-foreground">{label}</span>
       <select
         className="field-input"
         onChange={(event) => onChange(event.target.value)}
@@ -955,35 +955,35 @@ function formatExactDate(date: string, locale: string) {
 
 const taskDayTones = {
   completed: {
-    badge: "bg-[var(--accent-primary)]/12 text-[var(--success-text)]",
-    card: "border-[var(--accent-primary)]/15 bg-[var(--accent-primary)]/[0.04]",
+    badge: "bg-primary/12 text-fitness-ink",
+    card: "border-primary/15 bg-primary/[0.04]",
     label: "Done today",
-    title: "text-[var(--text-muted)] line-through",
+    title: "text-muted-foreground line-through",
   },
   overdue: {
-    badge: "bg-[var(--danger)]/15 text-[var(--danger-text)]",
-    card: "border-[var(--danger)]/35 bg-[var(--danger)]/[0.08]",
+    badge: "bg-destructive/15 text-destructive",
+    card: "border-[var(--destructive)]/35 bg-destructive/[0.08]",
     label: "Rolled over",
-    title: "text-[var(--danger)]",
+    title: "text-destructive",
   },
   scheduled: {
-    badge: "bg-[var(--accent-info)]/15 text-[var(--info-text)]",
-    card: "border-[var(--accent-info)]/35 bg-[var(--accent-info)]/[0.08]",
+    badge: "bg-finance/15 text-finance-ink",
+    card: "border-[var(--finance)]/35 bg-finance/[0.08]",
     label: "Scheduled",
-    title: "text-[var(--info-text)]",
+    title: "text-finance-ink",
   },
   today: {
-    badge: "bg-[rgba(244,235,221,0.07)] text-[var(--text-secondary)]",
-    card: "border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)]/55",
+    badge: "bg-[rgba(244,235,221,0.07)] text-muted-foreground",
+    card: "border-[rgba(244,235,221,0.1)] bg-muted/55",
     label: "Today",
-    title: "text-[var(--text-primary)]",
+    title: "text-foreground",
   },
 } as const;
 
 function Field({ children, label }: { children: ReactNode; label: string }) {
   return (
     <label className="grid gap-2">
-      <span className="label-caps text-[var(--text-secondary)]">{label}</span>
+      <span className="label-caps text-muted-foreground">{label}</span>
       {children}
     </label>
   );
@@ -991,8 +991,8 @@ function Field({ children, label }: { children: ReactNode; label: string }) {
 
 function Metric({ label, tone, value }: { label: string; tone: string; value: number }) {
   return (
-    <div className="border-b border-[var(--border-subtle)] p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
-      <dt className="label-caps text-[var(--text-secondary)]">{label}</dt>
+    <div className="border-b border-border p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+      <dt className="label-caps text-muted-foreground">{label}</dt>
       <dd className={`metric-value mt-3 text-[28px] font-semibold ${tone}`}>{value}</dd>
     </div>
   );

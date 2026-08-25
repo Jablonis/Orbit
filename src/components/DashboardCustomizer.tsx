@@ -162,9 +162,9 @@ export function DashboardCustomizer({
       <form
         action={action}
         aria-busy={pending}
-        className="content-panel rounded-[var(--radius-row)] p-4 sm:p-5"
+        className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-xl p-4 sm:p-5"
       >
-        <p className="mb-4 text-[13px] leading-5 text-[var(--text-secondary)]">
+        <p className="mb-4 text-[13px] leading-5 text-muted-foreground">
           Choose what appears in Today and Trends. Ordering stays within those two
           sections so the dashboard remains easy to scan.
         </p>
@@ -176,8 +176,8 @@ export function DashboardCustomizer({
         ))}
         <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
           <div>
-            <p className="label-caps text-[var(--text-secondary)]">Cards</p>
-            <p className="mt-2 text-[12px] leading-5 text-[var(--text-tertiary)]">
+            <p className="label-caps text-muted-foreground">Cards</p>
+            <p className="mt-2 text-[12px] leading-5 text-muted-foreground">
               {hidden.length
                 ? `Hidden preview: ${hidden.map((card) => dashboardCardLabels[card]).join(", ")}.`
                 : "All dashboard cards are currently visible."}
@@ -187,28 +187,28 @@ export function DashboardCustomizer({
                 const visible = !hidden.includes(card);
                 return (
                   <div
-                    className="flex items-center gap-2 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.025)] p-2"
+                    className="flex items-center gap-2 rounded-xl border border-border bg-[rgba(244,235,221,0.025)] p-2"
                     key={card}
                   >
                     <button
                       aria-label={`${visible ? "Hide" : "Show"} ${dashboardCardLabels[card]}`}
-                      className={`grid h-11 w-11 shrink-0 place-items-center rounded-[var(--radius-control)] text-[12px] font-bold ${
+                      className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[12px] font-bold ${
                         visible
-                          ? "bg-[var(--accent-primary)] text-[var(--surface-nav)]"
-                          : "bg-[rgba(244,235,221,0.05)] text-[var(--text-tertiary)]"
+                          ? "bg-primary text-[var(--card)]"
+                          : "bg-[rgba(244,235,221,0.05)] text-muted-foreground"
                       }`}
                       onClick={() => toggle(card)}
                       type="button"
                     >
                       {visible ? "✓" : "—"}
                     </button>
-                    <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-[var(--text-primary)]">
+                    <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-foreground">
                       {dashboardCardLabels[card]}
                     </span>
                     <div className="flex">
                       <button
                         aria-label={`Move ${dashboardCardLabels[card]} up`}
-                        className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] disabled:opacity-25"
+                        className="grid h-11 w-11 place-items-center rounded-xl text-muted-foreground hover:bg-secondary disabled:opacity-25"
                         disabled={index === 0}
                         onClick={() => move(card, -1)}
                         type="button"
@@ -217,7 +217,7 @@ export function DashboardCustomizer({
                       </button>
                       <button
                         aria-label={`Move ${dashboardCardLabels[card]} down`}
-                        className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] disabled:opacity-25"
+                        className="grid h-11 w-11 place-items-center rounded-xl text-muted-foreground hover:bg-secondary disabled:opacity-25"
                         disabled={index === order.length - 1}
                         onClick={() => move(card, 1)}
                         type="button"
@@ -289,11 +289,11 @@ export function DashboardCustomizer({
             </PreferenceField>
           </div>
         </div>
-        <div className="mt-5 border-t border-[var(--border-subtle)] pt-5">
-          <p className="label-caps text-[var(--accent-info)]">
+        <div className="mt-5 border-t border-border pt-5">
+          <p className="label-caps text-finance">
             Profile and regional
           </p>
-          <p className="mt-2 max-w-3xl text-[12px] leading-5 text-[var(--text-secondary)]">
+          <p className="mt-2 max-w-3xl text-[12px] leading-5 text-muted-foreground">
             These settings control your profile identity, date formatting,
             currency, week boundaries, and the timezone Orbit uses for today.
           </p>
@@ -396,11 +396,11 @@ export function DashboardCustomizer({
             </PreferenceField>
           </div>
         </div>
-        <div className="mt-5 border-t border-[var(--border-subtle)] pt-5">
-          <p className="label-caps text-[var(--accent-highlight)]">
+        <div className="mt-5 border-t border-border pt-5">
+          <p className="label-caps text-tasks">
             Productivity goal
           </p>
-          <p className="mt-2 max-w-3xl text-[12px] leading-5 text-[var(--text-secondary)]">
+          <p className="mt-2 max-w-3xl text-[12px] leading-5 text-muted-foreground">
             Set the focus target and relative weight of each domain. A rest day
             or a day without planned tasks is treated as missing data, not poor
             performance. Domains you turn off in the chart are normalized out.
@@ -418,7 +418,7 @@ export function DashboardCustomizer({
                   type="number"
                   value={focusTarget}
                 />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-[var(--text-tertiary)]">
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-muted-foreground">
                   min
                 </span>
               </div>
@@ -443,15 +443,15 @@ export function DashboardCustomizer({
             />
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
           <p
             aria-live="polite"
             className={`w-full text-[12px] font-semibold sm:w-auto ${
               pending
-                ? "text-[var(--info-text)]"
+                ? "text-finance-ink"
                 : hasUnsavedChanges
-                  ? "text-[var(--warning-text)]"
-                  : "text-[var(--success-text)]"
+                  ? "text-warning"
+                  : "text-fitness-ink"
             }`}
           >
             {pending
@@ -461,7 +461,7 @@ export function DashboardCustomizer({
                 : "All settings are saved."}
           </p>
           <button
-            className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-4 py-2.5 text-[13px] font-semibold text-[var(--text-secondary)] hover:bg-[rgba(244,235,221,0.05)] hover:text-[var(--text-primary)] disabled:opacity-55"
+            className="min-h-11 rounded-xl border border-input px-4 py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-[rgba(244,235,221,0.05)] hover:text-foreground disabled:opacity-55"
             disabled={pending}
             name="intent"
             onClick={showDefaults}
@@ -471,7 +471,7 @@ export function DashboardCustomizer({
             Reset defaults
           </button>
           <button
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-[var(--text-primary)] px-5 py-2.5 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-55"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-[13px] font-bold text-primary-foreground disabled:opacity-55"
             disabled={pending || !hasUnsavedChanges}
             type="submit"
           >
@@ -518,7 +518,7 @@ function WeightField({
           type="number"
           value={value}
         />
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-[var(--text-tertiary)]">
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-muted-foreground">
           %
         </span>
       </div>
@@ -535,7 +535,7 @@ function PreferenceField({
 }) {
   return (
     <label className="grid gap-2">
-      <span className="label-caps text-[var(--text-secondary)]">{label}</span>
+      <span className="label-caps text-muted-foreground">{label}</span>
       {children}
     </label>
   );

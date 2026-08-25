@@ -18,7 +18,7 @@ export function ResetPasswordForm({ nextPath }: { nextPath: string }) {
     <form action={action} aria-busy={pending} className="grid gap-4">
       <input name="next" type="hidden" value={nextPath} />
       <label className="grid gap-2">
-        <span className="label-caps text-[var(--text-secondary)]">
+        <span className="label-caps text-muted-foreground">
           New password
         </span>
         <input
@@ -32,7 +32,7 @@ export function ResetPasswordForm({ nextPath }: { nextPath: string }) {
         />
       </label>
       <label className="grid gap-2">
-        <span className="label-caps text-[var(--text-secondary)]">
+        <span className="label-caps text-muted-foreground">
           Confirm new password
         </span>
         <input
@@ -45,7 +45,7 @@ export function ResetPasswordForm({ nextPath }: { nextPath: string }) {
         />
       </label>
       <button
-        className="min-h-11 rounded-[var(--radius-control)] bg-white px-4 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-60"
+        className="min-h-11 rounded-xl bg-white px-4 text-[13px] font-bold text-foreground disabled:opacity-60"
         disabled={pending}
         type="submit"
       >
@@ -53,7 +53,7 @@ export function ResetPasswordForm({ nextPath }: { nextPath: string }) {
       </button>
       {state.message ? (
         <p
-          className="rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--danger)_9%,transparent)] p-3 text-[13px] text-[var(--danger-text)]"
+          className="rounded-xl border border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_9%,transparent)] p-3 text-[13px] text-destructive"
           role="alert"
         >
           {state.message}

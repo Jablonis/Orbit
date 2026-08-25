@@ -3,21 +3,21 @@ import Link from "next/link";
 export default function NotFound() {
   return (
     <main
-      className="grid min-h-[100dvh] place-items-center bg-[var(--canvas)] px-4 py-12 text-[var(--text-primary)]"
+      className="grid min-h-[100dvh] place-items-center bg-background px-4 py-12 text-foreground"
       id="main-content"
       tabIndex={-1}
     >
-      <section className="content-panel w-full max-w-xl rounded-[var(--radius-panel)] p-7 text-center sm:p-10">
-        <p className="label-caps text-[var(--accent-info)]">404 · Off course</p>
-        <h1 className="editorial-display mt-4 text-[38px] leading-tight text-[var(--text-primary)] sm:text-[48px]">
+      <section className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] w-full max-w-xl rounded-2xl p-7 text-center sm:p-10">
+        <p className="label-caps text-finance">404 · Off course</p>
+        <h1 className="editorial-display mt-4 text-[38px] leading-tight text-foreground sm:text-[48px]">
           This orbit does not exist.
         </h1>
-        <p className="mx-auto mt-4 max-w-md text-[14px] leading-6 text-[var(--text-secondary)]">
+        <p className="mx-auto mt-4 max-w-md text-[14px] leading-6 text-muted-foreground">
           The page may have moved, or the address may be incomplete. Return to
           Overview to continue with your current day.
         </p>
         <Link
-          className="mt-7 inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] bg-[var(--accent-primary)] px-5 text-[13px] font-bold text-[var(--text-on-accent)]"
+          className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 text-[13px] font-bold text-primary-foreground"
           href="/"
         >
           Return to Overview

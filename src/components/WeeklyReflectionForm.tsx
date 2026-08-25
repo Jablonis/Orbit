@@ -25,7 +25,7 @@ export function WeeklyReflectionForm({
       className="mt-5 grid gap-3 lg:grid-cols-[1fr_1fr_auto] lg:items-end"
     >
       <label className="grid gap-2">
-        <span className="label-caps text-[var(--text-secondary)]">What worked?</span>
+        <span className="label-caps text-muted-foreground">What worked?</span>
         <textarea
           className="field-input min-h-20 py-3"
           defaultValue={reflection.whatWorked}
@@ -35,7 +35,7 @@ export function WeeklyReflectionForm({
         />
       </label>
       <label className="grid gap-2">
-        <span className="label-caps text-[var(--text-secondary)]">
+        <span className="label-caps text-muted-foreground">
           What changes next week?
         </span>
         <textarea
@@ -48,7 +48,7 @@ export function WeeklyReflectionForm({
       </label>
       <button
         aria-busy={pending}
-        className="h-11 rounded-[var(--radius-control)] bg-[var(--text-primary)] px-5 text-[13px] font-bold text-[var(--text-on-light)] disabled:cursor-wait disabled:opacity-60"
+        className="h-11 rounded-xl bg-primary px-5 text-[13px] font-bold text-primary-foreground disabled:cursor-wait disabled:opacity-60"
         disabled={pending}
         type="submit"
       >
@@ -57,10 +57,10 @@ export function WeeklyReflectionForm({
       {state.message ? (
         <p
           aria-live="polite"
-          className={`rounded-[var(--radius-row)] border px-4 py-3 text-[13px] lg:col-span-3 ${
+          className={`rounded-xl border px-4 py-3 text-[13px] lg:col-span-3 ${
             state.ok
-              ? "border-[var(--accent-primary)]/25 bg-[var(--accent-primary)]/10 text-[var(--success-text)]"
-              : "border-[var(--danger)]/25 bg-[var(--danger)]/10 text-[var(--danger-text)]"
+              ? "border-primary/25 bg-primary/10 text-fitness-ink"
+              : "border-[var(--destructive)]/25 bg-destructive/10 text-destructive"
           }`}
           role={state.ok ? "status" : "alert"}
         >

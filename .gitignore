@@ -45,3 +45,7 @@ next-env.d.ts
 /PROJECT_MEMORY.md
 /IDEAS.md
 /design.md
+
+# Design canvas: keep the artboards, not the 2.5 MB seeded editor payload.
+.design/*.html
+!.design/*.dc.html

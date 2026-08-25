@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Instrument Sans', system-ui, sans-serif; }
+    a { color: #5B3DF5; } a:hover { color: #4A2FD6; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  </style>
+</helmet>
+
+<div style="width: 760px; min-height: 1000px; background: #FAFAFC; color: #16151A; padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke="#5B3DF5" stroke-width="2" stroke-opacity="0.3"></circle>
+        <path d="M12 3a9 9 0 0 1 8.5 6" stroke="#5B3DF5" stroke-width="2" stroke-linecap="round"></path>
+        <circle cx="12" cy="12" r="3.6" fill="#5B3DF5"></circle>
+      </svg>
+      <span style="font-size: 16px; font-weight: 700; letter-spacing: -0.01em">Orbit</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px">
+      <span class="mono" style="font-size: 11px; color: #6B6A78; letter-spacing: 0.04em">FRI 24 JUL</span>
+      <div style="width: 30px; height: 30px; border-radius: 999px; background: #E9E7FE; display: grid; place-items: center; font-size: 12px; font-weight: 600; color: #5B3DF5">PJ</div>
+    </div>
+  </div>
+
+  <div style="background: #FFFFFF; border: 1px solid #EBEAF2; border-radius: 14px; padding: 22px; box-shadow: 0 1px 2px rgba(20,18,40,0.05); display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 24px; align-items: center">
+    <div style="position: relative; width: 168px; height: 168px">
+      <svg viewBox="0 0 168 168" width="168" height="168" aria-hidden="true">
+        <g transform="rotate(-90 84 84)">
+          <circle cx="84" cy="84" r="70" fill="none" stroke="#FDE7EC" stroke-width="15"></circle>
+          <circle cx="84" cy="84" r="70" fill="none" stroke="#F43F5E" stroke-width="15" stroke-linecap="round" stroke-dasharray="439.8" stroke-dashoffset="123"></circle>
+          <circle cx="84" cy="84" r="51" fill="none" stroke="#DFF6EC" stroke-width="15"></circle>
+          <circle cx="84" cy="84" r="51" fill="none" stroke="#10B981" stroke-width="15" stroke-linecap="round" stroke-dasharray="320.4" stroke-dashoffset="0"></circle>
+          <circle cx="84" cy="84" r="32" fill="none" stroke="#E7E9FE" stroke-width="15"></circle>
+          <circle cx="84" cy="84" r="32" fill="none" stroke="#6366F1" stroke-width="15" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="100"></circle>
+        </g>
+      </svg>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <div>
+        <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #6B6A78">TODAY</p>
+        <p style="margin: 6px 0 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em">2 of 3 rings closed.</p>
+      </div>
+      <div style="display: grid; gap: 8px">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 999px; background: #F43F5E"></span>Tasks</span>
+          <span class="mono" style="font-size: 13px; font-weight: 500">5 / 7</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 999px; background: #10B981"></span>Fitness</span>
+          <span class="mono" style="font-size: 13px; font-weight: 500">1 / 1</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500"><span style="width: 8px; height: 8px; border-radius: 999px; background: #6366F1"></span>Finance</span>
+          <span class="mono" style="font-size: 13px; font-weight: 500">2 / 2</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+    <div style="background: #FFFFFF; border: 1px solid #EBEAF2; border-radius: 14px; padding: 20px; box-shadow: 0 1px 2px rgba(20,18,40,0.05)">
+      <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #6B6A78">ALTITUDE</p>
+      <p style="margin: 10px 0 0; font-size: 44px; font-weight: 600; letter-spacing: -0.04em; line-height: 1">62</p>
+      <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px">
+        <span style="display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; background: #EEEBFE; color: #5B3DF5; font-size: 11px; font-weight: 600">Mid orbit</span>
+        <span style="font-size: 12px; color: #6B6A78">+4 this week</span>
+      </div>
+      <div style="margin-top: 16px; height: 6px; border-radius: 999px; background: #F0EFF6; overflow: hidden">
+        <div style="width: 62%; height: 100%; background: #5B3DF5"></div>
+      </div>
+      <p style="margin: 10px 0 0; font-size: 12px; color: #6B6A78">Finish today at 49% to hold it.</p>
+    </div>
+
+    <div style="background: #FFFFFF; border: 1px solid #EBEAF2; border-radius: 14px; padding: 20px; box-shadow: 0 1px 2px rgba(20,18,40,0.05); display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #6B6A78">NEXT</p>
+        <span style="font-size: 12px; color: #6B6A78">3 due</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #EBEAF2; border-radius: 10px">
+          <span style="width: 16px; height: 16px; border: 1.5px solid #C9C7DA; border-radius: 5px"></span>
+          <span style="font-size: 13px; font-weight: 500">Draft the Q3 planning memo</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #EBEAF2; border-radius: 10px">
+          <span style="width: 16px; height: 16px; border: 1.5px solid #C9C7DA; border-radius: 5px"></span>
+          <span style="font-size: 13px; font-weight: 500">Reply about the lease</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #EBEAF2; border-radius: 10px; background: #FAFAFC">
+          <span style="width: 16px; height: 16px; border-radius: 5px; background: #10B981; display: grid; place-items: center">
+            <svg viewBox="0 0 12 12" width="10" height="10" fill="none" aria-hidden="true"><path d="M2.5 6.2 4.8 8.5 9.5 3.8" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </span>
+          <span style="font-size: 13px; color: #9694A6; text-decoration: line-through">Book the physio</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 10px">
+    <span style="display: inline-flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 10px; background: #5B3DF5; color: #FFFFFF; font-size: 13px; font-weight: 600">Log a session</span>
+    <span style="display: inline-flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 10px; background: #FFFFFF; border: 1px solid #DFDDEB; font-size: 13px; font-weight: 600">Add task</span>
+    <span style="display: inline-flex; align-items: center; height: 40px; padding: 0 14px; border-radius: 10px; font-size: 13px; font-weight: 600; color: #6B6A78">Share day card</span>
+  </div>
+
+  <div style="margin-top: auto; border-top: 1px solid #EBEAF2; padding-top: 16px; display: flex; flex-direction: column; gap: 10px">
+    <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #6B6A78">A · DAYLIGHT — PALETTE</p>
+    <div style="display: flex; gap: 8px">
+      <div style="flex-grow: 1; height: 44px; border-radius: 8px; background: #FAFAFC; border: 1px solid #EBEAF2"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 8px; background: #FFFFFF; border: 1px solid #EBEAF2"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 8px; background: #5B3DF5"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 8px; background: #F43F5E"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 8px; background: #10B981"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 8px; background: #6366F1"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 8px; background: #16151A"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

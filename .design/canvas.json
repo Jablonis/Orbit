@@ -1,0 +1,16 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "A · Daylight", "x": 0, "y": 0, "w": 760, "h": 1000 },
+    { "file": "DirectionB.dc.html", "title": "B · Nocturne", "x": 880, "y": 0, "w": 760, "h": 1000 },
+    { "file": "DirectionC.dc.html", "title": "C · Blocks", "x": 1760, "y": 0, "w": 760, "h": 1000 },
+    { "file": "DirectionD.dc.html", "title": "D · Bloom", "x": 2640, "y": 0, "w": 760, "h": 1000 }
+  ],
+  "annotations": [
+    { "id": "brief", "x": 0, "y": -220, "w": 620, "text": "Orbit v2 — pick one direction.\n\nSame screen four ways: same data, same logic, four different answers to colour and containers. Pick one and I build the whole system from it (tokens, shadcn primitives, every route)." },
+    { "id": "note-a", "x": 0, "y": 1060, "w": 760, "text": "A · DAYLIGHT — light neutral canvas, one violet accent, a colour per domain. Cards are white with a hairline and a 1px shadow; this is the shadcn shape done properly.\n\nWhy: reads as a real product, ages well, easiest to keep consistent across five routes.\nTradeoff: the safest of the four — it will not stop anyone scrolling." },
+    { "id": "note-b", "x": 880, "y": 1060, "w": 760, "text": "B · NOCTURNE — near-black ink with electric violet, cyan, pink and mint. Colour carries the data; a soft light-source glow sits behind the hero only.\n\nWhy: keeps the dark app you already have but makes it lively instead of grey, and the rings finally look like the point.\nTradeoff: gradients need discipline or it drifts into the same AI-dashboard look you are trying to leave." },
+    { "id": "note-c", "x": 1760, "y": 1060, "w": 760, "text": "C · BLOCKS — no cards at all. Full-bleed colour fields, 2px rules, huge Archivo numerals on paper white.\n\nWhy: the most memorable and the most ownable; nobody else's dashboard looks like this.\nTradeoff: loud, and dense screens (finance tables, statement imports) will fight it." },
+    { "id": "note-d", "x": 2640, "y": 1060, "w": 760, "text": "D · BLOOM — light and soft: tinted panels instead of bordered cards, one tint per domain, pill controls, deep plum accent.\n\nWhy: the friendliest and the most 'daily habit' of the four; colour tells you which system you are in without a label.\nTradeoff: tints eat contrast if the palette slips, and it is the least 'instrument' of the set." }
+  ],
+  "launch": { "view": "canvas" }
+}

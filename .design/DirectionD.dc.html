@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    a { color: #6B2FBF; } a:hover { color: #57249C; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  </style>
+</helmet>
+
+<div style="width: 760px; min-height: 1000px; background: #FBF9F7; color: #1B1A1F; padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke="#6B2FBF" stroke-width="2" stroke-opacity="0.28"></circle>
+        <path d="M12 3a9 9 0 0 1 8.5 6" stroke="#6B2FBF" stroke-width="2" stroke-linecap="round"></path>
+        <circle cx="12" cy="12" r="3.6" fill="#6B2FBF"></circle>
+      </svg>
+      <span style="font-size: 16px; font-weight: 800; letter-spacing: -0.01em">Orbit</span>
+    </div>
+    <span class="mono" style="font-size: 11px; color: #6E6A73; letter-spacing: 0.04em">FRI 24 JUL</span>
+  </div>
+
+  <div style="border-radius: 24px; padding: 26px; background: linear-gradient(150deg, #F1E9FF 0%, #FFE9F1 52%, #E9F6FF 100%); display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 24px; align-items: center">
+    <div style="width: 168px; height: 168px">
+      <svg viewBox="0 0 168 168" width="168" height="168" aria-hidden="true">
+        <g transform="rotate(-90 84 84)">
+          <circle cx="84" cy="84" r="70" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="16"></circle>
+          <circle cx="84" cy="84" r="70" fill="none" stroke="#F0568C" stroke-width="16" stroke-linecap="round" stroke-dasharray="439.8" stroke-dashoffset="123"></circle>
+          <circle cx="84" cy="84" r="50" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="16"></circle>
+          <circle cx="84" cy="84" r="50" fill="none" stroke="#22B07D" stroke-width="16" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="0"></circle>
+          <circle cx="84" cy="84" r="30" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="16"></circle>
+          <circle cx="84" cy="84" r="30" fill="none" stroke="#6B2FBF" stroke-width="16" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="94"></circle>
+        </g>
+      </svg>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <div>
+        <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #6E6A73">TODAY</p>
+        <p style="margin: 6px 0 0; font-size: 27px; font-weight: 700; letter-spacing: -0.02em">2 of 3 rings closed.</p>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <span style="display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,0.78); font-size: 12px; font-weight: 600"><span style="width: 7px; height: 7px; border-radius: 999px; background: #F0568C"></span>5/7</span>
+        <span style="display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,0.78); font-size: 12px; font-weight: 600"><span style="width: 7px; height: 7px; border-radius: 999px; background: #22B07D"></span>1/1</span>
+        <span style="display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,0.78); font-size: 12px; font-weight: 600"><span style="width: 7px; height: 7px; border-radius: 999px; background: #6B2FBF"></span>2/2</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+    <div style="border-radius: 22px; padding: 22px; background: #F3ECFF">
+      <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #6B2FBF">ALTITUDE</p>
+      <p style="margin: 10px 0 0; font-size: 46px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: #3D1670">62</p>
+      <p style="margin: 8px 0 0; font-size: 13px; font-weight: 600; color: #6B2FBF">Mid orbit · +4 this week</p>
+      <div style="margin-top: 16px; height: 8px; border-radius: 999px; background: rgba(107,47,191,0.16); overflow: hidden">
+        <div style="width: 62%; height: 100%; border-radius: 999px; background: #6B2FBF"></div>
+      </div>
+      <p style="margin: 10px 0 0; font-size: 12px; color: #6E6A73">Finish today at 49% to hold it.</p>
+    </div>
+
+    <div style="border-radius: 22px; padding: 22px; background: #FFFFFF; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #6E6A73">NEXT</p>
+        <span style="font-size: 12px; color: #6E6A73">3 due</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: #FBF9F7">
+          <span style="width: 18px; height: 18px; border: 2px solid #D6D1DA; border-radius: 999px"></span>
+          <span style="font-size: 13px; font-weight: 600">Draft the Q3 planning memo</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: #FBF9F7">
+          <span style="width: 18px; height: 18px; border: 2px solid #D6D1DA; border-radius: 999px"></span>
+          <span style="font-size: 13px; font-weight: 600">Reply about the lease</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: #ECFAF4">
+          <span style="width: 18px; height: 18px; border-radius: 999px; background: #22B07D; display: grid; place-items: center">
+            <svg viewBox="0 0 12 12" width="10" height="10" fill="none" aria-hidden="true"><path d="M2.5 6.2 4.8 8.5 9.5 3.8" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </span>
+          <span style="font-size: 13px; font-weight: 600; color: #94909A; text-decoration: line-through">Book the physio</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 10px">
+    <span style="display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 999px; background: #6B2FBF; color: #FFFFFF; font-size: 13px; font-weight: 700">Log a session</span>
+    <span style="display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 999px; background: #FFFFFF; font-size: 13px; font-weight: 700">Add task</span>
+    <span style="display: inline-flex; align-items: center; height: 44px; padding: 0 14px; font-size: 13px; font-weight: 700; color: #6E6A73">Share day card</span>
+  </div>
+
+  <div style="margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 10px">
+    <p class="mono" style="margin: 0; font-size: 11px; letter-spacing: 0.1em; color: #6E6A73">D · BLOOM — PALETTE</p>
+    <div style="display: flex; gap: 8px">
+      <div style="flex-grow: 1; height: 44px; border-radius: 12px; background: #FBF9F7"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 12px; background: #F3ECFF"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 12px; background: #FFE9F1"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 12px; background: #ECFAF4"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 12px; background: #6B2FBF"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 12px; background: #F0568C"></div>
+      <div style="flex-grow: 1; height: 44px; border-radius: 12px; background: #1B1A1F"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
