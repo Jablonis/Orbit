@@ -33,11 +33,11 @@ export function AppNavigation({
 }) {
   return (
     <>
-      <nav className="fixed left-0 top-0 z-40 hidden h-screen w-[112px] border-r border-[var(--border-subtle)] bg-[var(--surface-nav)]/90 backdrop-blur-2xl md:block">
+      <nav className="fixed left-0 top-0 z-40 hidden h-screen w-[104px] border-r border-border bg-card md:block">
         <div className="flex h-full flex-col items-center justify-between px-4 py-6">
           <Link className="flex flex-col items-center gap-2" href="/">
-            <OrbitMark className="text-[var(--accent-primary)]" size={34} />
-            <span className="text-[13px] font-semibold text-[var(--text-primary)]">Orbit</span>
+            <OrbitMark className="text-primary" size={30} />
+            <span className="text-[13px] font-bold tracking-[-0.01em]">Orbit</span>
             <LinkPendingIndicator label="Loading Overview" />
           </Link>
 
@@ -45,17 +45,15 @@ export function AppNavigation({
             {navItems.map((item) => (
               <Link
                 aria-current={active === item.key ? "page" : undefined}
-                className={`relative flex min-h-[64px] flex-col items-center justify-center gap-1 overflow-hidden rounded-[var(--radius-row)] px-2 py-2 text-[12px] font-semibold transition duration-150 ${
+                className={`relative flex min-h-[62px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[12px] font-semibold transition duration-150 ${
                   active === item.key
-                    ? "bg-[rgba(244,235,221,0.08)] text-[var(--text-primary)]"
-                    : "text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+                    ? "bg-plum-tint text-plum-ink"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
                 href={item.href}
                 key={item.key}
               >
-                {active === item.key ? (
-                  <span aria-hidden="true" className="absolute inset-y-3 left-0 w-0.5 rounded-full bg-[var(--accent-primary)]" />
-                ) : null}
+
                 {item.icon}
                 {item.label}
                 <LinkPendingIndicator label={`Loading ${item.label}`} />
@@ -67,20 +65,20 @@ export function AppNavigation({
         </div>
       </nav>
 
-      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-4 border-t border-[var(--border-subtle)] bg-[var(--surface-nav)]/92 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl md:hidden">
+      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-4 border-t border-border bg-card/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl md:hidden">
         {navItems.map((item) => (
           <Link
             aria-current={active === item.key ? "page" : undefined}
-            className={`relative flex min-w-0 flex-col items-center justify-center rounded-[var(--radius-row)] p-2 text-[12px] font-semibold transition duration-150 ${
+            className={`relative flex min-w-0 flex-col items-center justify-center rounded-2xl p-2 text-[12px] font-semibold transition duration-150 ${
               active === item.key
-                ? "bg-[rgba(244,235,221,0.08)] text-[var(--text-primary)]"
-                : "text-[var(--text-secondary)] hover:bg-[rgba(244,235,221,0.1)] hover:text-[var(--text-primary)]"
+                ? "bg-plum-tint text-plum-ink"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
             href={item.href}
             key={item.key}
           >
             {active === item.key ? (
-              <span aria-hidden="true" className="absolute inset-x-6 -top-2 h-0.5 rounded-full bg-[var(--accent-primary)]" />
+              <span aria-hidden="true" className="absolute inset-x-6 -top-2 h-0.5 rounded-full bg-primary" />
             ) : null}
             {item.icon}
             <span className="mt-1">{item.label}</span>

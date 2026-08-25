@@ -10,12 +10,12 @@ type RingValues = {
 };
 
 type RingDefinition = {
+  color: string;
   delay: number;
-  from: string;
   key: keyof RingValues;
   label: string;
   radius: number;
-  to: string;
+  track: string;
 };
 
 const STROKE = 21;
@@ -23,28 +23,28 @@ const CENTER = 120;
 
 const rings: RingDefinition[] = [
   {
+    color: "var(--tasks)",
     delay: 0,
-    from: "var(--ring-tasks-from)",
     key: "tasks",
     label: "Tasks",
     radius: 99,
-    to: "var(--ring-tasks-to)",
+    track: "var(--tasks-tint)",
   },
   {
+    color: "var(--fitness)",
     delay: 90,
-    from: "var(--ring-fitness-from)",
     key: "fitness",
     label: "Fitness",
     radius: 72,
-    to: "var(--ring-fitness-to)",
+    track: "var(--fitness-tint)",
   },
   {
+    color: "var(--finance)",
     delay: 180,
-    from: "var(--ring-finance-from)",
     key: "finance",
     label: "Finance",
     radius: 45,
-    to: "var(--ring-finance-to)",
+    track: "var(--finance-tint)",
   },
 ];
 
@@ -90,16 +90,19 @@ export function ActivityRings({ finance, fitness, tasks }: RingValues) {
               y1="1"
               y2="0"
             >
-              <stop offset="0%" stopColor={ring.from} />
-              <stop offset="100%" stopColor={ring.to} />
+              <stop
+                offset="0%"
+                stopColor={`color-mix(in srgb, ${ring.color} 78%, #1b1a1f)`}
+              />
+              <stop offset="100%" stopColor={ring.color} />
             </linearGradient>
           ))}
           <filter height="300%" id="ring-cap-shadow" width="300%" x="-100%" y="-100%">
             <feDropShadow
               dx="0"
               dy="0"
-              floodColor="#000"
-              floodOpacity="0.45"
+              floodColor="#1b1a1f"
+              floodOpacity="0.28"
               stdDeviation="2.2"
             />
           </filter>
@@ -151,8 +154,7 @@ function Ring({
         cy={CENTER}
         fill="none"
         r={definition.radius}
-        stroke={definition.to}
-        strokeOpacity={0.15}
+        stroke={definition.track}
         strokeWidth={STROKE}
       />
 
@@ -212,7 +214,7 @@ function OvershootCap({
       <circle
         cx={CENTER}
         cy={CENTER - definition.radius}
-        fill={definition.to}
+        fill={definition.color}
         r={STROKE / 2}
       />
     </g>

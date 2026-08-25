@@ -57,7 +57,7 @@ export default async function WelcomePage() {
     : { href: "/login", label: "Create your Orbit" };
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--canvas)] text-[var(--text-primary)]">
+    <div className="min-h-[100dvh] bg-background text-foreground">
       <CornerNav primary={primary} signedIn={signedIn} />
 
       <main id="main-content" tabIndex={-1}>
@@ -71,11 +71,11 @@ export default async function WelcomePage() {
         <ClosingSection primary={primary} />
       </main>
 
-      <footer className="hairline-top">
+      <footer className="border-t border-border">
         <div className="landing-container flex flex-col gap-6 py-10 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <OrbitMark className="text-[var(--accent-primary)]" size={22} />
-            <p className="mt-4 max-w-sm text-[13px] leading-5 text-[var(--text-muted)]">
+            <p className="mt-4 max-w-sm text-[13px] leading-5 text-muted-foreground">
               Built for one person who kept forgetting to open his own
               dashboard. The mechanic is what fixed it.
             </p>
@@ -100,7 +100,7 @@ function CornerNav({
   signedIn: boolean;
 }) {
   return (
-    <header className="sticky top-0 z-50 bg-[color-mix(in_srgb,var(--canvas)_84%,transparent)] backdrop-blur-xl">
+    <header className="sticky top-0 z-50 bg-background/85 backdrop-blur-xl">
       <div className="landing-container flex items-center justify-between gap-4 py-4">
         <Link
           aria-label="Orbit home"
@@ -125,7 +125,7 @@ function CornerNav({
         <div className="flex items-center gap-5">
           {signedIn ? null : (
             <Link
-              className="hidden min-h-11 items-center text-[13px] font-semibold text-[var(--text-secondary)] transition hover:text-[var(--text-primary)] sm:inline-flex"
+              className="hidden min-h-11 items-center text-[13px] font-semibold text-muted-foreground transition hover:text-foreground sm:inline-flex"
               href="/login"
             >
               Sign in
@@ -143,7 +143,7 @@ function CornerNav({
 function NavLink({ children, href }: { children: ReactNode; href: string }) {
   return (
     <Link
-      className="label-caps inline-flex min-h-11 items-center text-[var(--text-tertiary)] transition hover:text-[var(--text-primary)]"
+      className="label-caps inline-flex min-h-11 items-center text-muted-foreground transition hover:text-foreground"
       href={href}
     >
       {children}
@@ -154,7 +154,7 @@ function NavLink({ children, href }: { children: ReactNode; href: string }) {
 function FooterLink({ children, href }: { children: ReactNode; href: string }) {
   return (
     <Link
-      className="label-caps inline-flex min-h-11 items-center text-[var(--text-tertiary)] transition hover:text-[var(--text-primary)]"
+      className="label-caps inline-flex min-h-11 items-center text-muted-foreground transition hover:text-foreground"
       href={href}
     >
       {children}
@@ -164,25 +164,21 @@ function FooterLink({ children, href }: { children: ReactNode; href: string }) {
 
 function Hero({ primary }: { primary: { href: string; label: string } }) {
   return (
-    <section className="relative overflow-hidden border-b border-[var(--border-subtle)]">
+    <section className="relative overflow-hidden border-b border-border">
       <div
         aria-hidden="true"
-        className="instrument-grid pointer-events-none absolute inset-0"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(110%_80%_at_50%_38%,color-mix(in_srgb,var(--accent-primary)_5%,transparent),transparent_62%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(150deg,var(--plum-tint)_0%,var(--tasks-tint)_46%,var(--finance-tint)_100%)] opacity-70"
       />
 
       <div className="landing-container relative flex min-h-[80vh] flex-col justify-between pb-10 pt-14 sm:pt-16">
-        <h1 className="display-mega text-[var(--text-primary)]">Orbit</h1>
+        <h1 className="display-mega text-foreground">Orbit</h1>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:items-end">
           <div>
-            <p className="label-caps text-[var(--text-tertiary)]">
+            <p className="label-caps text-muted-foreground">
               A personal operating system
             </p>
-            <p className="mt-5 max-w-xl text-[19px] leading-8 text-[var(--text-primary)] sm:text-[22px] sm:leading-9">
+            <p className="mt-5 max-w-xl text-[19px] leading-8 text-foreground sm:text-[22px] sm:leading-9">
               Your day has an altitude. Tasks, training and money become one
               number that climbs when you show up and decays when you don’t.
             </p>
@@ -196,7 +192,7 @@ function Hero({ primary }: { primary: { href: string; label: string } }) {
             </div>
           </div>
 
-          <dl className="grid grid-cols-3 gap-px border border-[var(--border-subtle)] bg-[var(--border-subtle)]">
+          <dl className="grid grid-cols-3 gap-3">
             <HeroFigure label="Altitude" value={String(altitude)} />
             <HeroFigure label="Tier" value={tier.name.split(" ")[0]} />
             <HeroFigure
@@ -207,10 +203,10 @@ function Hero({ primary }: { primary: { href: string; label: string } }) {
         </div>
 
         <div className="mt-10 flex items-end justify-between gap-6">
-          <p className="label-caps text-[var(--text-muted)]">
+          <p className="label-caps text-muted-foreground">
             ORB-01 · Tasks / Fitness / Finance
           </p>
-          <p className="label-caps hidden text-[var(--text-muted)] sm:block">
+          <p className="label-caps hidden text-muted-foreground sm:block">
             Scroll ↓
           </p>
         </div>
@@ -221,9 +217,9 @@ function Hero({ primary }: { primary: { href: string; label: string } }) {
 
 function HeroFigure({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-[var(--canvas)] p-4">
-      <dt className="label-caps text-[var(--text-muted)]">{label}</dt>
-      <dd className="metric-value mt-2 text-[26px] font-semibold leading-none text-[var(--text-primary)]">
+    <div className="rounded-2xl bg-card p-4 shadow-[0_1px_2px_rgba(27,26,31,0.05)]">
+      <dt className="label-caps text-muted-foreground">{label}</dt>
+      <dd className="metric-value mt-2 text-[26px] font-semibold leading-none text-foreground">
         {value}
       </dd>
     </div>
@@ -237,27 +233,27 @@ function SystemsSection() {
       detail:
         "What needs your attention. Overdue, today, upcoming — one queue that rolls unfinished work forward and archives itself.",
       name: "Tasks",
-      tone: "var(--ring-tasks-to)",
+      tone: "var(--tasks)",
     },
     {
       code: "CH-02",
       detail:
         "What you planned, and what happened. One reusable weekly plan, logged week by week, without rewriting your history.",
       name: "Fitness",
-      tone: "var(--ring-fitness-to)",
+      tone: "var(--fitness)",
     },
     {
       code: "CH-03",
       detail:
         "What moved and what still needs review. Imported statements wait until you confirm them; the file is never stored.",
       name: "Finance",
-      tone: "var(--ring-finance-to)",
+      tone: "var(--finance)",
     },
   ];
 
   return (
     <Section eyebrow="The instrument" id="systems" title="Three systems, one glance.">
-      <p className="max-w-2xl text-[15px] leading-7 text-[var(--text-secondary)]">
+      <p className="max-w-2xl text-[15px] leading-7 text-muted-foreground">
         Orbit connects what needs your attention, what you planned for your
         body, and what moved in your finances — without turning the day into
         noise.
@@ -267,10 +263,10 @@ function SystemsSection() {
         <div className="mx-auto w-full max-w-[300px]">
           <ActivityRings finance={100} fitness={100} tasks={72} />
         </div>
-        <div className="border-t border-[var(--border-subtle)]">
+        <div className="border-t border-border">
           {channels.map((channel) => (
             <article
-              className="grid gap-3 border-b border-[var(--border-subtle)] py-6 sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-6"
+              className="grid gap-3 border-b border-border py-6 sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-6"
               key={channel.code}
             >
               <div className="flex items-center gap-2.5 sm:pt-1.5">
@@ -279,15 +275,15 @@ function SystemsSection() {
                   className="h-2 w-2 rounded-full"
                   style={{ backgroundColor: channel.tone }}
                 />
-                <span className="label-caps text-[var(--text-muted)]">
+                <span className="label-caps text-muted-foreground">
                   {channel.code}
                 </span>
               </div>
               <div>
-                <h3 className="text-[19px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+                <h3 className="text-[19px] font-semibold tracking-[-0.02em] text-foreground">
                   {channel.name}
                 </h3>
-                <p className="mt-2 max-w-xl text-[14px] leading-6 text-[var(--text-secondary)]">
+                <p className="mt-2 max-w-xl text-[14px] leading-6 text-muted-foreground">
                   {channel.detail}
                 </p>
               </div>
@@ -319,18 +315,18 @@ function MechanicSection() {
       id="mechanic"
       title="A streak punishes you once. An orbit keeps negotiating."
     >
-      <p className="max-w-2xl text-[15px] leading-7 text-[var(--text-secondary)]">
+      <p className="max-w-2xl text-[15px] leading-7 text-muted-foreground">
         Both charts are the same fortnight: two missed days in an otherwise
         decent run.
       </p>
 
-      <div className="mt-12 grid gap-px border border-[var(--border-subtle)] bg-[var(--border-subtle)] lg:grid-cols-2">
+      <div className="mt-12 grid gap-4 lg:grid-cols-2">
         <Plate>
-          <p className="label-caps text-[var(--text-muted)]">01 · Streak</p>
-          <h3 className="mt-3 text-[19px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+          <p className="label-caps text-muted-foreground">01 · Streak</p>
+          <h3 className="mt-3 text-[19px] font-semibold tracking-[-0.02em] text-foreground">
             Back to zero, twice
           </h3>
-          <p className="mt-2 text-[14px] leading-6 text-[var(--text-secondary)]">
+          <p className="mt-2 text-[14px] leading-6 text-muted-foreground">
             Miss day three and the count restarts. Build it back for a week,
             miss day ten, and it restarts again.
           </p>
@@ -341,11 +337,11 @@ function MechanicSection() {
           />
         </Plate>
         <Plate>
-          <p className="label-caps text-[var(--text-muted)]">02 · Altitude</p>
-          <h3 className="mt-3 text-[19px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+          <p className="label-caps text-muted-foreground">02 · Altitude</p>
+          <h3 className="mt-3 text-[19px] font-semibold tracking-[-0.02em] text-foreground">
             Down {Math.round((1 - MOMENTUM_DECAY) * 100)}%, not down to nothing
           </h3>
-          <p className="mt-2 text-[14px] leading-6 text-[var(--text-secondary)]">
+          <p className="mt-2 text-[14px] leading-6 text-muted-foreground">
             The same two days cost a slice of altitude each. Enough to feel,
             never enough to quit over.
           </p>
@@ -357,11 +353,11 @@ function MechanicSection() {
         </Plate>
       </div>
 
-      <p className="metric-value mt-8 font-[family-name:var(--font-geist-mono)] text-[14px] leading-7 text-[var(--text-primary)]">
+      <p className="metric-value mt-8 font-[family-name:var(--font-geist-mono)] text-[14px] leading-7 text-foreground">
         altitude today = {MOMENTUM_DECAY} × yesterday +{" "}
         {(1 - MOMENTUM_DECAY).toFixed(2)} × what you did
       </p>
-      <p className="mt-2 max-w-2xl text-[13px] leading-6 text-[var(--text-muted)]">
+      <p className="mt-2 max-w-2xl text-[13px] leading-6 text-muted-foreground">
         That is the whole engine, printed here on purpose. Nothing about your
         own progress should be a black box.
       </p>
@@ -382,15 +378,15 @@ function TodaySection() {
           />
           <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
             <div>
-              <p className="metric-value text-[38px] font-semibold leading-none text-[var(--text-primary)]">
+              <p className="metric-value text-[38px] font-semibold leading-none text-foreground">
                 {altitude}
               </p>
-              <p className="label-caps mt-2 text-[var(--text-muted)]">Altitude</p>
+              <p className="label-caps mt-2 text-muted-foreground">Altitude</p>
             </div>
           </div>
         </div>
 
-        <dl className="border-t border-[var(--border-subtle)]">
+        <dl className="border-t border-border">
           <Row
             detail="The exact score that keeps you in your tier. Not a nudge — a threshold you can clear before lunch."
             term={`Finish today at ${holdScore ?? 0}%`}
@@ -417,12 +413,12 @@ function DayCardSection() {
     <Section eyebrow="The day card" title="Proof you can post.">
       <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,300px)] lg:items-center">
         <div>
-          <p className="max-w-xl text-[15px] leading-7 text-[var(--text-secondary)]">
+          <p className="max-w-xl text-[15px] leading-7 text-muted-foreground">
             One tap renders your orbit, tier, run and verdict as an image built
             entirely on your device. Share it, or don’t — nothing is uploaded
             unless you choose to send it.
           </p>
-          <ul className="mt-8 border-t border-[var(--border-subtle)]">
+          <ul className="mt-8 border-t border-border">
             <Bullet>Rendered locally, never on a server</Bullet>
             <Bullet>Native share sheet on a phone, PNG anywhere else</Bullet>
             <Bullet>Your numbers only — no leaderboard, no strangers</Bullet>
@@ -430,7 +426,7 @@ function DayCardSection() {
         </div>
         <Image
           alt="An Orbit day card showing an altitude of 65 in Mid orbit, a 14 day run, and the verdict that you are 64 points ahead of last week."
-          className="mx-auto h-auto w-full max-w-[300px] border border-[var(--border-subtle)]"
+          className="mx-auto h-auto w-full max-w-[300px] rounded-2xl"
           height={1350}
           src="/day-card-sample.png"
           width={1080}
@@ -447,16 +443,16 @@ function PricingSection({ primaryHref }: { primaryHref: string }) {
       id="pricing"
       title="Bring your own database, or let Orbit host it."
     >
-      <div className="mt-12 grid gap-px border border-[var(--border-subtle)] bg-[var(--border-subtle)] lg:grid-cols-2">
+      <div className="mt-12 grid gap-4 lg:grid-cols-2">
         <Plate>
-          <p className="label-caps text-[var(--text-muted)]">Self-hosted</p>
+          <p className="label-caps text-muted-foreground">Self-hosted</p>
           <p className="mt-4 flex items-baseline gap-3">
-            <span className="metric-value text-[44px] font-semibold leading-none text-[var(--text-primary)]">
+            <span className="metric-value text-[44px] font-semibold leading-none text-foreground">
               Free
             </span>
-            <span className="label-caps text-[var(--text-muted)]">forever</span>
+            <span className="label-caps text-muted-foreground">forever</span>
           </p>
-          <ul className="mt-8 border-t border-[var(--border-subtle)]">
+          <ul className="mt-8 border-t border-border">
             <Bullet>Every feature, including momentum and day cards</Bullet>
             <Bullet>Your own Supabase project and row-level security</Bullet>
             <Bullet>Installs to your home screen as an app</Bullet>
@@ -471,23 +467,23 @@ function PricingSection({ primaryHref }: { primaryHref: string }) {
 
         <Plate>
           <div className="flex items-center justify-between gap-3">
-            <p className="label-caps text-[var(--accent-primary)]">Hosted</p>
-            <p className="label-caps text-[var(--text-muted)]">Planned</p>
+            <p className="label-caps text-primary">Hosted</p>
+            <p className="label-caps text-muted-foreground">Planned</p>
           </div>
           <p className="mt-4 flex items-baseline gap-3">
-            <span className="metric-value text-[44px] font-semibold leading-none text-[var(--text-primary)]">
+            <span className="metric-value text-[44px] font-semibold leading-none text-foreground">
               €5
             </span>
-            <span className="label-caps text-[var(--text-muted)]">
+            <span className="label-caps text-muted-foreground">
               per month, when it ships
             </span>
           </p>
-          <ul className="mt-8 border-t border-[var(--border-subtle)]">
+          <ul className="mt-8 border-t border-border">
             <Bullet>Managed database and backups</Bullet>
             <Bullet>One evening reminder carrying your hold score</Bullet>
             <Bullet>Records and history beyond the 60-day window</Bullet>
           </ul>
-          <p className="mt-8 text-[12px] leading-5 text-[var(--text-muted)]">
+          <p className="mt-8 text-[12px] leading-5 text-muted-foreground">
             Not open yet, and not charged for yet. Self-hosted Orbit is the
             whole product today.
           </p>
@@ -522,13 +518,16 @@ function FaqSection() {
 
   return (
     <Section eyebrow="Questions" title="The short answers.">
-      <dl className="mt-12 grid gap-px border border-[var(--border-subtle)] bg-[var(--border-subtle)] md:grid-cols-2">
+      <dl className="mt-12 grid gap-4 md:grid-cols-2">
         {faq.map((item) => (
-          <div className="bg-[var(--canvas)] p-6" key={item.question}>
-            <dt className="text-[15px] font-semibold text-[var(--text-primary)]">
+          <div
+            className="rounded-2xl bg-card p-6 shadow-[0_1px_2px_rgba(27,26,31,0.05)]"
+            key={item.question}
+          >
+            <dt className="text-[15px] font-semibold text-foreground">
               {item.question}
             </dt>
-            <dd className="mt-3 text-[14px] leading-6 text-[var(--text-secondary)]">
+            <dd className="mt-3 text-[14px] leading-6 text-muted-foreground">
               {item.answer}
             </dd>
           </div>
@@ -544,14 +543,14 @@ function ClosingSection({
   primary: { href: string; label: string };
 }) {
   return (
-    <section className="relative overflow-hidden border-t border-[var(--border-subtle)]">
+    <section className="relative overflow-hidden border-t border-border">
       <div
         aria-hidden="true"
-        className="instrument-grid pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(150deg,var(--plum-tint),var(--finance-tint))] opacity-70"
       />
       <div className="landing-container relative flex flex-col items-start gap-8 py-24 sm:py-32">
-        <p className="label-caps text-[var(--text-tertiary)]">ORB-01</p>
-        <h2 className="max-w-3xl text-[36px] font-semibold leading-[42px] tracking-[-0.035em] text-[var(--text-primary)] sm:text-[52px] sm:leading-[58px]">
+        <p className="label-caps text-muted-foreground">ORB-01</p>
+        <h2 className="max-w-3xl text-[36px] font-semibold leading-[42px] tracking-[-0.035em] text-foreground sm:text-[52px] sm:leading-[58px]">
           Start at zero. You only stay there by choosing to.
         </h2>
         <Link className="ui-button ui-button--primary px-7" href={primary.href}>
@@ -575,12 +574,12 @@ function Section({
 }) {
   return (
     <section
-      className="landing-container scroll-mt-24 border-b border-[var(--border-subtle)] py-20 sm:py-28"
+      className="landing-container scroll-mt-24 border-b border-border py-20 sm:py-28"
       id={id}
     >
       <Reveal>
-      <p className="label-caps text-[var(--accent-primary)]">{eyebrow}</p>
-      <h2 className="mt-5 max-w-3xl text-[30px] font-semibold leading-[36px] tracking-[-0.035em] text-[var(--text-primary)] sm:text-[42px] sm:leading-[48px]">
+      <p className="label-caps text-primary">{eyebrow}</p>
+      <h2 className="mt-5 max-w-3xl text-[30px] font-semibold leading-[36px] tracking-[-0.035em] text-foreground sm:text-[42px] sm:leading-[48px]">
         {title}
       </h2>
       <div className="mt-6">{children}</div>
@@ -590,7 +589,11 @@ function Section({
 }
 
 function Plate({ children }: { children: ReactNode }) {
-  return <div className="bg-[var(--canvas)] p-6 sm:p-8">{children}</div>;
+  return (
+    <div className="rounded-2xl bg-card p-6 shadow-[0_1px_2px_rgba(27,26,31,0.05)] sm:p-8">
+      {children}
+    </div>
+  );
 }
 
 function Row({
@@ -603,13 +606,13 @@ function Row({
   term: string;
 }) {
   return (
-    <div className="grid gap-2 border-b border-[var(--border-subtle)] py-6 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-6">
-      <dt className="label-caps text-[var(--text-muted)]">{label}</dt>
+    <div className="grid gap-2 border-b border-border py-6 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-6">
+      <dt className="label-caps text-muted-foreground">{label}</dt>
       <dd>
-        <p className="metric-value text-[19px] font-semibold text-[var(--text-primary)]">
+        <p className="metric-value text-[19px] font-semibold text-foreground">
           {term}
         </p>
-        <p className="mt-2 max-w-xl text-[14px] leading-6 text-[var(--text-secondary)]">
+        <p className="mt-2 max-w-xl text-[14px] leading-6 text-muted-foreground">
           {detail}
         </p>
       </dd>
@@ -619,10 +622,10 @@ function Row({
 
 function Bullet({ children }: { children: ReactNode }) {
   return (
-    <li className="flex items-start gap-3 border-b border-[var(--border-subtle)] py-3 text-[14px] leading-6 text-[var(--text-secondary)]">
+    <li className="flex items-start gap-3 border-b border-border py-3 text-[14px] leading-6 text-muted-foreground">
       <span
         aria-hidden="true"
-        className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-[var(--accent-primary)]"
+        className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-primary"
       />
       <span>{children}</span>
     </li>
@@ -667,7 +670,7 @@ function Sparkline({
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <figcaption className="label-caps mt-3 text-[var(--text-muted)]">
+      <figcaption className="label-caps mt-3 text-muted-foreground">
         {label}
       </figcaption>
     </figure>

@@ -89,7 +89,7 @@ export const AEROBRAKE_WINDOW_DAYS = 7;
 export const orbitTiers: OrbitTier[] = [
   {
     blurb: "The orbit has decayed. One honest day starts the climb back.",
-    color: "var(--danger)",
+    color: "var(--muted-foreground)",
     floor: 0,
     id: "grounded",
     name: "Grounded",
@@ -103,28 +103,28 @@ export const orbitTiers: OrbitTier[] = [
   },
   {
     blurb: "Stable but low. Drag is still faster than the climb.",
-    color: "var(--accent-info)",
+    color: "var(--finance)",
     floor: 40,
     id: "low-orbit",
     name: "Low orbit",
   },
   {
     blurb: "A real orbit. Most days now carry the ones you miss.",
-    color: "var(--accent-focus)",
+    color: "var(--plum)",
     floor: 60,
     id: "mid-orbit",
     name: "Mid orbit",
   },
   {
     blurb: "Locked in. The routine holds itself up without heroics.",
-    color: "var(--accent-primary)",
+    color: "var(--fitness)",
     floor: 78,
     id: "geostationary",
     name: "Geostationary",
   },
   {
     blurb: "Rare air. Almost nothing is being left on the ground.",
-    color: "var(--accent-highlight)",
+    color: "var(--tasks)",
     floor: 92,
     id: "escape-velocity",
     name: "Escape velocity",
