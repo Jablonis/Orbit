@@ -221,6 +221,7 @@
 
 .instrument-scene {
   display: grid;
+  overflow: clip;
   perspective: 1400px;
   place-items: center;
   width: 100%;
@@ -228,11 +229,11 @@
 
 .instrument-stack {
   display: grid;
-  height: 340px;
+  height: min(340px, 78vw);
   place-items: center;
-  transform: rotateX(46deg) rotateZ(-16deg);
+  transform: rotateX(16deg) rotateZ(-6deg);
   transform-style: preserve-3d;
-  width: 340px;
+  width: min(340px, 78vw);
 }
 
 .instrument-plane {
@@ -261,22 +262,22 @@
   @supports (animation-timeline: view()) {
     .instrument-stack {
       animation: instrument-turn linear both;
-      animation-range: entry 0% cover 55%;
+      animation-range: entry 0% cover 35%;
       animation-timeline: view();
     }
 
     .instrument-arc {
       animation: instrument-fill linear both;
-      animation-range: entry 10% cover 50%;
+      animation-range: entry 0% entry 100%;
       animation-timeline: view();
     }
 
     @keyframes instrument-turn {
       from {
-        transform: rotateX(58deg) rotateZ(-24deg) scale(0.9);
+        transform: rotateX(24deg) rotateZ(-9deg) scale(0.97);
       }
       to {
-        transform: rotateX(6deg) rotateZ(0deg) scale(1);
+        transform: rotateX(4deg) rotateZ(0deg) scale(1);
       }
     }
 

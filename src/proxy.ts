@@ -7,6 +7,11 @@ export function getContentSecurityPolicy(
 ) {
   return [
     "default-src 'self'",
+    // 'strict-dynamic' voids 'self', so every script has to carry the
+    // per-request nonce. Next can only stamp that nonce into a response it
+    // renders per request: a statically prerendered page is built before the
+    // nonce exists and loses all of its scripts. Every interactive route must
+    // therefore stay dynamic — see the note in tests/security.test.ts.
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${environment === "development" ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",

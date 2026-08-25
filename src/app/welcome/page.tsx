@@ -18,6 +18,8 @@ import {
   orbitTiers,
 } from "@/lib/momentum";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   alternates: { canonical: "/welcome" },
   description:
@@ -169,23 +171,23 @@ function Hero({ primary }: { primary: { href: string; label: string } }) {
     <section className="relative overflow-hidden border-b border-border">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(155deg,var(--plum-tint)_0%,var(--tasks-tint)_48%,var(--finance-tint)_100%)] opacity-75"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[62%] bg-[linear-gradient(160deg,var(--plum-tint)_0%,var(--tasks-tint)_52%,var(--finance-tint)_100%)] opacity-70"
       />
 
-      <div className="landing-container relative grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)]">
-        <div>
+      <div className="landing-container relative pb-0 pt-10 sm:pt-14">
+        <div className="max-w-3xl">
           <p className="label-caps text-muted-foreground">
             A personal operating system
           </p>
           <h1 className="display-mega mt-6 text-foreground">
             Your day has an altitude.
           </h1>
-          <p className="mt-7 max-w-xl text-[18px] leading-8 text-muted-foreground sm:text-[20px] sm:leading-9">
+          <p className="mt-5 max-w-xl text-[17px] leading-7 text-muted-foreground sm:text-[18px] sm:leading-8">
             Tasks, training and money become one number that climbs when you
             show up and decays when you don’t. No streak to reset, nothing that
             reaches zero.
           </p>
-          <div className="mt-9 flex flex-wrap items-center gap-3">
+          <div className="mt-7 flex flex-wrap items-center gap-3">
             <Button asChild size="lg">
               <Link href={primary.href}>{primary.label}</Link>
             </Button>
@@ -193,8 +195,7 @@ function Hero({ primary }: { primary: { href: string; label: string } }) {
               <Link href="#mechanic">See the system</Link>
             </Button>
           </div>
-
-          <dl className="mt-10 grid max-w-md grid-cols-3 gap-3">
+          <dl className="mt-8 grid max-w-lg grid-cols-3 gap-3">
             <HeroFigure label="Altitude" value={String(altitude)} />
             <HeroFigure label="Tier" value={tier.name.split(" ")[0]} />
             <HeroFigure
@@ -204,7 +205,27 @@ function Hero({ primary }: { primary: { href: string; label: string } }) {
           </dl>
         </div>
 
-        <OrbitInstrument />
+        <div className="relative mt-10 sm:mt-12">
+          <div className="overflow-hidden rounded-t-[28px] bg-card shadow-[0_-2px_60px_-20px_rgba(27,26,31,0.35)] ring-1 ring-border">
+            <Image
+              alt="The Orbit overview: today's three rings, the momentum panel with altitude and the ghost race, and the task and fitness panels."
+              className="h-auto w-full"
+              height={1520}
+              priority
+              src="/shots/overview-desktop.png"
+              width={2360}
+            />
+          </div>
+          <div className="pointer-events-none absolute -bottom-2 right-4 hidden w-[188px] overflow-hidden rounded-[26px] shadow-[0_28px_60px_-24px_rgba(27,26,31,0.5)] ring-1 ring-border lg:block xl:right-10 xl:w-[212px]">
+            <Image
+              alt="The same overview on a phone."
+              className="h-auto w-full"
+              height={2340}
+              src="/shots/overview-phone.png"
+              width={1170}
+            />
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -315,7 +336,9 @@ function MechanicSection() {
         decent run.
       </p>
 
-      <div className="mt-12 grid gap-4 lg:grid-cols-2">
+      <div className="mt-12 grid items-center gap-10 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
+        <OrbitInstrument />
+        <div className="grid gap-4">
         <Plate>
           <p className="label-caps text-muted-foreground">01 · Streak</p>
           <h3 className="mt-3 text-[19px] font-semibold tracking-[-0.02em] text-foreground">
@@ -341,11 +364,12 @@ function MechanicSection() {
             never enough to quit over.
           </p>
           <Sparkline
-            color="var(--accent-primary)"
+            color="var(--primary)"
             label="Altitude, 0 to 100"
             values={altitudes}
           />
         </Plate>
+        </div>
       </div>
 
       <p className="metric-value mt-8 font-[family-name:var(--font-geist-mono)] text-[14px] leading-7 text-foreground">
