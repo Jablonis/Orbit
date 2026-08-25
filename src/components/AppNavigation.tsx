@@ -6,7 +6,7 @@ import { ProfileMenu } from "@/components/ProfileMenu";
 import { QuickAdd } from "@/components/QuickAdd";
 import type { RegionalPreferences } from "@/lib/preferences";
 
-type NavKey = "dashboard" | "fitness" | "tasks" | "finance";
+type NavKey = "dashboard" | "fitness" | "tasks" | "finance" | "crew";
 
 const navItems: Array<{
   key: NavKey;
@@ -18,6 +18,7 @@ const navItems: Array<{
   { key: "fitness", label: "Fitness", href: "/fitness", icon: <SparkIcon /> },
   { key: "tasks", label: "Tasks", href: "/tasks", icon: <CheckIcon /> },
   { key: "finance", label: "Finance", href: "/finance", icon: <WalletIcon /> },
+  { key: "crew", label: "Crew", href: "/crew", icon: <CrewIcon /> },
 ];
 
 export function AppNavigation({
@@ -65,11 +66,11 @@ export function AppNavigation({
         </div>
       </nav>
 
-      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-4 border-t border-border bg-card/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl md:hidden">
+      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-5 border-t border-border bg-card/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl md:hidden">
         {navItems.map((item) => (
           <Link
             aria-current={active === item.key ? "page" : undefined}
-            className={`relative flex min-w-0 flex-col items-center justify-center rounded-2xl p-2 text-[12px] font-semibold transition duration-150 ${
+            className={`relative flex min-w-0 flex-col items-center justify-center rounded-2xl px-1 py-2 text-[12px] font-semibold transition duration-150 ${
               active === item.key
                 ? "bg-plum-tint text-plum-ink"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -78,10 +79,10 @@ export function AppNavigation({
             key={item.key}
           >
             {active === item.key ? (
-              <span aria-hidden="true" className="absolute inset-x-6 -top-2 h-0.5 rounded-full bg-primary" />
+              <span aria-hidden="true" className="absolute inset-x-4 -top-2 h-0.5 rounded-full bg-primary" />
             ) : null}
             {item.icon}
-            <span className="mt-1">{item.label}</span>
+            <span className="mt-1 truncate">{item.label}</span>
             <LinkPendingIndicator label={`Loading ${item.label}`} />
           </Link>
         ))}
@@ -148,6 +149,17 @@ function WalletIcon() {
       <path d="M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
       <path d="M16 14h5v-4h-5a2 2 0 0 0 0 4Z" />
       <path d="M3 7c0-2 1-3 3-3h12" />
+    </Svg>
+  );
+}
+
+function CrewIcon() {
+  return (
+    <Svg>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
+      <path d="M16 5.5a3 3 0 0 1 0 5.6" />
+      <path d="M17.5 13.4A5.5 5.5 0 0 1 20.5 18" />
     </Svg>
   );
 }

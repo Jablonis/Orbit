@@ -53,6 +53,7 @@ import type {
   OverviewTaskFilter,
 } from "@/lib/overview-query";
 import { getPinnedFinanceMetric } from "@/lib/finance-metric";
+import { hasCrew, publishSnapshot } from "@/lib/crew";
 import { getRecapWeek, getWeekRecap } from "@/lib/recap";
 import {
   getEarnedToday,
@@ -220,13 +221,31 @@ export default async function Home({
     bestStreak: streak.bestStreak,
     orbitDays: momentumRecords.orbitDays,
   });
+  const ringsClosedToday = Object.values(dailyRings).filter(
+    (area) => area.total > 0 && area.percent >= 100,
+  ).length;
+  const ringsActiveToday = Object.values(dailyRings).filter(
+    (area) => area.total > 0,
+  ).length;
   const earnedToday = getEarnedToday({
-    ringsClosed: Object.values(dailyRings).filter(
-      (area) => area.total > 0 && area.percent >= 100,
-    ).length,
-    ringsTotal: Object.values(dailyRings).filter((area) => area.total > 0).length,
+    ringsClosed: ringsClosedToday,
+    ringsTotal: ringsActiveToday,
     todayScore: momentum.todayScore,
   });
+
+  // The crew sees a published day, never the data underneath it — and nothing
+  // is published at all for an account with nobody in its crew.
+  if (await hasCrew(supabase)) {
+    await publishSnapshot(supabase, {
+      altitude: momentum.projected,
+      day: today,
+      ringsClosed: ringsClosedToday,
+      ringsTotal: ringsActiveToday,
+      score: momentum.todayScore ?? 0,
+      streak: streak.streak,
+      tierId: momentum.tier.id,
+    });
+  }
   const briefMode = params.brief === "weekly" ? "weekly" : "daily";
   const filter = getTaskFilter(params.tasks);
   const overviewQuery: OverviewQueryState = {

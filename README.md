@@ -115,6 +115,16 @@ running race against the same week seven days ago. The day can be exported as a
 shareable PNG rendered entirely on the device. The mechanics and formulas are
 documented in `docs/MOMENTUM.md`.
 
+## Crew
+
+A private circle, joined only by a code someone gives you: no search, no
+directory, nothing public. A crew member sees a published day — score,
+altitude, tier, run and rings closed — and never a task, a session, or a
+number with a currency on it. The page carries this week's table, a fortnight
+of days, and three one-tap reactions. An account with nobody in its crew
+publishes nothing at all. The model, the policies and the guarantees are
+documented in `docs/CREW.md`.
+
 ## Install on a phone
 
 Orbit ships a web manifest and icons, so it installs as a standalone app:
