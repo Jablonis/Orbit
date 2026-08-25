@@ -8,6 +8,7 @@ import {
   ReviewCard,
   RingsCard,
   TasksCard,
+  WeekStrip,
   greeting,
 } from "@/components/overview/cards";
 import { AppNavigation } from "@/components/AppNavigation";
@@ -334,6 +335,8 @@ export default async function Home({
           </div>
           <OpenDashboardSettingsButton />
         </header>
+
+        <WeekStrip points={weeklyProductivity.current} today={today} />
 
         {todayCards.length > 0 ? (
           <div className="grid gap-5 lg:grid-cols-2">

@@ -776,3 +776,77 @@ export function ReviewFigure({
   );
 }
 
+
+/**
+ * A week at a glance, borrowed from the day strips that calendar and journal
+ * apps put above the fold: seven days, each one a ring filled by that day's
+ * score, with today marked. It reuses the productivity points the dashboard
+ * already computes.
+ */
+export function WeekStrip({
+  points,
+  today,
+}: {
+  points: ProductivityPoint[];
+  today: string;
+}) {
+  return (
+    <section aria-label="This week" className="settle-in">
+      <ol className="flex items-stretch gap-1.5 sm:gap-2">
+        {points.map((point) => {
+          const isToday = point.date === today;
+          const score = point.score ?? 0;
+          const future = point.future || point.date > today;
+          const circumference = 2 * Math.PI * 14;
+          return (
+            <li className="min-w-0 flex-1" key={point.date}>
+              <div
+                className={`flex flex-col items-center gap-2 rounded-2xl px-1 py-3 transition ${
+                  isToday ? "bg-plum-tint" : "bg-card"
+                }`}
+              >
+                <span
+                  className={`label-caps ${
+                    isToday ? "text-plum-ink" : "text-muted-foreground"
+                  }`}
+                >
+                  {point.label.slice(0, 2)}
+                </span>
+                <span className="relative grid size-9 place-items-center">
+                  <svg className="size-9 -rotate-90" viewBox="0 0 36 36">
+                    <circle
+                      cx="18"
+                      cy="18"
+                      fill="none"
+                      r="14"
+                      stroke={future ? "var(--muted)" : "var(--secondary)"}
+                      strokeWidth="4"
+                    />
+                    {future ? null : (
+                      <circle
+                        cx="18"
+                        cy="18"
+                        fill="none"
+                        r="14"
+                        stroke={isToday ? "var(--plum)" : "var(--fitness)"}
+                        strokeDasharray={circumference}
+                        strokeDashoffset={
+                          circumference * (1 - Math.min(100, score) / 100)
+                        }
+                        strokeLinecap="round"
+                        strokeWidth="4"
+                      />
+                    )}
+                  </svg>
+                  <span className="metric-value absolute text-[11px] font-semibold">
+                    {future ? "" : score}
+                  </span>
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
