@@ -187,28 +187,28 @@ export function DashboardCustomizer({
                 const visible = !hidden.includes(card);
                 return (
                   <div
-                    className="flex items-center gap-2 rounded-[14px] border border-[var(--border-subtle)] bg-white/[0.025] p-2"
+                    className="flex items-center gap-2 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.025)] p-2"
                     key={card}
                   >
                     <button
                       aria-label={`${visible ? "Hide" : "Show"} ${dashboardCardLabels[card]}`}
-                      className={`grid h-11 w-11 shrink-0 place-items-center rounded-[10px] text-[12px] font-bold ${
+                      className={`grid h-11 w-11 shrink-0 place-items-center rounded-[var(--radius-control)] text-[12px] font-bold ${
                         visible
                           ? "bg-[var(--accent-primary)] text-[var(--surface-nav)]"
-                          : "bg-white/5 text-[var(--text-tertiary)]"
+                          : "bg-[rgba(244,235,221,0.05)] text-[var(--text-tertiary)]"
                       }`}
                       onClick={() => toggle(card)}
                       type="button"
                     >
                       {visible ? "✓" : "—"}
                     </button>
-                    <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-white">
+                    <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-[var(--text-primary)]">
                       {dashboardCardLabels[card]}
                     </span>
                     <div className="flex">
                       <button
                         aria-label={`Move ${dashboardCardLabels[card]} up`}
-                        className="grid h-11 w-11 place-items-center rounded-[10px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] disabled:opacity-25"
+                        className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] disabled:opacity-25"
                         disabled={index === 0}
                         onClick={() => move(card, -1)}
                         type="button"
@@ -217,7 +217,7 @@ export function DashboardCustomizer({
                       </button>
                       <button
                         aria-label={`Move ${dashboardCardLabels[card]} down`}
-                        className="grid h-11 w-11 place-items-center rounded-[10px] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] disabled:opacity-25"
+                        className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] disabled:opacity-25"
                         disabled={index === order.length - 1}
                         onClick={() => move(card, 1)}
                         type="button"
@@ -461,7 +461,7 @@ export function DashboardCustomizer({
                 : "All settings are saved."}
           </p>
           <button
-            className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-4 py-2.5 text-[13px] font-semibold text-[var(--text-secondary)] hover:bg-white/[0.05] hover:text-white disabled:opacity-55"
+            className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-4 py-2.5 text-[13px] font-semibold text-[var(--text-secondary)] hover:bg-[rgba(244,235,221,0.05)] hover:text-[var(--text-primary)] disabled:opacity-55"
             disabled={pending}
             name="intent"
             onClick={showDefaults}
@@ -471,7 +471,7 @@ export function DashboardCustomizer({
             Reset defaults
           </button>
           <button
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-white px-5 py-2.5 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-55"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-[var(--text-primary)] px-5 py-2.5 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-55"
             disabled={pending || !hasUnsavedChanges}
             type="submit"
           >

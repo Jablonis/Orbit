@@ -53,7 +53,7 @@ export function ResetPasswordForm({ nextPath }: { nextPath: string }) {
       </button>
       {state.message ? (
         <p
-          className="rounded-[12px] border border-[color-mix(in_srgb,var(--danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--danger)_9%,transparent)] p-3 text-[13px] text-[var(--danger-text)]"
+          className="rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--danger)_9%,transparent)] p-3 text-[13px] text-[var(--danger-text)]"
           role="alert"
         >
           {state.message}

@@ -20,6 +20,7 @@ test("the global shell exposes a visible-on-focus skip link", () => {
 test("every primary page exposes the shared main-content target", () => {
   const pages = [
     "src/app/page.tsx",
+    "src/app/welcome/page.tsx",
     "src/app/tasks/page.tsx",
     "src/app/fitness/page.tsx",
     "src/app/finance/page.tsx",
@@ -163,7 +164,7 @@ test("the UI quality matrix covers reflow, zoom, routes, and dense states", () =
   );
   assert.ok(quality.zoomLevels.includes(2));
   assert.deepEqual(
-    ["/", "/tasks", "/fitness", "/finance"].filter(
+    ["/", "/welcome", "/tasks", "/fitness", "/finance"].filter(
       (route) => !quality.routes.includes(route),
     ),
     [],

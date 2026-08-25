@@ -294,7 +294,7 @@ export function QuickAdd() {
       <dialog
         aria-label={view === "task" ? "Quick task" : "Quick Add commands"}
         aria-modal="true"
-        className="glass-modal modal-animate fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[100] m-0 max-h-[min(78dvh,560px)] w-auto overflow-y-auto rounded-[22px] border-0 p-2 text-[var(--text-primary)] backdrop:bg-black/55 backdrop:backdrop-blur-[2px] sm:inset-x-auto sm:bottom-auto sm:left-[var(--quick-add-left)] sm:top-[var(--quick-add-top)] sm:w-[352px] sm:rounded-[18px] sm:backdrop:bg-transparent sm:backdrop:backdrop-blur-none"
+        className="glass-modal modal-animate fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[100] m-0 max-h-[min(78dvh,560px)] w-auto overflow-y-auto rounded-[var(--radius-panel)] border-0 p-2 text-[var(--text-primary)] backdrop:bg-black/55 backdrop:backdrop-blur-[2px] sm:inset-x-auto sm:bottom-auto sm:left-[var(--quick-add-left)] sm:top-[var(--quick-add-top)] sm:w-[352px] sm:rounded-[var(--radius-row)] sm:backdrop:bg-transparent sm:backdrop:backdrop-blur-none"
         id="quick-add-dialog"
         onCancel={(event) => {
           event.preventDefault();
@@ -324,7 +324,7 @@ export function QuickAdd() {
             <div className="flex items-center gap-2">
               <button
                 aria-label="Back to commands"
-                className="grid h-11 w-11 place-items-center rounded-[12px] text-[var(--text-secondary)] hover:bg-white/[0.06]"
+                className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-[var(--text-secondary)] hover:bg-[rgba(244,235,221,0.06)]"
                 onClick={() => setView("commands")}
                 type="button"
               >
@@ -332,7 +332,7 @@ export function QuickAdd() {
               </button>
               <div>
                 <p className="label-caps text-[var(--accent-primary)]">Quick capture</p>
-                <h2 className="mt-1 text-[16px] font-semibold text-white">Add a task</h2>
+                <h2 className="mt-1 text-[16px] font-semibold text-[var(--text-primary)]">Add a task</h2>
               </div>
             </div>
             <label className="mt-4 grid gap-2">
@@ -378,7 +378,7 @@ export function QuickAdd() {
                 aria-autocomplete="list"
                 aria-controls="quick-add-options"
                 aria-expanded={open}
-                className="h-11 w-full rounded-[12px] border border-[var(--border-subtle)] bg-black/20 pl-9 pr-3 text-[13px] text-white outline-none placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent-primary)]"
+                className="h-11 w-full rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-black/20 pl-9 pr-3 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent-primary)]"
                 onChange={(event) => {
                   const nextQuery = event.target.value;
                   setQuery(nextQuery);
@@ -398,14 +398,14 @@ export function QuickAdd() {
             </label>
             {searchError ? (
               <div
-                className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] bg-[color-mix(in_srgb,var(--danger)_8%,transparent)] px-3 py-2"
+                className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] bg-[color-mix(in_srgb,var(--danger)_8%,transparent)] px-3 py-2"
                 role="alert"
               >
                 <p className="min-w-0 flex-1 text-[12px] leading-5 text-[var(--danger-text)]">
                   {searchError}
                 </p>
                 <button
-                  className="min-h-11 rounded-[var(--radius-control)] px-3 text-[12px] font-bold text-white hover:bg-white/[0.07]"
+                  className="min-h-11 rounded-[var(--radius-control)] px-3 text-[12px] font-bold text-[var(--text-primary)] hover:bg-[rgba(244,235,221,0.07)]"
                   onClick={() => setSearchRevision((revision) => revision + 1)}
                   type="button"
                 >
@@ -422,7 +422,7 @@ export function QuickAdd() {
                 return (
                   <Link
                     aria-selected={index === activeIndex}
-                    className={`block min-h-11 rounded-[13px] px-3 py-3 transition ${index === activeIndex ? "bg-white/[0.08]" : "hover:bg-white/[0.06]"}`}
+                    className={`block min-h-11 rounded-[var(--radius-control)] px-3 py-3 transition ${index === activeIndex ? "bg-[rgba(244,235,221,0.08)]" : "hover:bg-[rgba(244,235,221,0.06)]"}`}
                     href={result.href}
                     id={optionId}
                     key={optionId}
@@ -432,7 +432,7 @@ export function QuickAdd() {
                     role="option"
                   >
                     <span className="flex items-center justify-between gap-3">
-                      <span className="truncate text-[13px] font-semibold text-white">{result.label}</span>
+                      <span className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{result.label}</span>
                       <span className="text-[12px] font-semibold capitalize text-[var(--text-tertiary)]">{result.kind}</span>
                     </span>
                     <span className="mt-1 block truncate text-[12px] text-[var(--text-tertiary)]">{result.detail}</span>
@@ -452,14 +452,14 @@ export function QuickAdd() {
                 const content = (
                   <>
                     <span className="flex items-center justify-between gap-3">
-                      <span className="text-[13px] font-semibold text-white">{action.label}</span>
+                      <span className="text-[13px] font-semibold text-[var(--text-primary)]">{action.label}</span>
                       <span className="text-[12px] font-semibold text-[var(--text-tertiary)]">{action.group}</span>
                     </span>
                     <span className="mt-1 block text-[12px] text-[var(--text-tertiary)]">{action.detail}</span>
                   </>
                 );
                 return (
-                  <div className={`group flex rounded-[13px] ${selected ? "bg-white/[0.08]" : "hover:bg-white/[0.06]"}`} key={action.id}>
+                  <div className={`group flex rounded-[var(--radius-control)] ${selected ? "bg-[rgba(244,235,221,0.08)]" : "hover:bg-[rgba(244,235,221,0.06)]"}`} key={action.id}>
                     {action.kind === "link" && action.href ? (
                       <Link
                         aria-selected={selected}
@@ -495,7 +495,7 @@ export function QuickAdd() {
                     <button
                       aria-label={`${pins.includes(action.id) ? "Unpin" : "Pin"} ${action.label}`}
                       aria-pressed={pins.includes(action.id)}
-                      className="grid h-11 w-11 shrink-0 place-items-center self-center rounded-[11px] text-[16px] text-[var(--text-tertiary)] hover:bg-white/[0.07] hover:text-white"
+                      className="grid h-11 w-11 shrink-0 place-items-center self-center rounded-[var(--radius-control)] text-[16px] text-[var(--text-tertiary)] hover:bg-[rgba(244,235,221,0.07)] hover:text-[var(--text-primary)]"
                       onClick={() => togglePin(action.id)}
                       title={pins.includes(action.id) ? "Unpin command" : "Pin command"}
                       type="button"
@@ -507,7 +507,7 @@ export function QuickAdd() {
               })}
               {options.length === 0 && !searchError ? (
                 <div className="px-3 py-6 text-center">
-                  <p className="text-[13px] font-semibold text-white">
+                  <p className="text-[13px] font-semibold text-[var(--text-primary)]">
                     {searching ? "Searching Orbit…" : "No matching result"}
                   </p>
                   <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">

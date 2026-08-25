@@ -221,7 +221,7 @@ export function SegmentedControl({
           <Link
             aria-current={active ? "page" : undefined}
             className={joinClasses(
-              "inline-flex min-h-11 items-center rounded-[10px] px-4 text-[13px] font-semibold",
+              "inline-flex min-h-11 items-center rounded-[var(--radius-control)] px-4 text-[13px] font-semibold",
               active
                 ? "bg-[var(--surface-selected)] text-[var(--text-primary)]"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
@@ -340,7 +340,7 @@ export function Skeleton({
     <span
       aria-hidden="true"
       className={joinClasses(
-        "skeleton-shimmer block rounded-[var(--radius-control)] bg-white/[0.06]",
+        "skeleton-shimmer block rounded-[var(--radius-control)] bg-[rgba(244,235,221,0.06)]",
         className,
       )}
     />

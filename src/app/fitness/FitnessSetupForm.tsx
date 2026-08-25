@@ -53,7 +53,7 @@ export function FitnessSetupForm({
         <p className="label-caps text-[var(--accent-primary)]">
           Reviewed starter setup
         </p>
-        <h2 className="mt-2 text-[22px] font-semibold text-white">
+        <h2 className="mt-2 text-[22px] font-semibold text-[var(--text-primary)]">
           {profile
             ? "Edit training setup"
             : existingPlan
@@ -171,7 +171,7 @@ export function FitnessSetupForm({
           unchanged.
         </p>
         <button
-          className="min-h-11 shrink-0 rounded-[var(--radius-control)] bg-white px-5 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-60"
+          className="min-h-11 shrink-0 rounded-[var(--radius-control)] bg-[var(--text-primary)] px-5 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-60"
           disabled={pending}
           type="submit"
         >
@@ -185,7 +185,7 @@ export function FitnessSetupForm({
 
       {state.message ? (
         <p
-          className={`mt-4 rounded-[12px] border p-3 text-[13px] ${
+          className={`mt-4 rounded-[var(--radius-control)] border p-3 text-[13px] ${
             state.ok
               ? "border-[color-mix(in_srgb,var(--success)_30%,transparent)] text-[var(--success-text)]"
               : "border-[color-mix(in_srgb,var(--danger)_30%,transparent)] text-[var(--danger-text)]"
@@ -211,7 +211,7 @@ function Choice({
   value: string;
 }) {
   return (
-    <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-2)] px-3 text-[13px] font-semibold text-[var(--text-secondary)] has-[:checked]:border-[var(--accent-primary)] has-[:checked]:text-white">
+    <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-2)] px-3 text-[13px] font-semibold text-[var(--text-secondary)] has-[:checked]:border-[var(--accent-primary)] has-[:checked]:text-[var(--text-primary)]">
       <input
         className="h-4 w-4 accent-[var(--accent-primary)]"
         defaultChecked={defaultChecked}

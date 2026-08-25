@@ -48,7 +48,7 @@ export function WeeklyReflectionForm({
       </label>
       <button
         aria-busy={pending}
-        className="h-11 rounded-[12px] bg-white px-5 text-[13px] font-bold text-[var(--text-on-light)] disabled:cursor-wait disabled:opacity-60"
+        className="h-11 rounded-[var(--radius-control)] bg-[var(--text-primary)] px-5 text-[13px] font-bold text-[var(--text-on-light)] disabled:cursor-wait disabled:opacity-60"
         disabled={pending}
         type="submit"
       >

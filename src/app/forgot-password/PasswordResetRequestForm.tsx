@@ -38,7 +38,7 @@ export function PasswordResetRequestForm({ nextPath }: { nextPath: string }) {
       </button>
       {state.message ? (
         <p
-          className={`rounded-[12px] border p-3 text-[13px] leading-5 ${
+          className={`rounded-[var(--radius-control)] border p-3 text-[13px] leading-5 ${
             state.ok
               ? "border-[color-mix(in_srgb,var(--success)_30%,transparent)] bg-[color-mix(in_srgb,var(--success)_9%,transparent)] text-[var(--success-text)]"
               : "border-[color-mix(in_srgb,var(--danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--danger)_9%,transparent)] text-[var(--danger-text)]"

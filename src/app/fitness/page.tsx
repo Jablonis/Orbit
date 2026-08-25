@@ -42,7 +42,7 @@ export default async function FitnessPage() {
           />
           <section className="page-container pb-10">
             <details className="group">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-[var(--radius-control)] border border-[var(--border-subtle)] px-4 text-[13px] font-semibold text-[var(--text-secondary)] hover:text-white">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-[var(--radius-control)] border border-[var(--border-subtle)] px-4 text-[13px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
                 Training setup
                 <span aria-hidden="true" className="group-open:rotate-45">＋</span>
               </summary>
@@ -62,7 +62,7 @@ export default async function FitnessPage() {
             <p className="label-caps text-[var(--accent-primary)]">
               Fitness setup
             </p>
-            <h1 className="page-title mt-2 text-white">
+            <h1 className="page-title mt-2 text-[var(--text-primary)]">
               Choose how you want to train
             </h1>
             <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[var(--text-secondary)]">

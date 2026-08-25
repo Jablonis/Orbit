@@ -107,7 +107,7 @@ export function FinanceClient({
       <header className="mb-8 flex flex-col gap-5 pr-14 md:pr-0 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="label-caps text-[var(--accent-primary)]">Finance system</p>
-          <h1 className="page-title mt-2 text-white">
+          <h1 className="page-title mt-2 text-[var(--text-primary)]">
             {`${formatStatementMonth(selectedMonth, regional.locale)} cashflow`}
           </h1>
           <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[var(--text-secondary)]">
@@ -133,7 +133,7 @@ export function FinanceClient({
           </label>
           <button
             aria-pressed={privacyMode}
-            className="min-h-11 rounded-full border border-[var(--border-strong)] bg-white/[0.045] px-4 py-2 text-[13px] font-semibold text-white"
+            className="min-h-11 rounded-full border border-[var(--border-strong)] bg-[rgba(244,235,221,0.045)] px-4 py-2 text-[13px] font-semibold text-[var(--text-primary)]"
             onClick={() => {
               const next = !privacyMode;
               setPrivacyMode(next);
@@ -159,7 +159,7 @@ export function FinanceClient({
           <p className="label-caps text-[var(--text-secondary)]">
             {`${formatStatementMonth(selectedMonth, regional.locale)} paid net cashflow`}
           </p>
-          <p className="metric-value relative mt-4 text-[46px] font-bold leading-[54px] text-white sm:text-[58px] sm:leading-[64px]">
+          <p className="metric-value relative mt-4 text-[46px] font-bold leading-[54px] text-[var(--text-primary)] sm:text-[58px] sm:leading-[64px]">
             {money(periodSummary.netCashflow)}
           </p>
           <p className={`metric-value relative mt-3 text-[13px] font-semibold ${netChange >= 0 ? "text-[var(--accent-primary)]" : "text-[var(--danger)]"}`}>
@@ -185,7 +185,7 @@ export function FinanceClient({
       </section>
       <section aria-labelledby="finance-utilities-title" className="mt-10">
         <p className="label-caps text-[var(--text-tertiary)]">Utilities</p>
-        <h2 className="mt-1 text-[22px] font-semibold text-white" id="finance-utilities-title">Statement import and maintenance</h2>
+        <h2 className="mt-1 text-[22px] font-semibold text-[var(--text-primary)]" id="finance-utilities-title">Statement import and maintenance</h2>
         <div className="mt-4 grid gap-6 xl:grid-cols-12">
           <ManualTransactionsCard
             onChanged={() => router.refresh()}
@@ -235,7 +235,7 @@ function FinanceDataStatus({
     <aside className="content-panel mb-6 grid gap-4 rounded-[var(--radius-row)] p-4 sm:grid-cols-3 sm:p-5">
       <div>
         <p className="label-caps text-[var(--text-tertiary)]">Last successful import</p>
-        <p className="mt-2 text-[13px] font-semibold text-white">
+        <p className="mt-2 text-[13px] font-semibold text-[var(--text-primary)]">
           {coverage.latestImportAt
             ? new Intl.DateTimeFormat(locale, {
                 dateStyle: "medium",
@@ -246,7 +246,7 @@ function FinanceDataStatus({
       </div>
       <div>
         <p className="label-caps text-[var(--text-tertiary)]">Statement coverage</p>
-        <p className="mt-2 text-[13px] font-semibold text-white">
+        <p className="mt-2 text-[13px] font-semibold text-[var(--text-primary)]">
           {coverage.latestStatementMonth
             ? `Through ${formatStatementMonth(coverage.latestStatementMonth, locale)}`
             : "No covered period"}
@@ -259,7 +259,7 @@ function FinanceDataStatus({
       </div>
       <div>
         <p className="label-caps text-[var(--text-tertiary)]">Data confidence</p>
-        <p className="mt-2 text-[13px] font-semibold text-white">
+        <p className="mt-2 text-[13px] font-semibold text-[var(--text-primary)]">
           {hasOverlaps ? "Review overlapping statements" : "No overlaps detected"}
         </p>
         <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
@@ -314,7 +314,7 @@ function ManualTransactionsCard({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="label-caps text-[var(--accent-info)]">Manual ledger</p>
-          <h3 className="mt-2 text-[22px] font-semibold text-white">
+          <h3 className="mt-2 text-[22px] font-semibold text-[var(--text-primary)]">
             Add or correct a transaction
           </h3>
         </div>
@@ -368,10 +368,10 @@ function ManualTransactionsCard({
           <div className="grid gap-3 border-b border-[var(--border-subtle)] py-3 sm:grid-cols-[auto_1fr_auto_auto] sm:items-center" key={transaction.id}>
             <time className="metric-value text-[12px] text-[var(--text-tertiary)]" dateTime={transaction.date}>{transaction.date}</time>
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-semibold text-white">{transaction.title}</p>
+              <p className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{transaction.title}</p>
               <p className="text-[12px] text-[var(--text-tertiary)]">{transaction.category} · {transaction.status}</p>
             </div>
-            <p className="metric-value text-[13px] text-white">{formatCurrency(transaction.amount, regional)}</p>
+            <p className="metric-value text-[13px] text-[var(--text-primary)]">{formatCurrency(transaction.amount, regional)}</p>
             <div className="flex gap-2">
               <button className="min-h-11 px-2 text-[12px] font-semibold text-[var(--accent-primary)]" onClick={() => setEditing(transaction)} type="button">Edit</button>
               <ConfirmDialog
@@ -405,7 +405,7 @@ function MaintenanceCard({
   return (
     <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-5">
       <p className="label-caps text-[var(--text-secondary)]">Data maintenance</p>
-      <h3 className="mt-2 text-[22px] font-semibold text-white">Manage finance history</h3>
+      <h3 className="mt-2 text-[22px] font-semibold text-[var(--text-primary)]">Manage finance history</h3>
       <p className="mt-2 text-[12px] leading-5 text-[var(--text-secondary)]">
         Export remains available above. Clearing archives your imported statements and transactions so they can be restored immediately.
       </p>
@@ -420,7 +420,7 @@ function MaintenanceCard({
             return result;
           }}
           title="Clear all finance data?"
-          triggerClassName="rounded-[14px] border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-2 text-[13px] font-semibold text-[var(--danger-text)]"
+          triggerClassName="rounded-[var(--radius-control)] border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-2 text-[13px] font-semibold text-[var(--danger-text)]"
           triggerLabel="Clear finance data"
         />
       </div>
@@ -440,7 +440,7 @@ function StatementHistoryCard({
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="label-caps text-[var(--text-secondary)]">Monthly statements</p>
-          <h2 className="mt-2 text-[24px] font-semibold text-white">Import history</h2>
+          <h2 className="mt-2 text-[24px] font-semibold text-[var(--text-primary)]">Import history</h2>
         </div>
         <span className="metric-value text-[12px] font-semibold text-[var(--text-secondary)]">
           {statementImports.length} saved
@@ -452,7 +452,7 @@ function StatementHistoryCard({
             <div className="grid gap-4 border-b border-[var(--border-subtle)] py-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center" key={statement.id}>
               <div className="flex items-start justify-between gap-3 sm:block">
                 <div>
-                  <p className="text-[14px] font-semibold text-white">
+                  <p className="text-[14px] font-semibold text-[var(--text-primary)]">
                     {formatStatementMonth(statement.statementMonth, regional.locale)}
                   </p>
                   <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
@@ -460,8 +460,8 @@ function StatementHistoryCard({
                   </p>
                 </div>
               </div>
-              <p className="text-[12px] text-[var(--text-tertiary)]">Income <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.income, regional)}</span></p>
-              <p className="text-[12px] text-[var(--text-tertiary)]">Expenses <span className="metric-value block pt-1 font-semibold text-white">{formatCurrency(statement.expenses, regional)}</span></p>
+              <p className="text-[12px] text-[var(--text-tertiary)]">Income <span className="metric-value block pt-1 font-semibold text-[var(--text-primary)]">{formatCurrency(statement.income, regional)}</span></p>
+              <p className="text-[12px] text-[var(--text-tertiary)]">Expenses <span className="metric-value block pt-1 font-semibold text-[var(--text-primary)]">{formatCurrency(statement.expenses, regional)}</span></p>
               <p className={`metric-value text-[13px] font-semibold ${statement.net >= 0 ? "text-[var(--accent-primary)]" : "text-[var(--danger-text)]"}`}>
                 {formatCurrency(statement.net, regional)}
               </p>
@@ -513,7 +513,7 @@ function CashflowCard({
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <p className="label-caps text-[var(--text-secondary)]">Monthly cashflow</p>
-          <h2 className="mt-2 text-[26px] font-semibold text-white">
+          <h2 className="mt-2 text-[26px] font-semibold text-[var(--text-primary)]">
             Income vs expenses
           </h2>
         </div>
@@ -533,12 +533,12 @@ function CashflowCard({
           {summary.monthlyCashflow.map((item, index) => (
             <button
               aria-label={`${item.month}: income ${formatCurrency(item.income, regional)}, expenses ${formatCurrency(item.expense, regional)}, net ${formatCurrency(item.income - item.expense, regional)}`}
-              className="group relative flex h-full min-w-0 flex-1 flex-col items-center gap-3 rounded-[12px] outline-none focus-visible:bg-white/[0.035]"
+              className="group relative flex h-full min-w-0 flex-1 flex-col items-center gap-3 rounded-[var(--radius-control)] outline-none focus-visible:bg-[rgba(244,235,221,0.035)]"
               key={item.month}
               type="button"
             >
               <span
-                className={`metric-value pointer-events-none absolute -top-2 z-10 hidden max-w-[min(18rem,80vw)] rounded-[10px] border border-[var(--border-subtle)] bg-[var(--surface-hover)] px-3 py-2 text-left text-[12px] text-white shadow-xl group-hover:block group-focus-visible:block ${
+                className={`metric-value pointer-events-none absolute -top-2 z-10 hidden max-w-[min(18rem,80vw)] rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-hover)] px-3 py-2 text-left text-[12px] text-[var(--text-primary)] shadow-xl group-hover:block group-focus-visible:block ${
                   index === 0
                     ? "left-0"
                     : index === summary.monthlyCashflow.length - 1
@@ -568,14 +568,14 @@ function CashflowCard({
         />
       )}
       {summary.monthlyCashflow.length > 0 ? (
-        <details className="mt-5 border-t border-white/10 pt-4">
+        <details className="mt-5 border-t border-[rgba(244,235,221,0.1)] pt-4">
           <summary className="cursor-pointer text-[12px] font-semibold text-[var(--accent-primary)]">
             Accessible cashflow summary
           </summary>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-left text-[12px]">
               <thead className="text-[var(--text-tertiary)]"><tr><th className="pb-2">Month</th><th>Income</th><th>Expense</th></tr></thead>
-              <tbody>{summary.monthlyCashflow.map((item) => <tr className="border-t border-white/[0.06]" key={item.month}><td className="py-2 text-white">{item.month}</td><td className="metric-value">{formatCurrency(item.income, regional)}</td><td className="metric-value">{formatCurrency(item.expense, regional)}</td></tr>)}</tbody>
+              <tbody>{summary.monthlyCashflow.map((item) => <tr className="border-t border-[rgba(244,235,221,0.06)]" key={item.month}><td className="py-2 text-[var(--text-primary)]">{item.month}</td><td className="metric-value">{formatCurrency(item.income, regional)}</td><td className="metric-value">{formatCurrency(item.expense, regional)}</td></tr>)}</tbody>
             </table>
           </div>
         </details>
@@ -594,24 +594,24 @@ function TransactionsCard({
   return (
     <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-4">
       <p className="label-caps text-[var(--text-secondary)]">Latest transactions</p>
-      <h2 className="mt-2 text-[24px] font-semibold text-white">Recent flow</h2>
+      <h2 className="mt-2 text-[24px] font-semibold text-[var(--text-primary)]">Recent flow</h2>
       <div className="mt-5 space-y-3">
         {transactions.map((transaction) => (
           <div
-            className="scroll-mt-24 flex items-center gap-3 rounded-[16px] border border-white/10 bg-[var(--surface-row)]/55 p-3"
+            className="scroll-mt-24 flex items-center gap-3 rounded-[var(--radius-row)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)]/55 p-3"
             id={`transaction-${transaction.id}`}
             key={transaction.id}
           >
-            <div className="grid h-10 w-10 place-items-center rounded-full bg-white/8 text-[13px] font-bold text-white">
+            <div className="grid h-10 w-10 place-items-center rounded-full bg-[rgba(244,235,221,0.08)] text-[13px] font-bold text-[var(--text-primary)]">
               {transaction.category.slice(0, 1)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[14px] font-semibold text-white">{transaction.title}</p>
+              <p className="truncate text-[14px] font-semibold text-[var(--text-primary)]">{transaction.title}</p>
               <p className="text-[12px] text-[var(--text-secondary)]">
                 {transaction.date} · {transaction.status}
               </p>
             </div>
-            <p className={`metric-value text-[14px] font-semibold ${transaction.amount >= 0 ? "text-[var(--accent-primary)]" : "text-[#ffb4ab]"}`}>
+            <p className={`metric-value text-[14px] font-semibold ${transaction.amount >= 0 ? "text-[var(--accent-primary)]" : "text-[var(--danger)]"}`}>
               {formatCurrency(transaction.amount, regional)}
             </p>
           </div>
@@ -640,17 +640,17 @@ function CategoryCard({
   return (
     <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-4">
       <p className="label-caps text-[var(--text-secondary)]">Category spend</p>
-      <h2 className="mt-2 text-[24px] font-semibold text-white">This month</h2>
+      <h2 className="mt-2 text-[24px] font-semibold text-[var(--text-primary)]">This month</h2>
       <div className="mt-6 space-y-4">
         {summary.categorySpend.map((item) => (
           <div key={item.label}>
             <div className="mb-2 flex justify-between text-[13px]">
-              <span className="font-semibold text-white">{item.label}</span>
+              <span className="font-semibold text-[var(--text-primary)]">{item.label}</span>
               <span className="metric-value text-[var(--text-secondary)]">
                 {formatCurrency(item.amount, regional)} · {item.value}%
               </span>
             </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-[#353434]">
+            <div className="h-2.5 overflow-hidden rounded-full bg-[var(--surface-selected)]">
               <div
                 className="h-full rounded-full"
                 style={{
@@ -687,7 +687,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="border-b border-[var(--border-subtle)] py-4 last:border-b-0 sm:border-b-0 sm:border-r sm:px-4 sm:first:pl-0 sm:last:border-r-0">
       <dt className="label-caps text-[var(--text-secondary)]">{label}</dt>
-      <dd className="metric-value mt-2 text-[20px] font-semibold text-white">{value}</dd>
+      <dd className="metric-value mt-2 text-[20px] font-semibold text-[var(--text-primary)]">{value}</dd>
     </div>
   );
 }

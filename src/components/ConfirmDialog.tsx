@@ -83,7 +83,7 @@ export function ConfirmDialog({
       <dialog
         aria-describedby={descriptionId}
         aria-labelledby={titleId}
-        className="glass-modal modal-animate m-auto max-h-[calc(100dvh-2rem)] w-[min(calc(100%-2rem),28rem)] overflow-y-auto rounded-[24px] border-0 p-6 text-left text-[var(--text-primary)] backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+        className="glass-modal modal-animate m-auto max-h-[calc(100dvh-2rem)] w-[min(calc(100%-2rem),28rem)] overflow-y-auto rounded-[var(--radius-panel)] border-0 p-6 text-left text-[var(--text-primary)] backdrop:bg-black/70 backdrop:backdrop-blur-sm"
         onCancel={(event) => {
           if (pending) {
             event.preventDefault();
@@ -107,8 +107,8 @@ export function ConfirmDialog({
         ref={dialog}
         role="alertdialog"
       >
-        <p className="label-caps text-[#ff9fca]">Please confirm</p>
-        <h2 className="mt-3 text-[24px] font-semibold text-white" id={titleId}>
+        <p className="label-caps text-[var(--highlight-text)]">Please confirm</p>
+        <h2 className="mt-3 text-[24px] font-semibold text-[var(--text-primary)]" id={titleId}>
           {title}
         </h2>
         <p className="mt-3 text-[14px] leading-6 text-[var(--text-secondary)]" id={descriptionId}>
@@ -117,7 +117,7 @@ export function ConfirmDialog({
         {confirmationPhrase ? (
           <label className="mt-5 grid gap-2">
             <span className="text-[12px] font-semibold text-[var(--text-secondary)]">
-              Type <strong className="text-white">{confirmationPhrase}</strong> to continue
+              Type <strong className="text-[var(--text-primary)]">{confirmationPhrase}</strong> to continue
             </span>
             <input
               autoComplete="off"
@@ -139,7 +139,7 @@ export function ConfirmDialog({
         ) : null}
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="min-h-11 rounded-[12px] border border-white/10 px-4 py-2.5 text-[13px] font-semibold text-[var(--text-secondary)]"
+            className="min-h-11 rounded-[var(--radius-control)] border border-[rgba(244,235,221,0.1)] px-4 py-2.5 text-[13px] font-semibold text-[var(--text-secondary)]"
             disabled={pending}
             onClick={() => setOpen(false)}
             ref={cancelButton}
@@ -149,7 +149,7 @@ export function ConfirmDialog({
           </button>
           <button
             aria-busy={pending}
-            className="min-h-11 rounded-[12px] bg-[var(--danger)] px-4 py-2.5 text-[13px] font-bold text-[#3b0908] disabled:cursor-not-allowed disabled:opacity-45"
+            className="min-h-11 rounded-[var(--radius-control)] bg-[var(--danger)] px-4 py-2.5 text-[13px] font-bold text-[var(--text-inverse)] disabled:cursor-not-allowed disabled:opacity-45"
             disabled={
               pending ||
               Boolean(confirmationPhrase && phrase !== confirmationPhrase)

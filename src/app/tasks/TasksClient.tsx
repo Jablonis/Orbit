@@ -290,7 +290,7 @@ export function TasksClient({
       <header className="mb-8 flex items-end justify-between gap-5 pr-14 md:pr-0">
         <div>
           <p className="label-caps text-[var(--accent-info)]">Task system</p>
-          <h1 className="page-title mt-2 text-white">
+          <h1 className="page-title mt-2 text-[var(--text-primary)]">
             Today&apos;s work
           </h1>
           <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[var(--text-secondary)]">
@@ -456,14 +456,14 @@ export function TasksClient({
             </Field>
             <div className="flex gap-3">
               <PendingSubmitButton
-                className="flex-1 rounded-[14px] bg-white px-4 py-3 text-[13px] font-semibold text-[var(--text-on-light)]"
+                className="flex-1 rounded-[var(--radius-control)] bg-white px-4 py-3 text-[13px] font-semibold text-[var(--text-on-light)]"
                 pendingLabel={editing ? "Saving…" : "Creating…"}
               >
                 {editing ? "Save changes" : "Create task"}
               </PendingSubmitButton>
               {editing ? (
                 <button
-                  className="rounded-[14px] border border-white/10 bg-[var(--surface-row)] px-4 py-3 text-[13px] font-semibold text-[var(--text-secondary)]"
+                  className="rounded-[var(--radius-control)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)] px-4 py-3 text-[13px] font-semibold text-[var(--text-secondary)]"
                   onClick={() => {
                     setEditing(null);
                     setEstimateMode("1hr");
@@ -490,7 +490,7 @@ export function TasksClient({
 
         <section className="space-y-6 xl:col-start-2 xl:row-start-1">
           <dl className="content-panel grid overflow-hidden rounded-[var(--radius-panel)] sm:grid-cols-4">
-            <Metric label="Active" value={stats.activeTasksCount} tone="text-white" />
+            <Metric label="Active" value={stats.activeTasksCount} tone="text-[var(--text-primary)]" />
             <Metric label="Done" value={stats.completedTasksCount} tone="text-[var(--accent-primary)]" />
             <Metric label="Hard" value={stats.hardTasksCount} tone="text-[var(--warning)]" />
             <Metric label="Focus min" value={stats.totalEstimateMinutes} tone="text-[var(--accent-info)]" />
@@ -570,7 +570,7 @@ export function TasksClient({
               </p>
               {filtersActive ? (
                 <button
-                  className="min-h-11 rounded-[var(--radius-control)] px-3 text-[12px] font-semibold text-[var(--accent-primary)] hover:bg-white/[0.05]"
+                  className="min-h-11 rounded-[var(--radius-control)] px-3 text-[12px] font-semibold text-[var(--accent-primary)] hover:bg-[rgba(244,235,221,0.05)]"
                   onClick={clearFilters}
                   type="button"
                 >
@@ -583,7 +583,7 @@ export function TasksClient({
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <p className="label-caps text-[var(--text-secondary)]">Active queue</p>
-                <h2 className="mt-2 text-[24px] font-semibold text-white">
+                <h2 className="mt-2 text-[24px] font-semibold text-[var(--text-primary)]">
                   {activeTasks.length} open tasks
                 </h2>
               </div>
@@ -591,8 +591,8 @@ export function TasksClient({
                 {stats.completionPercent}% done
               </span>
             </div>
-            <div className="mb-5 flex flex-col gap-3 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-3 lg:flex-row lg:items-end">
-              <label className="flex min-h-11 items-center gap-3 px-1 text-[12px] font-semibold text-white">
+            <div className="mb-5 flex flex-col gap-3 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.025)] p-3 lg:flex-row lg:items-end">
+              <label className="flex min-h-11 items-center gap-3 px-1 text-[12px] font-semibold text-[var(--text-primary)]">
                 <input
                   checked={allVisibleSelected}
                   onChange={() =>
@@ -607,13 +607,13 @@ export function TasksClient({
                 Select visible ({selectedTaskIds.length} selected)
               </label>
               <div className="flex flex-1 flex-wrap gap-2 lg:justify-end">
-                <button className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-white disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("complete")} type="button">Complete</button>
-                <button className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-white disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("reopen")} type="button">Reopen</button>
+                <button className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-[var(--text-primary)] disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("complete")} type="button">Complete</button>
+                <button className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-[var(--text-primary)] disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("reopen")} type="button">Reopen</button>
                 <label className="flex items-center gap-2">
                   <span className="sr-only">Bulk reschedule date</span>
                   <input className="field-input min-h-11 w-[150px]" min={today} onChange={(event) => setBulkDate(event.target.value)} type="date" value={bulkDate} />
                 </label>
-                <button className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-white disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("reschedule")} type="button">Reschedule</button>
+                <button className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-[var(--text-primary)] disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("reschedule")} type="button">Reschedule</button>
                 <button className="min-h-11 rounded-[var(--radius-control)] border border-[var(--danger)]/25 bg-[var(--danger)]/10 px-3 text-[12px] font-semibold text-[var(--danger-text)] disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("archive")} type="button">Archive</button>
               </div>
             </div>
@@ -621,7 +621,7 @@ export function TasksClient({
               {taskGroups.map((group) => group.tasks.length > 0 ? (
                 <section aria-labelledby={`task-group-${group.key}`} className="relative pl-7" key={group.key}>
                   <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-[13px] font-semibold text-white" id={`task-group-${group.key}`}>{group.label}</h3>
+                    <h3 className="text-[13px] font-semibold text-[var(--text-primary)]" id={`task-group-${group.key}`}>{group.label}</h3>
                     <span className="metric-value text-[12px] text-[var(--text-tertiary)]">{group.tasks.length}</span>
                   </div>
                   <div className="grid gap-3">
@@ -651,7 +651,7 @@ export function TasksClient({
                 <EmptyState
                   action={(
                     <button
-                      className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-white/[0.045] px-4 text-[12px] font-semibold text-white"
+                      className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[rgba(244,235,221,0.045)] px-4 text-[12px] font-semibold text-[var(--text-primary)]"
                       onClick={() => {
                         setEditing(null);
                         setEstimateMode("1hr");
@@ -701,7 +701,7 @@ export function TasksClient({
             </div>
           </div>
           <details className="content-panel rounded-[var(--radius-panel)] p-5">
-            <summary className="cursor-pointer text-[14px] font-semibold text-white">
+            <summary className="cursor-pointer text-[14px] font-semibold text-[var(--text-primary)]">
               Archive and history · {archivedTasks.length}
             </summary>
             <p className="mt-2 text-[12px] leading-5 text-[var(--text-secondary)]">
@@ -711,11 +711,11 @@ export function TasksClient({
               {archivedTasks.map((task) => (
                 <div className="flex flex-col gap-3 rounded-[var(--radius-row)] border border-[var(--border-subtle)] p-3 sm:flex-row sm:items-center" key={task.id}>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-white">{task.title}</p>
+                    <p className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{task.title}</p>
                     <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">{task.category} · {task.completed ? "Completed" : "Open when archived"}</p>
                   </div>
                   <button
-                    className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-white"
+                    className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-3 text-[12px] font-semibold text-[var(--text-primary)]"
                     onClick={async () => {
                       const result = await restoreTaskAction(task.id);
                       if (result.ok) router.refresh();
@@ -825,7 +825,7 @@ function TaskRow({
           <input name="completed" type="hidden" value={String(!task.completed)} />
           <PendingSubmitButton
             ariaLabel={task.completed ? "Reopen task" : "Complete task"}
-            className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[var(--surface-hover)] px-3 text-[12px] font-semibold text-white"
+            className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[var(--surface-hover)] px-3 text-[12px] font-semibold text-[var(--text-primary)]"
             pendingLabel="Saving…"
           >
             {task.completed ? "Reopen" : "Done"}
@@ -970,13 +970,13 @@ const taskDayTones = {
     badge: "bg-[var(--accent-info)]/15 text-[var(--info-text)]",
     card: "border-[var(--accent-info)]/35 bg-[var(--accent-info)]/[0.08]",
     label: "Scheduled",
-    title: "text-[#dbeafe]",
+    title: "text-[var(--info-text)]",
   },
   today: {
-    badge: "bg-white/[0.07] text-[var(--text-secondary)]",
-    card: "border-white/10 bg-[var(--surface-row)]/55",
+    badge: "bg-[rgba(244,235,221,0.07)] text-[var(--text-secondary)]",
+    card: "border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)]/55",
     label: "Today",
-    title: "text-white",
+    title: "text-[var(--text-primary)]",
   },
 } as const;
 

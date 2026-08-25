@@ -2,74 +2,79 @@
 
 :root {
   color-scheme: dark;
-  --background: #0d0d0e;
-  --foreground: #f7f7f5;
-  --canvas: #0d0d0e;
-  --surface-1: #151516;
-  --surface-2: #1c1c1e;
-  --surface-nav: #111112;
-  --surface-row: #201f1f;
-  --surface-hover: #242426;
-  --surface-selected: #29292c;
-  --surface-overlay: rgba(20, 20, 22, 0.94);
-  --surface-scrim: rgba(0, 0, 0, 0.72);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Canvas and surfaces — warm, so bone type sits on it without glare. */
+  --background: #100f0d;
+  --foreground: #f4ebdd;
+  --canvas: #100f0d;
+  --surface-1: #171410;
+  --surface-2: #1c1915;
+  --surface-nav: #131110;
+  --surface-row: #201c17;
+  --surface-hover: #241f19;
+  --surface-selected: #2a241c;
+  --surface-overlay: rgba(19, 17, 15, 0.94);
+  --surface-scrim: rgba(8, 7, 6, 0.74);
+
+  /* Hairlines. Every edge in Orbit is bone at low opacity, never a grey fill. */
+  --border-subtle: rgba(244, 235, 221, 0.09);
+  --border-strong: rgba(244, 235, 221, 0.18);
   --border-focus: #a3e635;
-  --text-primary: #f7f7f5;
-  --text-secondary: #c4c7c8;
-  --text-tertiary: #9ea2a4;
-  --text-muted: #8d9092;
-  --text-inverse: #171718;
-  --text-on-accent: #14200a;
-  --text-on-light: #202020;
+  --grid-line: rgba(244, 235, 221, 0.035);
+
+  /* Type */
+  --text-primary: #f4ebdd;
+  --text-secondary: #c3b9ab;
+  --text-tertiary: #9a9086;
+  --text-muted: #7c736a;
+  --text-inverse: #171410;
+  --text-on-accent: #171410;
+  --text-on-light: #201c17;
+
+  /* One accent per domain, used as small areas only. */
   --accent-primary: #a3e635;
+  --accent-primary-hover: #b3f145;
   --accent-info: #60a5fa;
   --accent-highlight: #ff4fa3;
-  --accent-focus: #a78bfa;
+  --accent-focus: #8b7bd8;
+
   --success: #a3e635;
   --success-text: #d9f99d;
-  --warning: #f59e0b;
-  --warning-text: #fde68a;
+  --warning: #f0a831;
+  --warning-text: #fadfa8;
   --danger: #ff8a80;
   --danger-text: #ffd7d3;
   --info-text: #bfdbfe;
   --highlight-text: #ffd1e5;
+
   --data-series-1: #a3e635;
   --data-series-2: #60a5fa;
-  --data-series-3: #a78bfa;
+  --data-series-3: #8b7bd8;
   --data-series-4: #ff4fa3;
-  --data-series-5: #fbbf24;
-  --radius-control: 12px;
-  --radius-row: 18px;
-  --radius-panel: 24px;
-  --radius-overlay: 24px;
+  --data-series-5: #f0a831;
+
+  /* Ring gradients run dark to bright along the sweep. */
+  --ring-tasks-from: #a8175c;
+  --ring-tasks-to: #ff4fa3;
+  --ring-fitness-from: #5c8a10;
+  --ring-fitness-to: #a3e635;
+  --ring-finance-from: #2360bd;
+  --ring-finance-to: #60a5fa;
+
+  /* Machined corners: sharp enough to read as an instrument. */
+  --radius-control: 2px;
+  --radius-row: 4px;
+  --radius-panel: 6px;
+  --radius-overlay: 8px;
+
   --control-height: 44px;
   --space-card: clamp(1.25rem, 2vw, 1.5rem);
-  --shadow-panel: 0 20px 45px -34px rgba(0, 0, 0, 0.9);
-  --shadow-overlay: 0 28px 64px -28px rgba(0, 0, 0, 0.92);
+  --shadow-panel: 0 24px 48px -40px rgba(0, 0, 0, 0.9);
+  --shadow-overlay: 0 32px 70px -32px rgba(0, 0, 0, 0.94);
   --ease-orbit: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-ring: cubic-bezier(0.32, 0.94, 0.35, 1);
   --duration-micro: 160ms;
   --duration-state: 280ms;
-}
-
-@keyframes ring-score-enter {
-  0% {
-    opacity: 0.35;
-    transform: scale(0.72);
-  }
-  65% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.ring-score-enter {
-  animation: ring-score-enter 520ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes action-toast-enter {
@@ -338,7 +343,7 @@
 
 .skeleton-shimmer::after {
   animation: skeleton-shimmer 1.35s ease-in-out infinite;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+  background: linear-gradient(90deg, transparent, rgba(244, 235, 221, 0.07), transparent);
   content: "";
   inset: 0;
   position: absolute;
@@ -366,7 +371,7 @@
 
 .pending-button-state::after {
   animation: pending-button-sweep 900ms ease-in-out infinite;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.24), transparent);
+  background: linear-gradient(90deg, transparent, rgba(244, 235, 221, 0.24), transparent);
   content: "";
   inset: 0;
   pointer-events: none;
@@ -458,7 +463,7 @@
 .dashboard-density-compact > .glass-panel,
 .dashboard-density-compact > .content-panel,
 .dashboard-density-compact > section > .glass-panel {
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   padding: 1rem;
 }
 
@@ -479,10 +484,6 @@
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
-  }
-
-  .ring-score-enter {
-    animation: none;
   }
 }
 
@@ -537,6 +538,13 @@ body {
   padding-bottom: calc(7rem + env(safe-area-inset-bottom));
 }
 
+.landing-container {
+  margin-inline: auto;
+  max-width: 78rem;
+  padding-inline: clamp(1.25rem, 4vw, 3.5rem);
+  width: 100%;
+}
+
 .page-container {
   margin-inline: auto;
   max-width: 90rem;
@@ -546,12 +554,12 @@ body {
 
 .surface-hero {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 44%),
+    linear-gradient(135deg, rgba(244, 235, 221, 0.045), transparent 44%),
     color-mix(in srgb, var(--surface-1) 96%, transparent);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-panel);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    inset 0 1px 0 rgba(244, 235, 221, 0.045),
     0 30px 70px -42px rgba(0, 0, 0, 0.95);
 }
 
@@ -560,7 +568,7 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-panel);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    inset 0 1px 0 rgba(244, 235, 221, 0.025),
     var(--shadow-panel);
 }
 
@@ -609,7 +617,7 @@ body {
 }
 
 .ui-button--secondary {
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(244, 235, 221, 0.045);
   border: 1px solid var(--border-strong);
   color: var(--text-primary);
 }
@@ -689,8 +697,8 @@ body {
 }
 
 ::selection {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
+  background: rgba(244, 235, 221, 0.18);
+  color: var(--text-primary);
 }
 
 ::-webkit-scrollbar {
@@ -703,20 +711,20 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(244, 235, 221, 0.12);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(244, 235, 221, 0.22);
 }
 
 .glass-panel {
   background: rgba(20, 19, 19, 0.62);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-top-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(244, 235, 221, 0.08);
+  border-top-color: rgba(244, 235, 221, 0.12);
   box-shadow: 0 25px 60px -24px rgba(0, 0, 0, 0.85);
 }
 
@@ -725,17 +733,17 @@ body {
   border: 1px solid var(--border-subtle);
   border-top-color: var(--border-strong);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    inset 0 1px 0 rgba(244, 235, 221, 0.025),
     var(--shadow-panel);
 }
 
 .hero-panel {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 44%),
+    linear-gradient(135deg, rgba(244, 235, 221, 0.045), transparent 44%),
     color-mix(in srgb, var(--surface-1) 96%, transparent);
   border: 1px solid var(--border-strong);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    inset 0 1px 0 rgba(244, 235, 221, 0.045),
     0 30px 70px -42px rgba(0, 0, 0, 0.95);
 }
 
@@ -751,26 +759,69 @@ body {
   background: rgba(20, 19, 19, 0.88);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(244, 235, 221, 0.12);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65);
 }
 
 .label-caps {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   line-height: 18px;
   text-transform: uppercase;
+}
+
+/* The landing wordmark and any single-word statement set at display scale. */
+.display-mega {
+  font-size: clamp(4.5rem, 19vw, 18rem);
+  font-stretch: 115%;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 0.82;
+  text-transform: uppercase;
+}
+
+/* A 72px hairline grid, masked so it fades before it reaches an edge. */
+.reveal {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 620ms var(--ease-orbit),
+      transform 620ms var(--ease-orbit);
+  }
+
+  .reveal-in {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.instrument-grid {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(120% 80% at 50% 40%, #000 30%, transparent 78%);
+}
+
+.hairline-top {
+  border-top: 1px solid var(--border-subtle);
 }
 
 .field-input {
   min-height: var(--control-height);
   width: 100%;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border-subtle);
   background: var(--surface-2);
   padding: 0 12px;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 14px;
   outline: none;
 }
@@ -807,7 +858,14 @@ body {
 }
 
 @media (min-width: 640px) {
-  .page-container {
+  .landing-container {
+  margin-inline: auto;
+  max-width: 78rem;
+  padding-inline: clamp(1.25rem, 4vw, 3.5rem);
+  width: 100%;
+}
+
+.page-container {
     padding-inline: 1.5rem;
   }
 }
@@ -818,13 +876,27 @@ body {
     padding-left: 112px;
   }
 
-  .page-container {
+  .landing-container {
+  margin-inline: auto;
+  max-width: 78rem;
+  padding-inline: clamp(1.25rem, 4vw, 3.5rem);
+  width: 100%;
+}
+
+.page-container {
     padding: 2rem;
   }
 }
 
 @media (min-width: 1280px) {
-  .page-container {
+  .landing-container {
+  margin-inline: auto;
+  max-width: 78rem;
+  padding-inline: clamp(1.25rem, 4vw, 3.5rem);
+  width: 100%;
+}
+
+.page-container {
     padding-inline: 2.5rem;
   }
 }

@@ -25,6 +25,9 @@ export async function updateSession(
   request: NextRequest,
   requestHeaders: Headers = request.headers,
 ) {
+  // A signed-out visitor at the root sees the product, not a login wall.
+  const marketingRedirect = () =>
+    NextResponse.redirect(new URL("/welcome", request.url));
   const loginRedirect = () => {
     const loginUrl = new URL("/login", request.url);
     const intendedPath = getSafeReturnPath(
@@ -42,6 +45,7 @@ export async function updateSession(
   try {
     env = getSupabaseEnv();
   } catch {
+    if (request.nextUrl.pathname === "/") return marketingRedirect();
     if (isProtectedPath(request.nextUrl.pathname)) {
       return loginRedirect();
     }
@@ -72,6 +76,10 @@ export async function updateSession(
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
   const pathname = request.nextUrl.pathname;
+
+  if (!claims && pathname === "/") {
+    return marketingRedirect();
+  }
 
   if (!claims && isProtectedPath(pathname)) {
     return loginRedirect();

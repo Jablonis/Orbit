@@ -111,7 +111,7 @@ export function BankStatementImporter({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="label-caps text-[var(--accent-primary)]">Monthly bank PDF</p>
-          <h3 className="mt-2 text-[22px] font-semibold text-white">Import a statement</h3>
+          <h3 className="mt-2 text-[22px] font-semibold text-[var(--text-primary)]">Import a statement</h3>
           <p className="mt-2 max-w-xl text-[12px] leading-5 text-[var(--text-secondary)]">
             Upload a text-based EUR statement, review every detected amount, then confirm the import.
           </p>
@@ -158,7 +158,7 @@ export function BankStatementImporter({
           />
         </label>
         <button
-          className="min-h-11 self-end rounded-[var(--radius-control)] bg-white px-5 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-55"
+          className="min-h-11 self-end rounded-[var(--radius-control)] bg-[var(--text-primary)] px-5 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-55"
           disabled={pendingMode !== null}
           type="submit"
         >
@@ -166,7 +166,7 @@ export function BankStatementImporter({
         </button>
       </form>
 
-      <div className="mt-4 flex items-start gap-3 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.02] p-4">
+      <div className="mt-4 flex items-start gap-3 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.02)] p-4">
         <span aria-hidden="true" className="mt-0.5 text-[var(--accent-info)]">◈</span>
         <p className="text-[12px] leading-[18px] text-[var(--text-tertiary)]">
           Orbit validates the file type, size, PDF signature, page count, origin, and signed-in user on the server. It discards the document after parsing and stores only confirmed transactions plus a non-reversible duplicate fingerprint. Account and card numbers found in descriptions are masked.
@@ -184,7 +184,7 @@ export function BankStatementImporter({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="label-caps text-[var(--text-tertiary)]">Review before import</p>
-              <h4 className="mt-1 text-[18px] font-semibold text-white" id="statement-preview-title">
+              <h4 className="mt-1 text-[18px] font-semibold text-[var(--text-primary)]" id="statement-preview-title">
                 {preview.rows.length} transactions · {preview.pages} page{preview.pages === 1 ? "" : "s"}
               </h4>
               <p className="mt-2 max-w-2xl text-[12px] leading-5 text-[var(--text-secondary)]">
@@ -244,13 +244,13 @@ export function BankStatementImporter({
                 {preview.rows.map((row, index) => (
                   <tr className="border-t border-[var(--border-subtle)]" key={`${index}-${row.date}-${row.title}-${row.amount}`}>
                     <td className="px-4 py-3 text-[var(--text-secondary)]">{row.date}</td>
-                    <td className="max-w-[320px] break-words pr-4 font-semibold leading-5 text-white">{row.title}</td>
+                    <td className="max-w-[320px] break-words pr-4 font-semibold leading-5 text-[var(--text-primary)]">{row.title}</td>
                     <td className="min-w-[190px] pr-4">
                       <label className="sr-only" htmlFor={`statement-category-${index}`}>
                         Category for {row.title}
                       </label>
                       <select
-                        className="min-h-11 w-full rounded-[10px] border border-[var(--border-strong)] bg-[var(--surface-1)] px-3 text-[12px] font-semibold text-white"
+                        className="min-h-11 w-full rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[var(--surface-1)] px-3 text-[12px] font-semibold text-[var(--text-primary)]"
                         id={`statement-category-${index}`}
                         onChange={(event) => {
                           const category = event.target.value as BankStatementCategory;
@@ -315,9 +315,9 @@ async function readStatementResponse(response: Response): Promise<StatementRespo
 
 function PreviewMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-4">
+    <div className="rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.025)] p-4">
       <p className="label-caps text-[var(--text-tertiary)]">{label}</p>
-      <p className="metric-value mt-2 text-[18px] font-semibold text-white">{value}</p>
+      <p className="metric-value mt-2 text-[18px] font-semibold text-[var(--text-primary)]">{value}</p>
     </div>
   );
 }

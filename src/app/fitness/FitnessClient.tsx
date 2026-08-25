@@ -193,7 +193,7 @@ export function FitnessClient({
       <header className="mb-7 flex flex-col gap-5 pr-14 md:pr-0 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="label-caps text-[var(--accent-primary)]">Fitness plan</p>
-          <h1 className="page-title mt-2 text-white">
+          <h1 className="page-title mt-2 text-[var(--text-primary)]">
             Today&apos;s training
           </h1>
           <p className="mt-3 text-[14px] text-[var(--text-tertiary)]">
@@ -203,7 +203,7 @@ export function FitnessClient({
         <div className="flex flex-wrap items-center gap-3">
           <div
             aria-label="Fitness mode"
-            className="inline-flex rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-white/[0.025] p-1"
+            className="inline-flex rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.025)] p-1"
             role="group"
           >
             {(["review", "plan"] as const).map((value) => (
@@ -211,8 +211,8 @@ export function FitnessClient({
                 aria-pressed={mode === value}
                 className={`min-h-11 rounded-[calc(var(--radius-control)-4px)] px-4 text-[13px] font-semibold capitalize ${
                   mode === value
-                    ? "bg-white text-[var(--text-on-light)]"
-                    : "text-[var(--text-secondary)] hover:text-white"
+                    ? "bg-[var(--text-primary)] text-[var(--text-on-light)]"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 }`}
                 key={value}
                 onClick={() => {
@@ -247,7 +247,7 @@ export function FitnessClient({
             setResetNotice("Plan reset. Session history was preserved.");
           }}
           title="Reset the weekly plan?"
-          triggerClassName="rounded-[12px] border border-white/10 bg-[var(--surface-row)] px-4 py-2.5 text-[13px] font-semibold text-[var(--text-secondary)] transition hover:border-white/20 hover:bg-[#2a2929] hover:text-white"
+          triggerClassName="rounded-[var(--radius-control)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)] px-4 py-2.5 text-[13px] font-semibold text-[var(--text-secondary)] transition hover:border-[rgba(244,235,221,0.2)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
           triggerLabel="Reset plan"
           />
           ) : null}
@@ -263,7 +263,7 @@ export function FitnessClient({
                 <p className="label-caps text-[var(--success-text)]">Today · {todayDay.label}</p>
                 <StatusBadge day={todayDay} compact />
               </div>
-              <h2 className="mt-5 text-[36px] font-semibold leading-[42px] text-white sm:text-[46px] sm:leading-[52px]">
+              <h2 className="mt-5 text-[36px] font-semibold leading-[42px] text-[var(--text-primary)] sm:text-[46px] sm:leading-[52px]">
                 {todayTraining.title}
               </h2>
               <p className="mt-3 max-w-2xl text-[14px] leading-6 text-[var(--text-secondary)]">
@@ -286,7 +286,7 @@ export function FitnessClient({
                 </button>
               ) : (
                 <button
-                  className="mt-5 min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-white/[0.04] px-5 text-[13px] font-semibold text-white"
+                  className="mt-5 min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[rgba(244,235,221,0.04)] px-5 text-[13px] font-semibold text-[var(--text-primary)]"
                   onClick={() => document.getElementById("weekly-plan")?.scrollIntoView({ behavior: "smooth" })}
                   type="button"
                 >
@@ -294,9 +294,9 @@ export function FitnessClient({
                 </button>
               )}
             </div>
-            <div className="border-t border-white/10 pt-5 md:border-l md:border-t-0 md:pl-7 md:pt-0">
-              <p className="label-caps text-[#ff82bc]">Main focus</p>
-              <p className="mt-3 text-[18px] font-semibold leading-6 text-white">
+            <div className="border-t border-[rgba(244,235,221,0.1)] pt-5 md:border-l md:border-t-0 md:pl-7 md:pt-0">
+              <p className="label-caps text-[var(--accent-highlight)]">Main focus</p>
+              <p className="mt-3 text-[18px] font-semibold leading-6 text-[var(--text-primary)]">
                 {todayGuidance.headline}
               </p>
               <p className="mt-2 text-[13px] leading-5 text-[var(--text-tertiary)]">
@@ -310,7 +310,7 @@ export function FitnessClient({
           <div className="flex items-center justify-between gap-6">
             <div>
               <p className="label-caps text-[var(--accent-info)]">Week progress</p>
-              <p className="metric-value mt-3 text-[26px] font-semibold text-white">
+              <p className="metric-value mt-3 text-[26px] font-semibold text-[var(--text-primary)]">
                 {completedSessionsCount} sessions · {completedDuration} min
               </p>
               <p className="mt-2 text-[13px] text-[var(--text-tertiary)]">
@@ -319,9 +319,9 @@ export function FitnessClient({
             </div>
             <ProgressRing value={completionPercent} />
           </div>
-          <div className="mt-7 grid grid-cols-3 border-t border-white/10 pt-5">
+          <div className="mt-7 grid grid-cols-3 border-t border-[rgba(244,235,221,0.1)] pt-5">
             <Metric label="Gym" value={localPlan.filter((day) => day.sport === "gym").length} tone="text-[var(--accent-primary)]" />
-            <Metric label="Rest" value={localPlan.filter((day) => day.sport === "rest").length} tone="text-[#94a3b8]" />
+            <Metric label="Rest" value={localPlan.filter((day) => day.sport === "rest").length} tone="text-[var(--text-muted)]" />
             <Metric label="Done" value={completedSessionsCount} tone="text-[var(--accent-info)]" />
           </div>
         </aside>
@@ -332,7 +332,7 @@ export function FitnessClient({
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="label-caps text-[var(--text-tertiary)]">Calendar</p>
-            <h2 className="mt-2 text-[24px] font-semibold text-white">
+            <h2 className="mt-2 text-[24px] font-semibold text-[var(--text-primary)]">
               {mode === "plan" ? "Edit the reusable plan" : "Review and log this week"}
             </h2>
             <p className="mt-2 max-w-2xl text-[12px] leading-5 text-[var(--text-secondary)]">
@@ -343,7 +343,7 @@ export function FitnessClient({
           </div>
           <div className="hidden items-center gap-4 text-[12px] text-[var(--text-tertiary)] sm:flex">
             <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--accent-primary)]" />Done</span>
-            <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#7d838a]" />Rest</span>
+            <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--text-muted)]" />Rest</span>
           </div>
         </div>
 
@@ -361,7 +361,7 @@ export function FitnessClient({
                     <p className={`label-caps ${getSportTextTone(displayDay.sport)}`}>
                       {day.shortLabel}
                     </p>
-                    <h3 className="mt-2 text-[18px] font-semibold text-white">
+                    <h3 className="mt-2 text-[18px] font-semibold text-[var(--text-primary)]">
                       {day.label}
                     </h3>
                   </div>
@@ -369,12 +369,12 @@ export function FitnessClient({
                 </div>
 
                 <div className="mt-6 min-h-[48px]">
-                  <p className="text-[15px] font-semibold text-white">
+                  <p className="text-[15px] font-semibold text-[var(--text-primary)]">
                     {sportLabels[displayDay.sport]}
                   </p>
                   {displayDay.sport !== "rest" || day.log.completed ? (
                     <>
-                      <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-[12px] border border-[var(--border-subtle)] bg-white/[0.025]">
+                      <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.025)]">
                         <div className="border-r border-[var(--border-subtle)] p-2.5">
                           <p className="label-caps text-[var(--text-tertiary)]">Planned</p>
                           <p className="metric-value mt-1 text-[14px] font-semibold text-[var(--info-text)]">
@@ -426,10 +426,10 @@ export function FitnessClient({
                 ) : (
                   <button
                     aria-expanded={isOpen}
-                    className={`mt-5 flex h-11 w-full items-center justify-between rounded-[10px] px-3 text-[13px] font-semibold transition ${
+                    className={`mt-5 flex h-11 w-full items-center justify-between rounded-[var(--radius-control)] px-3 text-[13px] font-semibold transition ${
                       isOpen
-                        ? "bg-white text-[#171718]"
-                        : "bg-white/[0.06] text-[#d6d8d9] hover:bg-white/[0.1] hover:text-white"
+                        ? "bg-[var(--text-primary)] text-[var(--text-inverse)]"
+                        : "bg-[rgba(244,235,221,0.06)] text-[var(--text-secondary)] hover:bg-[rgba(244,235,221,0.1)] hover:text-[var(--text-primary)]"
                     }`}
                     onClick={() => {
                       setNotice(null);
@@ -449,13 +449,13 @@ export function FitnessClient({
 
       {openDay ? (
         <article className="content-panel modal-animate mt-5 rounded-[var(--radius-panel)] p-5 sm:p-7">
-          <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-4 border-b border-[rgba(244,235,221,0.1)] pb-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
                 <p className="label-caps text-[var(--accent-primary)]">{openDay.label}</p>
                 <StatusBadge day={openDay} compact />
               </div>
-              <h2 className="mt-2 text-[26px] font-semibold text-white">
+              <h2 className="mt-2 text-[26px] font-semibold text-[var(--text-primary)]">
                 {focusTraining.title}
               </h2>
               <p className="mt-2 text-[13px] leading-5 text-[var(--text-tertiary)]">
@@ -463,7 +463,7 @@ export function FitnessClient({
               </p>
             </div>
             <button
-              className="h-11 rounded-[10px] border border-white/10 px-4 text-[13px] font-semibold text-[var(--text-secondary)] transition hover:bg-white/[0.06] hover:text-white"
+              className="h-11 rounded-[var(--radius-control)] border border-[rgba(244,235,221,0.1)] px-4 text-[13px] font-semibold text-[var(--text-secondary)] transition hover:bg-[rgba(244,235,221,0.06)] hover:text-[var(--text-primary)]"
               onClick={() => setOpenDayId(null)}
               type="button"
             >
@@ -484,14 +484,14 @@ export function FitnessClient({
               value={openDay.log.sport ?? openDay.sport}
             />
 
-            <label className="flex h-11 cursor-pointer items-center gap-3 rounded-[12px] border border-white/10 bg-white/[0.04] px-3">
+            <label className="flex h-11 cursor-pointer items-center gap-3 rounded-[var(--radius-control)] border border-[rgba(244,235,221,0.1)] bg-[rgba(244,235,221,0.04)] px-3">
               <input
                 className="h-5 w-5 accent-[var(--accent-primary)]"
                 defaultChecked={openDay.log.completed}
                 name="completed"
                 type="checkbox"
               />
-              <span className="text-[13px] font-semibold text-white">Training done</span>
+              <span className="text-[13px] font-semibold text-[var(--text-primary)]">Training done</span>
             </label>
 
             <Field label="Time">
@@ -510,7 +510,7 @@ export function FitnessClient({
               </select>
             </Field>
             <button
-              className="h-11 rounded-[12px] bg-[var(--accent-primary)] px-6 text-[13px] font-bold text-[var(--text-on-accent)] transition hover:bg-[#b7ef58] disabled:cursor-wait disabled:opacity-60"
+              className="h-11 rounded-[var(--radius-control)] bg-[var(--accent-primary)] px-6 text-[13px] font-bold text-[var(--text-on-accent)] transition hover:bg-[var(--accent-primary-hover)] disabled:cursor-wait disabled:opacity-60"
               disabled={pendingDayId === openDay.id}
               type="submit"
             >
@@ -529,8 +529,8 @@ export function FitnessClient({
             </div>
           </form>
           ) : (
-            <div className="mt-6 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-white/[0.025] p-5">
-              <p className="text-[14px] font-semibold text-white">Recovery is the plan for this day.</p>
+            <div className="mt-6 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.025)] p-5">
+              <p className="text-[14px] font-semibold text-[var(--text-primary)]">Recovery is the plan for this day.</p>
               <p className="mt-2 text-[13px] leading-5 text-[var(--text-secondary)]">
                 There is no workout to log. Switch to Plan mode if this day should contain a session instead.
               </p>
@@ -568,16 +568,16 @@ function getDayCardClass(day: WeeklyPlanDay, open: boolean) {
   if (day.log.completed) {
     return `${base} before:bg-[var(--accent-primary)] ${
       open
-        ? "bg-[#1b3117]"
-        : "bg-[#152614] hover:bg-[#1a2d18]"
+        ? "bg-[color-mix(in_srgb,var(--accent-primary)_18%,var(--surface-2))]"
+        : "bg-[color-mix(in_srgb,var(--accent-primary)_9%,var(--surface-1))] hover:bg-[color-mix(in_srgb,var(--accent-primary)_14%,var(--surface-1))]"
     }`;
   }
 
   if (day.sport === "rest") {
-    return `${base} before:bg-[#7d838a] ${
+    return `${base} before:bg-[var(--text-muted)] ${
       open
-        ? "bg-[#252728]"
-        : "bg-[#191a1b] hover:bg-[#202122]"
+        ? "bg-[var(--surface-hover)]"
+        : "bg-[var(--surface-1)] hover:bg-[var(--surface-row)]"
     }`;
   }
 
@@ -590,18 +590,18 @@ function getDayCardClass(day: WeeklyPlanDay, open: boolean) {
 
   return `${base} ${sportAccent[day.sport]} ${
     open
-      ? "bg-[#252424]"
-      : "bg-[#1b1a1a] hover:bg-[#222121]"
+      ? "bg-[var(--surface-hover)]"
+      : "bg-[var(--surface-1)] hover:bg-[var(--surface-row)]"
   }`;
 }
 
 function getSportTextTone(sport: SportType) {
   const tones: Record<SportType, string> = {
-    cardio: "text-[#93c5fd]",
+    cardio: "text-[var(--accent-info)]",
     gym: "text-[var(--success-text)]",
-    mobility: "text-[#fcd34d]",
+    mobility: "text-[var(--warning-text)]",
     rest: "text-[var(--text-tertiary)]",
-    tennis: "text-[#ff9ac9]",
+    tennis: "text-[var(--highlight-text)]",
   };
   return tones[sport];
 }
@@ -625,7 +625,7 @@ function StatusBadge({
 
   if (day.sport === "rest") {
     return (
-      <span className={`${size} rounded-full border border-white/10 bg-white/[0.06] font-bold text-[#c6cacc]`}>
+      <span className={`${size} rounded-full border border-[rgba(244,235,221,0.1)] bg-[rgba(244,235,221,0.06)] font-bold text-[var(--text-secondary)]`}>
         Rest
       </span>
     );
@@ -645,7 +645,7 @@ function ProgressRing({ value }: { value: number }) {
   return (
     <div className="relative h-24 w-24 shrink-0">
       <svg aria-label={`${value}% complete`} className="h-full w-full -rotate-90" role="img" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" fill="none" r="40" stroke="#303234" strokeWidth="9" />
+        <circle cx="50" cy="50" fill="none" r="40" stroke="var(--surface-hover)" strokeWidth="9" />
         <circle
           cx="50"
           cy="50"
@@ -658,7 +658,7 @@ function ProgressRing({ value }: { value: number }) {
           strokeWidth="9"
         />
       </svg>
-      <span className="absolute inset-0 grid place-items-center text-[20px] font-semibold text-white">
+      <span className="absolute inset-0 grid place-items-center text-[20px] font-semibold text-[var(--text-primary)]">
         {value}%
       </span>
     </div>
@@ -676,8 +676,8 @@ function Field({ children, label }: { children: ReactNode; label: string }) {
 
 function Metric({ label, tone, value }: { label: string; tone: string; value: number }) {
   return (
-    <div className="border-r border-white/10 px-3 last:border-r-0 first:pl-0 last:pr-0">
-      <p className="label-caps text-[#858b8e]">{label}</p>
+    <div className="border-r border-[rgba(244,235,221,0.1)] px-3 last:border-r-0 first:pl-0 last:pr-0">
+      <p className="label-caps text-[var(--text-muted)]">{label}</p>
       <p className={`mt-2 text-[26px] font-semibold ${tone}`}>{value}</p>
     </div>
   );
@@ -700,9 +700,9 @@ function TrainingInfoCard({
   };
 
   return (
-    <article className={`rounded-[18px] border p-5 ${tones[tone]}`}>
+    <article className={`rounded-[var(--radius-row)] border p-5 ${tones[tone]}`}>
       <p className="label-caps opacity-80">{label}</p>
-      <p className="mt-3 text-[14px] leading-6 text-white">{value}</p>
+      <p className="mt-3 text-[14px] leading-6 text-[var(--text-primary)]">{value}</p>
     </article>
   );
 }

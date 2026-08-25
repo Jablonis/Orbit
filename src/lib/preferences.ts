@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const dashboardCardIds = [
+  "momentum",
   "rings",
   "fitness",
   "finance",
@@ -13,6 +14,7 @@ export const dashboardCardLabels: Record<DashboardCardId, string> = {
   analytics: "Analytics",
   finance: "Finance summary",
   fitness: "Fitness today",
+  momentum: "Momentum orbit",
   review: "Weekly review",
   rings: "Daily rings",
   tasks: "Quick tasks",
@@ -114,10 +116,17 @@ function isCardId(value: unknown): value is DashboardCardId {
 }
 
 function normalizeCardOrder(value: unknown) {
-  const requested = Array.isArray(value) ? value.filter(isCardId) : [];
-  return [
-    ...new Set([...requested, ...dashboardCardIds]),
+  const requested = [
+    ...new Set(Array.isArray(value) ? value.filter(isCardId) : []),
   ] as DashboardCardId[];
+  const order = [...requested];
+  // Cards added after a preference was stored take their default position
+  // instead of always landing at the bottom of the dashboard.
+  dashboardCardIds.forEach((card, defaultIndex) => {
+    if (order.includes(card)) return;
+    order.splice(Math.min(defaultIndex, order.length), 0, card);
+  });
+  return order;
 }
 
 function boundedInteger(
