@@ -342,84 +342,7 @@
   }
 }
 
-/* ---------------------------------------------------------------------------
- * TEMPORARY v1 bridge.
- * Tasks, Fitness and Finance still speak the old token names. These map them
- * onto v2 values so those routes stay legible while they are migrated, and the
- * whole block is deleted the moment the last one moves over.
- * ------------------------------------------------------------------------ */
-:root {
-  --canvas: var(--background);
-  --surface-1: var(--card);
-  --surface-2: var(--muted);
-  --surface-nav: var(--card);
-  --surface-row: var(--muted);
-  --surface-hover: var(--secondary);
-  --surface-selected: var(--accent);
-  --surface-overlay: rgba(255, 255, 255, 0.96);
-  --surface-scrim: rgba(27, 26, 31, 0.35);
-  --border-subtle: var(--border);
-  --border-strong: var(--input);
-  --border-focus: var(--ring);
-  --text-primary: var(--foreground);
-  --text-secondary: #55505a;
-  --text-tertiary: var(--muted-foreground);
-  --text-muted: var(--muted-foreground);
-  --text-inverse: #ffffff;
-  --text-on-accent: var(--primary-foreground);
-  --text-on-light: var(--foreground);
-  --accent-primary: var(--primary);
-  --accent-primary-hover: #7c3fd6;
-  --accent-info: var(--finance);
-  --accent-highlight: var(--tasks);
-  --accent-focus: var(--plum);
-  --success-text: var(--fitness-ink);
-  --warning-text: #8a5310;
-  --danger: var(--destructive);
-  --danger-text: #8f1f31;
-  --info-text: var(--finance-ink);
-  --highlight-text: var(--tasks-ink);
-  --data-series-1: var(--chart-1);
-  --data-series-2: var(--chart-2);
-  --data-series-3: var(--chart-3);
-  --data-series-4: var(--chart-4);
-  --data-series-5: var(--chart-5);
-  --ring-tasks-from: #d63a76;
-  --ring-tasks-to: var(--tasks);
-  --ring-fitness-from: #17845d;
-  --ring-fitness-to: var(--fitness);
-  --ring-finance-from: #2f4fb8;
-  --ring-finance-to: var(--finance);
-  --radius-control: var(--radius-md);
-  --radius-row: var(--radius-lg);
-  --radius-panel: var(--radius-xl);
-  --radius-overlay: var(--radius-2xl);
-  --control-height: 44px;
-  --space-card: clamp(1.25rem, 2vw, 1.5rem);
-  --shadow-panel: 0 1px 2px rgba(27, 26, 31, 0.05);
-  --shadow-overlay: 0 24px 60px -30px rgba(27, 26, 31, 0.35);
-  --grid-line: rgba(27, 26, 31, 0.05);
-}
-
-.content-panel,
-.hero-panel,
-.glass-panel,
-.floating-panel,
-.surface-hero,
-.surface-primary {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 1px 2px rgba(27, 26, 31, 0.05);
-}
-
-.surface-secondary,
-.surface-overlay,
-.glass-modal {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-}
+/* ---------- Controls ---------- */
 
 .field-input {
   background: var(--card);
@@ -427,14 +350,21 @@
   border-radius: var(--radius-md);
   color: var(--foreground);
   font-size: 14px;
-  min-height: var(--control-height);
+  min-height: 44px;
   outline: none;
   padding: 0 0.875rem;
+  transition: border-color var(--duration-micro) var(--ease-orbit);
   width: 100%;
 }
 
 .field-input:focus-visible {
   border-color: color-mix(in srgb, var(--primary) 50%, transparent);
+  outline: 2px solid transparent;
+}
+
+.field-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .ui-button {
@@ -445,9 +375,15 @@
   font-weight: 600;
   gap: 0.5rem;
   justify-content: center;
-  min-height: var(--control-height);
+  min-height: 44px;
   padding: 0 1.25rem;
-  transition: background-color var(--duration-micro) var(--ease-orbit);
+  transition:
+    background-color var(--duration-micro) var(--ease-orbit),
+    transform var(--duration-micro) var(--ease-orbit);
+}
+
+.ui-button:active {
+  transform: scale(0.985);
 }
 
 .ui-button--primary {
@@ -464,4 +400,129 @@
 .ui-button--danger {
   background: var(--destructive);
   color: var(--destructive-foreground);
+}
+
+.ui-badge {
+  align-items: center;
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+}
+
+.ui-icon-button {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  transition: background-color var(--duration-micro) var(--ease-orbit);
+}
+
+.ui-icon-button:hover {
+  background: var(--muted);
+}
+
+/* ---------- Surfaces still named by older routes ---------- */
+
+.surface-primary,
+.surface-hero {
+  background: var(--card);
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 1px 2px rgba(27, 26, 31, 0.05);
+}
+
+.surface-secondary {
+  background: var(--muted);
+  border-radius: var(--radius-lg);
+}
+
+.surface-overlay {
+  background: var(--popover);
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 24px 60px -30px rgba(27, 26, 31, 0.35);
+}
+
+/* ---------- Feedback and pending states ---------- */
+
+@keyframes skeleton-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+.skeleton-shimmer {
+  animation: skeleton-shimmer 1.4s linear infinite;
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    var(--secondary) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes action-toast-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.action-toast {
+  animation: action-toast-enter 240ms var(--ease-orbit) both;
+}
+
+@keyframes action-toast-spin {
+  to { transform: rotate(360deg); }
+}
+
+.action-toast-spinner {
+  animation: action-toast-spin 700ms linear infinite;
+}
+
+.route-loading-progress {
+  background: linear-gradient(90deg, var(--primary), var(--tasks));
+  height: 2px;
+  left: 0;
+  position: fixed;
+  top: 0;
+  z-index: 60;
+}
+
+.pending-button-state,
+.link-pending-indicator {
+  display: inline-flex;
+}
+
+.task-queue-axis {
+  position: relative;
+}
+
+.overview-interactive-card {
+  transition:
+    background-color var(--duration-micro) var(--ease-orbit),
+    transform var(--duration-micro) var(--ease-orbit);
+}
+
+.overview-interactive-card:hover {
+  transform: translateY(-1px);
+}
+
+.overview-card-enter,
+.overview-row-enter,
+.overview-intro-enter,
+.overview-brief-enter,
+.overview-heading-enter,
+.overview-bar-enter,
+.overview-line-draw,
+.overview-chart-point {
+  animation: settle-in 420ms var(--ease-orbit) both;
+}
+
+[data-finance-private="true"] .metric-value {
+  filter: blur(0.38rem);
+  user-select: none;
 }

@@ -45,9 +45,9 @@ export function PageHeader({
   return (
     <header className="flex flex-wrap items-end justify-between gap-5">
       <div className="min-w-0">
-        <p className="label-caps text-[var(--accent-primary)]">{eyebrow}</p>
-        <h1 className="page-title mt-2 text-[var(--text-primary)]">{title}</h1>
-        <p className="body-copy mt-3 max-w-2xl text-[var(--text-secondary)]">
+        <p className="label-caps text-primary">{eyebrow}</p>
+        <h1 className="page-title mt-2 text-foreground">{title}</h1>
+        <p className="body-copy mt-3 max-w-2xl text-muted-foreground">
           {description}
         </p>
       </div>
@@ -125,10 +125,10 @@ export function Field({
 }) {
   return (
     <label className="grid gap-2">
-      <span className="label-caps text-[var(--text-secondary)]">{label}</span>
+      <span className="label-caps text-muted-foreground">{label}</span>
       {children}
       {description ? (
-        <span className="metadata-copy text-[var(--text-tertiary)]">
+        <span className="metadata-copy text-muted-foreground">
           {description}
         </span>
       ) : null}
@@ -178,12 +178,12 @@ export function Metric({
 }) {
   return (
     <div>
-      <dt className="label-caps text-[var(--text-secondary)]">{label}</dt>
-      <dd className="metric-value mt-2 text-[28px] font-semibold text-[var(--text-primary)]">
+      <dt className="label-caps text-muted-foreground">{label}</dt>
+      <dd className="metric-value mt-2 text-[28px] font-semibold text-foreground">
         {value}
       </dd>
       {detail ? (
-        <p className="metadata-copy mt-1 text-[var(--text-tertiary)]">
+        <p className="metadata-copy mt-1 text-muted-foreground">
           {detail}
         </p>
       ) : null}
@@ -213,7 +213,7 @@ export function SegmentedControl({
   return (
     <nav
       aria-label={label}
-      className="inline-flex rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-2)] p-1"
+      className="inline-flex rounded-xl border border-border bg-muted p-1"
     >
       {items.map((item) => {
         const active = item.href === activeHref;
@@ -221,10 +221,10 @@ export function SegmentedControl({
           <Link
             aria-current={active ? "page" : undefined}
             className={joinClasses(
-              "inline-flex min-h-11 items-center rounded-[var(--radius-control)] px-4 text-[13px] font-semibold",
+              "inline-flex min-h-11 items-center rounded-xl px-4 text-[13px] font-semibold",
               active
-                ? "bg-[var(--surface-selected)] text-[var(--text-primary)]"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
+                ? "bg-accent text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
             href={item.href}
             key={item.href}
@@ -251,8 +251,8 @@ export function FilterChip({
       className={joinClasses(
         "ui-badge min-h-11 transition",
         active
-          ? "border-[var(--accent-primary)] bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] text-[var(--text-primary)]"
-          : "hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)]",
+          ? "border-primary bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] text-foreground"
+          : "hover:border-input hover:bg-secondary",
         className,
       )}
       type="button"
@@ -282,10 +282,10 @@ export function ListRow({
       )}
     >
       <div className="min-w-0">
-        <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
+        <h3 className="text-[15px] font-semibold text-foreground">
           {title}
         </h3>
-        <div className="metadata-copy mt-1 text-[var(--text-tertiary)]">
+        <div className="metadata-copy mt-1 text-muted-foreground">
           {children}
         </div>
       </div>
@@ -340,7 +340,7 @@ export function Skeleton({
     <span
       aria-hidden="true"
       className={joinClasses(
-        "skeleton-shimmer block rounded-[var(--radius-control)] bg-[rgba(244,235,221,0.06)]",
+        "skeleton-shimmer block rounded-xl bg-[rgba(244,235,221,0.06)]",
         className,
       )}
     />

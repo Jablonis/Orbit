@@ -18,7 +18,7 @@ export function PasswordResetRequestForm({ nextPath }: { nextPath: string }) {
     <form action={action} aria-busy={pending} className="grid gap-4">
       <input name="next" type="hidden" value={nextPath} />
       <label className="grid gap-2">
-        <span className="label-caps text-[var(--text-secondary)]">Email</span>
+        <span className="label-caps text-muted-foreground">Email</span>
         <input
           autoComplete="email"
           autoFocus
@@ -30,7 +30,7 @@ export function PasswordResetRequestForm({ nextPath }: { nextPath: string }) {
         />
       </label>
       <button
-        className="min-h-11 rounded-[var(--radius-control)] bg-white px-4 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-60"
+        className="min-h-11 rounded-xl bg-white px-4 text-[13px] font-bold text-foreground disabled:opacity-60"
         disabled={pending}
         type="submit"
       >
@@ -38,10 +38,10 @@ export function PasswordResetRequestForm({ nextPath }: { nextPath: string }) {
       </button>
       {state.message ? (
         <p
-          className={`rounded-[var(--radius-control)] border p-3 text-[13px] leading-5 ${
+          className={`rounded-xl border p-3 text-[13px] leading-5 ${
             state.ok
-              ? "border-[color-mix(in_srgb,var(--success)_30%,transparent)] bg-[color-mix(in_srgb,var(--success)_9%,transparent)] text-[var(--success-text)]"
-              : "border-[color-mix(in_srgb,var(--danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--danger)_9%,transparent)] text-[var(--danger-text)]"
+              ? "border-[color-mix(in_srgb,var(--fitness)_30%,transparent)] bg-[color-mix(in_srgb,var(--fitness)_9%,transparent)] text-fitness-ink"
+              : "border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_9%,transparent)] text-destructive"
           }`}
           role={state.ok ? "status" : "alert"}
         >

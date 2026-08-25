@@ -50,11 +50,11 @@ export function OrbitWordmark({
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <OrbitMark
-        className={tone === "accent" ? "text-[var(--accent-primary)]" : "text-[var(--text-primary)]"}
+        className={tone === "accent" ? "text-primary" : "text-foreground"}
         size={size}
       />
       <span
-        className="font-bold uppercase text-[var(--text-primary)]"
+        className="font-bold uppercase text-foreground"
         style={{
           fontSize: size * 0.62,
           fontStretch: "115%",

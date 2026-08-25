@@ -41,7 +41,7 @@ export function AppNavigation({
             <LinkPendingIndicator label="Loading Overview" />
           </Link>
 
-          <div className="flex w-full flex-col items-stretch gap-2 rounded-[var(--radius-panel)] border border-[var(--border-subtle)] bg-[var(--surface-1)] p-2 shadow-[inset_0_1px_0_rgba(244, 235, 221,0.035),0_18px_42px_rgba(0,0,0,0.28)]">
+          <div className="flex w-full flex-col items-stretch gap-2 rounded-2xl border border-border bg-card p-2 shadow-[inset_0_1px_0_rgba(244, 235, 221,0.035),0_18px_42px_rgba(0,0,0,0.28)]">
             {navItems.map((item) => (
               <Link
                 aria-current={active === item.key ? "page" : undefined}

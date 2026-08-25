@@ -22,13 +22,13 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
         <input name="next" type="hidden" value={nextPath} />
         <AuthFields passwordAutocomplete="current-password" />
         <Link
-          className="justify-self-end text-[13px] font-semibold text-[var(--accent-primary)] hover:underline"
+          className="justify-self-end text-[13px] font-semibold text-primary hover:underline"
           href={`/forgot-password?next=${encodeURIComponent(nextPath)}`}
         >
           Forgot password?
         </Link>
         <button
-          className="rounded-[var(--radius-control)] bg-white px-4 py-3 text-[13px] font-semibold text-[var(--text-on-light)] transition hover:bg-[rgba(244,235,221,0.9)] disabled:opacity-60"
+          className="rounded-xl bg-white px-4 py-3 text-[13px] font-semibold text-foreground transition hover:bg-[rgba(244,235,221,0.9)] disabled:opacity-60"
           disabled={loginPending}
           type="submit"
         >
@@ -37,7 +37,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
         {loginState.message ? (
           <p
             aria-live="assertive"
-            className="rounded-[var(--radius-control)] border border-[var(--danger)]/30 bg-[var(--danger)]/10 p-3 text-[13px] text-[var(--danger-text)]"
+            className="rounded-xl border border-[var(--destructive)]/30 bg-destructive/10 p-3 text-[13px] text-destructive"
             role="alert"
           >
             {loginState.message}
@@ -47,7 +47,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
 
       <div className="flex items-center gap-3 text-[#555]">
         <span className="h-px flex-1 bg-[rgba(244,235,221,0.1)]" />
-        <span className="text-[12px] uppercase tracking-[0.18em] text-[var(--text-muted)]">
+        <span className="text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
           or
         </span>
         <span className="h-px flex-1 bg-[rgba(244,235,221,0.1)]" />
@@ -57,7 +57,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
         <input name="next" type="hidden" value={nextPath} />
         <AuthFields passwordAutocomplete="new-password" />
         <button
-          className="rounded-[var(--radius-control)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)] px-4 py-3 text-[13px] font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-selected)] disabled:opacity-60"
+          className="rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted px-4 py-3 text-[13px] font-semibold text-foreground transition hover:bg-accent disabled:opacity-60"
           disabled={signupPending}
           type="submit"
         >
@@ -66,7 +66,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
         {signupState.message ? (
           <p
             aria-live="polite"
-            className="rounded-[var(--radius-control)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)]/70 p-3 text-[13px] text-[var(--text-secondary)]"
+            className="rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted/70 p-3 text-[13px] text-muted-foreground"
             role="status"
           >
             {signupState.message}
@@ -85,20 +85,20 @@ function AuthFields({
   return (
     <>
       <label className="grid gap-2">
-        <span className="label-caps text-[var(--text-secondary)]">Email</span>
+        <span className="label-caps text-muted-foreground">Email</span>
         <input
           autoComplete="email"
-          className="h-12 rounded-[var(--radius-control)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)] px-4 text-[14px] text-[var(--text-primary)] outline-none focus:border-[rgba(244,235,221,0.35)]"
+          className="h-12 rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted px-4 text-[14px] text-foreground outline-none focus:border-[rgba(244,235,221,0.35)]"
           name="email"
           required
           type="email"
         />
       </label>
       <label className="grid gap-2">
-        <span className="label-caps text-[var(--text-secondary)]">Password</span>
+        <span className="label-caps text-muted-foreground">Password</span>
         <input
           autoComplete={passwordAutocomplete}
-          className="h-12 rounded-[var(--radius-control)] border border-[rgba(244,235,221,0.1)] bg-[var(--surface-row)] px-4 text-[14px] text-[var(--text-primary)] outline-none focus:border-[rgba(244,235,221,0.35)]"
+          className="h-12 rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted px-4 text-[14px] text-foreground outline-none focus:border-[rgba(244,235,221,0.35)]"
           minLength={6}
           name="password"
           required

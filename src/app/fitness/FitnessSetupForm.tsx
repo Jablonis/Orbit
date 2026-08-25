@@ -45,22 +45,22 @@ export function FitnessSetupForm({
     <form
       action={action}
       aria-busy={pending}
-      className={`surface-primary rounded-[var(--radius-panel)] ${
+      className={`surface-primary rounded-2xl ${
         compact ? "p-4 sm:p-5" : "p-5 sm:p-7"
       }`}
     >
-      <div className="border-b border-[var(--border-subtle)] pb-5">
-        <p className="label-caps text-[var(--accent-primary)]">
+      <div className="border-b border-border pb-5">
+        <p className="label-caps text-primary">
           Reviewed starter setup
         </p>
-        <h2 className="mt-2 text-[22px] font-semibold text-[var(--text-primary)]">
+        <h2 className="mt-2 text-[22px] font-semibold text-foreground">
           {profile
             ? "Edit training setup"
             : existingPlan
               ? "Add setup details"
               : "Build your first weekly plan"}
         </h2>
-        <p className="mt-2 max-w-2xl text-[13px] leading-6 text-[var(--text-secondary)]">
+        <p className="mt-2 max-w-2xl text-[13px] leading-6 text-muted-foreground">
           Starter defaults are preselected for review. Orbit creates a schedule
           only after you confirm these choices; it does not assess injuries or
           provide medical advice.
@@ -69,7 +69,7 @@ export function FitnessSetupForm({
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <label className="grid gap-2">
-          <span className="label-caps text-[var(--text-secondary)]">
+          <span className="label-caps text-muted-foreground">
             Main goal
           </span>
           <select className="field-input" defaultValue={values.goal} name="goal">
@@ -81,7 +81,7 @@ export function FitnessSetupForm({
           </select>
         </label>
         <label className="grid gap-2">
-          <span className="label-caps text-[var(--text-secondary)]">
+          <span className="label-caps text-muted-foreground">
             Experience
           </span>
           <select
@@ -98,7 +98,7 @@ export function FitnessSetupForm({
         </label>
 
         <fieldset className="grid gap-3">
-          <legend className="label-caps text-[var(--text-secondary)]">
+          <legend className="label-caps text-muted-foreground">
             Available equipment
           </legend>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -115,7 +115,7 @@ export function FitnessSetupForm({
         </fieldset>
 
         <fieldset className="grid gap-3">
-          <legend className="label-caps text-[var(--text-secondary)]">
+          <legend className="label-caps text-muted-foreground">
             Available days
           </legend>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -132,7 +132,7 @@ export function FitnessSetupForm({
         </fieldset>
 
         <label className="grid gap-2">
-          <span className="label-caps text-[var(--text-secondary)]">
+          <span className="label-caps text-muted-foreground">
             Session length
           </span>
           <select
@@ -149,7 +149,7 @@ export function FitnessSetupForm({
         </label>
 
         <label className="grid gap-2">
-          <span className="label-caps text-[var(--text-secondary)]">
+          <span className="label-caps text-muted-foreground">
             Exercises to avoid
           </span>
           <textarea
@@ -159,19 +159,19 @@ export function FitnessSetupForm({
             name="exercisesToAvoid"
             placeholder="Optional: movements you do not want included"
           />
-          <span className="text-[12px] leading-5 text-[var(--text-tertiary)]">
+          <span className="text-[12px] leading-5 text-muted-foreground">
             Saved for future exercise selection; it is not an injury assessment.
           </span>
         </label>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3 border-t border-[var(--border-subtle)] pt-5 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[12px] leading-5 text-[var(--text-tertiary)]">
+      <div className="mt-6 flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-[12px] leading-5 text-muted-foreground">
           Saving rebuilds future plan days. Completed session history remains
           unchanged.
         </p>
         <button
-          className="min-h-11 shrink-0 rounded-[var(--radius-control)] bg-[var(--text-primary)] px-5 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-60"
+          className="min-h-11 shrink-0 rounded-xl bg-primary px-5 text-[13px] font-bold text-primary-foreground disabled:opacity-60"
           disabled={pending}
           type="submit"
         >
@@ -185,10 +185,10 @@ export function FitnessSetupForm({
 
       {state.message ? (
         <p
-          className={`mt-4 rounded-[var(--radius-control)] border p-3 text-[13px] ${
+          className={`mt-4 rounded-xl border p-3 text-[13px] ${
             state.ok
-              ? "border-[color-mix(in_srgb,var(--success)_30%,transparent)] text-[var(--success-text)]"
-              : "border-[color-mix(in_srgb,var(--danger)_30%,transparent)] text-[var(--danger-text)]"
+              ? "border-[color-mix(in_srgb,var(--fitness)_30%,transparent)] text-fitness-ink"
+              : "border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] text-destructive"
           }`}
           role={state.ok ? "status" : "alert"}
         >
@@ -211,9 +211,9 @@ function Choice({
   value: string;
 }) {
   return (
-    <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--surface-2)] px-3 text-[13px] font-semibold text-[var(--text-secondary)] has-[:checked]:border-[var(--accent-primary)] has-[:checked]:text-[var(--text-primary)]">
+    <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-border bg-muted px-3 text-[13px] font-semibold text-muted-foreground has-[:checked]:border-primary has-[:checked]:text-foreground">
       <input
-        className="h-4 w-4 accent-[var(--accent-primary)]"
+        className="h-4 w-4 accent-[var(--primary)]"
         defaultChecked={defaultChecked}
         name={name}
         type="checkbox"

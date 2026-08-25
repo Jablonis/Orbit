@@ -14,21 +14,21 @@ export default async function ForgotPasswordPage({
 
   return (
     <main
-      className="grid min-h-[100dvh] place-items-center bg-[var(--canvas)] px-4 py-10 text-[var(--text-primary)]"
+      className="grid min-h-[100dvh] place-items-center bg-background px-4 py-10 text-foreground"
       id="main-content"
       tabIndex={-1}
     >
-      <section className="surface-overlay w-full max-w-[460px] rounded-[var(--radius-panel)] p-6 shadow-[var(--shadow-overlay)]">
-        <p className="label-caps text-[var(--accent-primary)]">Orbit recovery</p>
-        <h1 className="mt-3 text-[32px] font-semibold text-[var(--text-primary)]">
+      <section className="surface-overlay w-full max-w-[460px] rounded-2xl p-6 shadow-[var(--shadow-pop)]">
+        <p className="label-caps text-primary">Orbit recovery</p>
+        <h1 className="mt-3 text-[32px] font-semibold text-foreground">
           Reset your password
         </h1>
-        <p className="mb-6 mt-3 text-[14px] leading-6 text-[var(--text-secondary)]">
+        <p className="mb-6 mt-3 text-[14px] leading-6 text-muted-foreground">
           We will send a time-limited link to the email on your account.
         </p>
         <PasswordResetRequestForm nextPath={nextPath} />
         <Link
-          className="mt-6 inline-flex min-h-11 items-center text-[13px] font-semibold text-[var(--accent-primary)]"
+          className="mt-6 inline-flex min-h-11 items-center text-[13px] font-semibold text-primary"
           href={`/login?next=${encodeURIComponent(nextPath)}`}
         >
           ← Back to sign in

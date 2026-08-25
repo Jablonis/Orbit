@@ -108,7 +108,7 @@ export function MomentumOrbit({
 
       {/* Tier boundaries read as gate marks across the ring. */}
       <line
-        stroke="var(--canvas)"
+        stroke="var(--background)"
         strokeOpacity={0.85}
         strokeWidth={2}
         x1={floorMark.inner.x}

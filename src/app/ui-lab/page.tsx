@@ -46,33 +46,33 @@ export default async function UiLabPage() {
 
         <section aria-labelledby="surfaces-heading" className="grid gap-4">
           <div>
-            <p className="label-caps text-[var(--accent-focus)]">Foundations</p>
+            <p className="label-caps text-plum">Foundations</p>
             <h2 className="card-title mt-2" id="surfaces-heading">
               Surface hierarchy
             </h2>
           </div>
           <div className="grid gap-4 lg:grid-cols-4">
             <Surface className="p-5" tone="hero">
-              <p className="label-caps text-[var(--accent-primary)]">Hero</p>
-              <p className="body-copy mt-2 text-[var(--text-secondary)]">
+              <p className="label-caps text-primary">Hero</p>
+              <p className="body-copy mt-2 text-muted-foreground">
                 One route-level state or decision.
               </p>
             </Surface>
             <Surface className="p-5">
-              <p className="label-caps text-[var(--accent-info)]">Primary</p>
-              <p className="body-copy mt-2 text-[var(--text-secondary)]">
+              <p className="label-caps text-finance">Primary</p>
+              <p className="body-copy mt-2 text-muted-foreground">
                 Main working content and evidence.
               </p>
             </Surface>
             <Surface className="p-5" tone="secondary">
-              <p className="label-caps text-[var(--text-tertiary)]">Secondary</p>
-              <p className="body-copy mt-2 text-[var(--text-secondary)]">
+              <p className="label-caps text-muted-foreground">Secondary</p>
+              <p className="body-copy mt-2 text-muted-foreground">
                 Rows, inset details, and supporting controls.
               </p>
             </Surface>
             <Surface className="p-5" tone="overlay">
-              <p className="label-caps text-[var(--accent-highlight)]">Overlay</p>
-              <p className="body-copy mt-2 text-[var(--text-secondary)]">
+              <p className="label-caps text-tasks">Overlay</p>
+              <p className="body-copy mt-2 text-muted-foreground">
                 Dialogs, command surfaces, and transient focus.
               </p>
             </Surface>
@@ -81,7 +81,7 @@ export default async function UiLabPage() {
 
         <section aria-labelledby="controls-heading" className="surface-primary grid gap-6 p-5 sm:p-6">
           <div>
-            <p className="label-caps text-[var(--accent-primary)]">Controls</p>
+            <p className="label-caps text-primary">Controls</p>
             <h2 className="card-title mt-2" id="controls-heading">
               Actions and selection
             </h2>
@@ -94,7 +94,7 @@ export default async function UiLabPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge>Default badge</Badge>
-            <Badge className="border-[var(--accent-primary)] text-[var(--text-primary)]">
+            <Badge className="border-primary text-foreground">
               Complete
             </Badge>
             <FilterChip active>Today</FilterChip>
@@ -113,7 +113,7 @@ export default async function UiLabPage() {
         <section aria-labelledby="forms-heading" className="grid gap-4 lg:grid-cols-2">
           <Surface className="grid gap-4 p-5 sm:p-6">
             <div>
-              <p className="label-caps text-[var(--accent-info)]">Forms</p>
+              <p className="label-caps text-finance">Forms</p>
               <h2 className="card-title mt-2" id="forms-heading">
                 Fields and guidance
               </h2>
@@ -137,7 +137,7 @@ export default async function UiLabPage() {
 
           <Surface className="grid content-start gap-4 p-5 sm:p-6">
             <div>
-              <p className="label-caps text-[var(--accent-highlight)]">Feedback</p>
+              <p className="label-caps text-tasks">Feedback</p>
               <h2 className="card-title mt-2">System states</h2>
             </div>
             <InlineFeedback>Data is ready to review.</InlineFeedback>
@@ -155,7 +155,7 @@ export default async function UiLabPage() {
 
         <section aria-labelledby="data-heading" className="grid gap-4">
           <div>
-            <p className="label-caps text-[var(--accent-focus)]">Data</p>
+            <p className="label-caps text-plum">Data</p>
             <h2 className="card-title mt-2" id="data-heading">
               Metrics, rows, and tables
             </h2>

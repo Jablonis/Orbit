@@ -120,7 +120,7 @@ function ProfileMenuDialog({
     <>
       <button
         aria-label="Open profile and settings"
-        className="fixed bottom-6 left-[34px] z-50 hidden h-11 w-11 place-items-center overflow-hidden rounded-full border border-[var(--border-strong)] bg-[conic-gradient(from_140deg,var(--accent-highlight),var(--accent-info),var(--accent-primary),var(--accent-highlight))] text-[12px] font-bold text-[var(--canvas)] shadow-[0_14px_34px_rgba(0,0,0,0.38)] transition duration-150 hover:scale-[1.04] md:grid"
+        className="fixed bottom-6 left-[34px] z-50 hidden h-11 w-11 place-items-center overflow-hidden rounded-full border border-input bg-[conic-gradient(from_140deg,var(--tasks),var(--finance),var(--primary),var(--tasks))] text-[12px] font-bold text-[var(--background)] shadow-[0_14px_34px_rgba(0,0,0,0.38)] transition duration-150 hover:scale-[1.04] md:grid"
         onClick={open}
         title={userEmail}
         type="button"
@@ -129,7 +129,7 @@ function ProfileMenuDialog({
       </button>
       <button
         aria-label="Open profile and settings"
-        className="floating-panel fixed right-4 top-[calc(1rem+env(safe-area-inset-top))] z-40 grid h-11 w-11 place-items-center rounded-full text-[var(--text-primary)] md:hidden"
+        className="rounded-2xl bg-popover shadow-[0_24px_60px_-30px_rgba(27,26,31,0.35)] fixed right-4 top-[calc(1rem+env(safe-area-inset-top))] z-40 grid h-11 w-11 place-items-center rounded-full text-foreground md:hidden"
         onClick={open}
         type="button"
       >
@@ -138,7 +138,7 @@ function ProfileMenuDialog({
 
       <dialog
         aria-labelledby="profile-settings-title"
-        className="floating-panel modal-animate fixed inset-x-3 bottom-[calc(1rem+env(safe-area-inset-bottom))] top-auto m-0 max-h-[calc(100dvh-2rem)] w-auto max-w-none overflow-y-auto rounded-[var(--radius-panel)] p-0 text-left text-[var(--text-primary)] backdrop:bg-black/70 backdrop:backdrop-blur-[2px] md:inset-x-auto md:bottom-6 md:right-6 md:w-[min(580px,calc(100vw-3rem))]"
+        className="rounded-2xl bg-popover shadow-[0_24px_60px_-30px_rgba(27,26,31,0.35)] modal-animate fixed inset-x-3 bottom-[calc(1rem+env(safe-area-inset-bottom))] top-auto m-0 max-h-[calc(100dvh-2rem)] w-auto max-w-none overflow-y-auto rounded-2xl p-0 text-left text-foreground backdrop:bg-black/70 backdrop:backdrop-blur-[2px] md:inset-x-auto md:bottom-6 md:right-6 md:w-[min(580px,calc(100vw-3rem))]"
         onCancel={(event) => {
           event.preventDefault();
           requestDismiss();
@@ -158,17 +158,17 @@ function ProfileMenuDialog({
             role="alertdialog"
           >
             <div>
-              <p className="label-caps text-[var(--warning-text)]">
+              <p className="label-caps text-warning">
                 Unsaved settings
               </p>
               <h2
-                className="mt-2 text-[24px] font-semibold text-[var(--text-primary)]"
+                className="mt-2 text-[24px] font-semibold text-foreground"
                 id="discard-settings-title"
               >
                 Discard unsaved changes?
               </h2>
               <p
-                className="mt-3 max-w-md text-[14px] leading-6 text-[var(--text-secondary)]"
+                className="mt-3 max-w-md text-[14px] leading-6 text-muted-foreground"
                 id="discard-settings-description"
               >
                 Your dashboard order, visibility, scoring, and regional changes
@@ -178,14 +178,14 @@ function ProfileMenuDialog({
             <div className="grid gap-3 sm:grid-cols-2">
               <button
                 autoFocus
-                className="min-h-11 rounded-[var(--radius-control)] bg-white px-4 text-[13px] font-bold text-[var(--text-on-light)]"
+                className="min-h-11 rounded-xl bg-white px-4 text-[13px] font-bold text-foreground"
                 onClick={keepEditing}
                 type="button"
               >
                 Keep editing
               </button>
               <button
-                className="min-h-11 rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--danger)_10%,transparent)] px-4 text-[13px] font-semibold text-[var(--danger-text)]"
+                className="min-h-11 rounded-xl border border-[color-mix(in_srgb,var(--destructive)_35%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_10%,transparent)] px-4 text-[13px] font-semibold text-destructive"
                 onClick={confirmDiscard}
                 type="button"
               >
@@ -195,16 +195,16 @@ function ProfileMenuDialog({
           </section>
         ) : (
           <>
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--border-subtle)] bg-[var(--surface-1)]/92 px-5 py-4 backdrop-blur-xl sm:px-6">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-border bg-card/92 px-5 py-4 backdrop-blur-xl sm:px-6">
           <div>
-            <p className="label-caps text-[var(--accent-primary)]">Orbit settings</p>
+            <p className="label-caps text-primary">Orbit settings</p>
             <h2 className="mt-1 text-[22px] font-semibold" id="profile-settings-title">
               Profile and preferences
             </h2>
           </div>
           <button
             aria-label="Close profile and settings"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--border-subtle)] text-[20px] text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border text-[20px] text-muted-foreground transition hover:bg-secondary hover:text-foreground"
             onClick={() => requestDismiss()}
             type="button"
           >
@@ -213,24 +213,24 @@ function ProfileMenuDialog({
         </div>
 
         <div className="grid gap-5 p-5 sm:p-6">
-          <section aria-labelledby="account-heading" className="content-panel rounded-[var(--radius-row)] p-4">
-            <p className="label-caps text-[var(--text-tertiary)]" id="account-heading">
+          <section aria-labelledby="account-heading" className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-xl p-4">
+            <p className="label-caps text-muted-foreground" id="account-heading">
               Account
             </p>
             <div className="mt-3 flex items-center gap-3">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--surface-hover)] text-[13px] font-bold text-[var(--text-primary)]">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-secondary text-[13px] font-bold text-foreground">
                 {initial}
               </div>
               <div className="min-w-0">
-                <p className="text-[13px] text-[var(--text-tertiary)]">Signed in as</p>
+                <p className="text-[13px] text-muted-foreground">Signed in as</p>
                 {profile?.displayName ? (
-                  <p className="truncate text-[15px] font-semibold text-[var(--text-primary)]">
+                  <p className="truncate text-[15px] font-semibold text-foreground">
                     {profile.displayName}
                   </p>
                 ) : null}
-                <p className="truncate text-[14px] font-semibold text-[var(--text-primary)]">{userEmail}</p>
+                <p className="truncate text-[14px] font-semibold text-foreground">{userEmail}</p>
                 {profile ? (
-                  <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
+                  <p className="mt-1 text-[12px] text-muted-foreground">
                     {profile.timeZone} · {profile.currency}
                   </p>
                 ) : null}
@@ -241,7 +241,7 @@ function ProfileMenuDialog({
           {children ? (
             <section aria-labelledby="overview-preferences-heading">
               <div className="mb-3">
-                <p className="label-caps text-[var(--accent-focus)]">Dashboard</p>
+                <p className="label-caps text-plum">Dashboard</p>
                 <h3 className="mt-1 text-[18px] font-semibold" id="overview-preferences-heading">
                   Overview preferences
                 </h3>
@@ -250,16 +250,16 @@ function ProfileMenuDialog({
             </section>
           ) : null}
 
-          <section aria-labelledby="data-portability-heading" className="content-panel rounded-[var(--radius-row)] p-4">
-            <p className="label-caps text-[var(--accent-info)]" id="data-portability-heading">
+          <section aria-labelledby="data-portability-heading" className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-xl p-4">
+            <p className="label-caps text-finance" id="data-portability-heading">
               Data portability
             </p>
-            <p className="mt-2 text-[12px] leading-5 text-[var(--text-secondary)]">
+            <p className="mt-2 text-[12px] leading-5 text-muted-foreground">
               Download a JSON copy of your profile, tasks, fitness, finance, and
               reflection records.
             </p>
             <a
-              className="mt-3 inline-flex min-h-11 items-center rounded-[var(--radius-control)] border border-[var(--border-strong)] px-4 text-[13px] font-semibold text-[var(--text-primary)]"
+              className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-input px-4 text-[13px] font-semibold text-foreground"
               download
               href="/api/export"
             >
@@ -269,13 +269,13 @@ function ProfileMenuDialog({
 
           <form
             action="/auth/logout"
-            className="border-t border-[var(--border-subtle)] pt-5"
+            className="border-t border-border pt-5"
             method="post"
             onSubmit={guardLogout}
             ref={logoutFormRef}
           >
             <button
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] bg-[color-mix(in_srgb,var(--danger)_9%,transparent)] px-4 text-[13px] font-semibold text-[var(--danger-text)] transition hover:bg-[color-mix(in_srgb,var(--danger)_14%,transparent)]"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--destructive)_28%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_9%,transparent)] px-4 text-[13px] font-semibold text-destructive transition hover:bg-[color-mix(in_srgb,var(--destructive)_14%,transparent)]"
               type="submit"
             >
               <LogoutIcon />

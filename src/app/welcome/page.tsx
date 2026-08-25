@@ -78,7 +78,7 @@ export default async function WelcomePage() {
       <footer className="border-t border-border">
         <div className="landing-container flex flex-col gap-6 py-10 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <OrbitMark className="text-[var(--accent-primary)]" size={22} />
+            <OrbitMark className="text-primary" size={22} />
             <p className="mt-4 max-w-sm text-[13px] leading-5 text-muted-foreground">
               Built for one person who kept forgetting to open his own
               dashboard. The mechanic is what fixed it.
@@ -111,7 +111,7 @@ function CornerNav({
           className="inline-flex min-h-11 items-center gap-2.5"
           href="/welcome"
         >
-          <OrbitMark className="text-[var(--accent-primary)]" size={22} />
+          <OrbitMark className="text-primary" size={22} />
           <span
             className="text-[15px] font-bold uppercase"
             style={{ fontStretch: "115%", letterSpacing: "0.08em" }}
@@ -349,7 +349,7 @@ function MechanicSection() {
             miss day ten, and it restarts again.
           </p>
           <Sparkline
-            color="var(--danger)"
+            color="var(--destructive)"
             label="Streak, in days"
             values={streaks.map((value) => (value / streakScale) * 100)}
           />

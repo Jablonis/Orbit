@@ -279,7 +279,7 @@ export function QuickAdd() {
           aria-expanded={open}
           aria-haspopup="dialog"
           aria-label="Open Quick Add"
-          className="grid h-11 w-11 place-items-center rounded-full border border-[var(--border-strong)] bg-[var(--accent-primary)] text-[24px] font-medium text-[var(--surface-nav)] shadow-[0_14px_32px_rgba(0,0,0,0.38)] transition hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+          className="grid h-11 w-11 place-items-center rounded-full border border-input bg-primary text-[24px] font-medium text-[var(--card)] shadow-[0_14px_32px_rgba(0,0,0,0.38)] transition hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
           onClick={() => {
             if (!open) preparePalette();
             setOpen((current) => !current);
@@ -294,7 +294,7 @@ export function QuickAdd() {
       <dialog
         aria-label={view === "task" ? "Quick task" : "Quick Add commands"}
         aria-modal="true"
-        className="glass-modal modal-animate fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[100] m-0 max-h-[min(78dvh,560px)] w-auto overflow-y-auto rounded-[var(--radius-panel)] border-0 p-2 text-[var(--text-primary)] backdrop:bg-black/55 backdrop:backdrop-blur-[2px] sm:inset-x-auto sm:bottom-auto sm:left-[var(--quick-add-left)] sm:top-[var(--quick-add-top)] sm:w-[352px] sm:rounded-[var(--radius-row)] sm:backdrop:bg-transparent sm:backdrop:backdrop-blur-none"
+        className="rounded-2xl bg-popover shadow-[0_24px_60px_-30px_rgba(27,26,31,0.35)] modal-animate fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[100] m-0 max-h-[min(78dvh,560px)] w-auto overflow-y-auto rounded-2xl border-0 p-2 text-foreground backdrop:bg-black/55 backdrop:backdrop-blur-[2px] sm:inset-x-auto sm:bottom-auto sm:left-[var(--quick-add-left)] sm:top-[var(--quick-add-top)] sm:w-[352px] sm:rounded-xl sm:backdrop:bg-transparent sm:backdrop:backdrop-blur-none"
         id="quick-add-dialog"
         onCancel={(event) => {
           event.preventDefault();
@@ -324,19 +324,19 @@ export function QuickAdd() {
             <div className="flex items-center gap-2">
               <button
                 aria-label="Back to commands"
-                className="grid h-11 w-11 place-items-center rounded-[var(--radius-control)] text-[var(--text-secondary)] hover:bg-[rgba(244,235,221,0.06)]"
+                className="grid h-11 w-11 place-items-center rounded-xl text-muted-foreground hover:bg-[rgba(244,235,221,0.06)]"
                 onClick={() => setView("commands")}
                 type="button"
               >
                 ←
               </button>
               <div>
-                <p className="label-caps text-[var(--accent-primary)]">Quick capture</p>
-                <h2 className="mt-1 text-[16px] font-semibold text-[var(--text-primary)]">Add a task</h2>
+                <p className="label-caps text-primary">Quick capture</p>
+                <h2 className="mt-1 text-[16px] font-semibold text-foreground">Add a task</h2>
               </div>
             </div>
             <label className="mt-4 grid gap-2">
-              <span className="label-caps text-[var(--text-secondary)]">Task title</span>
+              <span className="label-caps text-muted-foreground">Task title</span>
               <input
                 className="field-input"
                 maxLength={200}
@@ -348,22 +348,22 @@ export function QuickAdd() {
             </label>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <label className="grid gap-2">
-                <span className="label-caps text-[var(--text-secondary)]">Category</span>
+                <span className="label-caps text-muted-foreground">Category</span>
                 <input className="field-input" defaultValue="General" maxLength={80} name="category" />
               </label>
               <label className="grid gap-2">
-                <span className="label-caps text-[var(--text-secondary)]">Due date</span>
+                <span className="label-caps text-muted-foreground">Due date</span>
                 <input className="field-input" name="dueDate" type="date" />
               </label>
             </div>
             <button
-              className="mt-4 min-h-11 w-full rounded-[var(--radius-control)] bg-white px-4 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-55"
+              className="mt-4 min-h-11 w-full rounded-xl bg-white px-4 text-[13px] font-bold text-foreground disabled:opacity-55"
               disabled={pending}
               type="submit"
             >
               {pending ? "Creating…" : "Create task"}
             </button>
-            <p className="mt-3 text-[12px] leading-5 text-[var(--text-tertiary)]">
+            <p className="mt-3 text-[12px] leading-5 text-muted-foreground">
               The full task editor remains available in Tasks. Failed saves keep
               these fields intact so you can retry.
             </p>
@@ -372,13 +372,13 @@ export function QuickAdd() {
           <>
             <label className="relative block">
               <span className="sr-only">Search commands and Orbit data</span>
-              <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]">⌕</span>
+              <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">⌕</span>
               <input
                 aria-activedescendant={options[activeIndex]?.id}
                 aria-autocomplete="list"
                 aria-controls="quick-add-options"
                 aria-expanded={open}
-                className="h-11 w-full rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-black/20 pl-9 pr-3 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent-primary)]"
+                className="h-11 w-full rounded-xl border border-border bg-black/20 pl-9 pr-3 text-[13px] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
                 onChange={(event) => {
                   const nextQuery = event.target.value;
                   setQuery(nextQuery);
@@ -398,14 +398,14 @@ export function QuickAdd() {
             </label>
             {searchError ? (
               <div
-                className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] bg-[color-mix(in_srgb,var(--danger)_8%,transparent)] px-3 py-2"
+                className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[color-mix(in_srgb,var(--destructive)_28%,transparent)] bg-[color-mix(in_srgb,var(--destructive)_8%,transparent)] px-3 py-2"
                 role="alert"
               >
-                <p className="min-w-0 flex-1 text-[12px] leading-5 text-[var(--danger-text)]">
+                <p className="min-w-0 flex-1 text-[12px] leading-5 text-destructive">
                   {searchError}
                 </p>
                 <button
-                  className="min-h-11 rounded-[var(--radius-control)] px-3 text-[12px] font-bold text-[var(--text-primary)] hover:bg-[rgba(244,235,221,0.07)]"
+                  className="min-h-11 rounded-xl px-3 text-[12px] font-bold text-foreground hover:bg-[rgba(244,235,221,0.07)]"
                   onClick={() => setSearchRevision((revision) => revision + 1)}
                   type="button"
                 >
@@ -415,14 +415,14 @@ export function QuickAdd() {
             ) : null}
             <div className="mt-2 max-h-[min(390px,52vh)] overflow-y-auto" id="quick-add-options" role="listbox">
               {entityResults.length > 0 ? (
-                <p className="label-caps px-3 pb-1 pt-2 text-[var(--text-tertiary)]">Orbit results</p>
+                <p className="label-caps px-3 pb-1 pt-2 text-muted-foreground">Orbit results</p>
               ) : null}
               {entityResults.map((result, index) => {
                 const optionId = `entity-${result.kind}-${result.id}`;
                 return (
                   <Link
                     aria-selected={index === activeIndex}
-                    className={`block min-h-11 rounded-[var(--radius-control)] px-3 py-3 transition ${index === activeIndex ? "bg-[rgba(244,235,221,0.08)]" : "hover:bg-[rgba(244,235,221,0.06)]"}`}
+                    className={`block min-h-11 rounded-xl px-3 py-3 transition ${index === activeIndex ? "bg-[rgba(244,235,221,0.08)]" : "hover:bg-[rgba(244,235,221,0.06)]"}`}
                     href={result.href}
                     id={optionId}
                     key={optionId}
@@ -432,16 +432,16 @@ export function QuickAdd() {
                     role="option"
                   >
                     <span className="flex items-center justify-between gap-3">
-                      <span className="truncate text-[13px] font-semibold text-[var(--text-primary)]">{result.label}</span>
-                      <span className="text-[12px] font-semibold capitalize text-[var(--text-tertiary)]">{result.kind}</span>
+                      <span className="truncate text-[13px] font-semibold text-foreground">{result.label}</span>
+                      <span className="text-[12px] font-semibold capitalize text-muted-foreground">{result.kind}</span>
                     </span>
-                    <span className="mt-1 block truncate text-[12px] text-[var(--text-tertiary)]">{result.detail}</span>
+                    <span className="mt-1 block truncate text-[12px] text-muted-foreground">{result.detail}</span>
                     <LinkPendingIndicator label={`Opening ${result.label}`} />
                   </Link>
                 );
               })}
               {visibleActions.length > 0 ? (
-                <p className="label-caps px-3 pb-1 pt-2 text-[var(--text-tertiary)]">
+                <p className="label-caps px-3 pb-1 pt-2 text-muted-foreground">
                   {query ? "Commands" : pins.length ? "Pinned and frequent" : "Commands"}
                 </p>
               ) : null}
@@ -452,14 +452,14 @@ export function QuickAdd() {
                 const content = (
                   <>
                     <span className="flex items-center justify-between gap-3">
-                      <span className="text-[13px] font-semibold text-[var(--text-primary)]">{action.label}</span>
-                      <span className="text-[12px] font-semibold text-[var(--text-tertiary)]">{action.group}</span>
+                      <span className="text-[13px] font-semibold text-foreground">{action.label}</span>
+                      <span className="text-[12px] font-semibold text-muted-foreground">{action.group}</span>
                     </span>
-                    <span className="mt-1 block text-[12px] text-[var(--text-tertiary)]">{action.detail}</span>
+                    <span className="mt-1 block text-[12px] text-muted-foreground">{action.detail}</span>
                   </>
                 );
                 return (
-                  <div className={`group flex rounded-[var(--radius-control)] ${selected ? "bg-[rgba(244,235,221,0.08)]" : "hover:bg-[rgba(244,235,221,0.06)]"}`} key={action.id}>
+                  <div className={`group flex rounded-xl ${selected ? "bg-[rgba(244,235,221,0.08)]" : "hover:bg-[rgba(244,235,221,0.06)]"}`} key={action.id}>
                     {action.kind === "link" && action.href ? (
                       <Link
                         aria-selected={selected}
@@ -495,7 +495,7 @@ export function QuickAdd() {
                     <button
                       aria-label={`${pins.includes(action.id) ? "Unpin" : "Pin"} ${action.label}`}
                       aria-pressed={pins.includes(action.id)}
-                      className="grid h-11 w-11 shrink-0 place-items-center self-center rounded-[var(--radius-control)] text-[16px] text-[var(--text-tertiary)] hover:bg-[rgba(244,235,221,0.07)] hover:text-[var(--text-primary)]"
+                      className="grid h-11 w-11 shrink-0 place-items-center self-center rounded-xl text-[16px] text-muted-foreground hover:bg-[rgba(244,235,221,0.07)] hover:text-foreground"
                       onClick={() => togglePin(action.id)}
                       title={pins.includes(action.id) ? "Unpin command" : "Pin command"}
                       type="button"
@@ -507,16 +507,16 @@ export function QuickAdd() {
               })}
               {options.length === 0 && !searchError ? (
                 <div className="px-3 py-6 text-center">
-                  <p className="text-[13px] font-semibold text-[var(--text-primary)]">
+                  <p className="text-[13px] font-semibold text-foreground">
                     {searching ? "Searching Orbit…" : "No matching result"}
                   </p>
-                  <p className="mt-1 text-[12px] text-[var(--text-tertiary)]">
+                  <p className="mt-1 text-[12px] text-muted-foreground">
                     Try a task, transaction, category, or command.
                   </p>
                 </div>
               ) : null}
             </div>
-            <div className="mt-2 hidden items-center justify-between border-t border-[var(--border-subtle)] px-3 pt-2 text-[12px] text-[var(--text-tertiary)] sm:flex">
+            <div className="mt-2 hidden items-center justify-between border-t border-border px-3 pt-2 text-[12px] text-muted-foreground sm:flex">
               <span>↑↓ navigate · ↵ open</span>
               <span>⌘K toggle · esc close</span>
             </div>
@@ -527,7 +527,7 @@ export function QuickAdd() {
         <ActionToast
           action={(
             <button
-              className="min-h-11 px-2 font-bold text-[var(--accent-primary)]"
+              className="min-h-11 px-2 font-bold text-primary"
               onClick={() => setNotice(null)}
               type="button"
             >

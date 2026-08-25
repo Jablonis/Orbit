@@ -107,16 +107,16 @@ export function BankStatementImporter({
   const correctedCategoryCount = Object.keys(categoryOverrides).length;
 
   return (
-    <article className="content-panel rounded-[var(--radius-panel)] p-6 xl:col-span-7" id="bank-statement-import">
+    <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-6 xl:col-span-7" id="bank-statement-import">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="label-caps text-[var(--accent-primary)]">Monthly bank PDF</p>
-          <h3 className="mt-2 text-[22px] font-semibold text-[var(--text-primary)]">Import a statement</h3>
-          <p className="mt-2 max-w-xl text-[12px] leading-5 text-[var(--text-secondary)]">
+          <p className="label-caps text-primary">Monthly bank PDF</p>
+          <h3 className="mt-2 text-[22px] font-semibold text-foreground">Import a statement</h3>
+          <p className="mt-2 max-w-xl text-[12px] leading-5 text-muted-foreground">
             Upload a text-based EUR statement, review every detected amount, then confirm the import.
           </p>
         </div>
-        <span className="rounded-full border border-[var(--accent-primary)]/20 bg-[var(--accent-primary)]/10 px-3 py-1.5 text-[12px] font-semibold text-[var(--success-text)]">
+        <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-[12px] font-semibold text-fitness-ink">
           PDF is never stored
         </span>
       </div>
@@ -129,10 +129,10 @@ export function BankStatementImporter({
         }}
       >
         <label className="grid gap-2">
-          <span className="label-caps text-[var(--text-secondary)]">Statement PDF</span>
+          <span className="label-caps text-muted-foreground">Statement PDF</span>
           <input
             accept=".pdf,application/pdf"
-            className="field-input file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-[12px] file:font-semibold file:text-[var(--text-on-light)]"
+            className="field-input file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-[12px] file:font-semibold file:text-foreground"
             onChange={(event) => {
               setFile(event.target.files?.[0] ?? null);
               resetPreview();
@@ -143,7 +143,7 @@ export function BankStatementImporter({
           />
         </label>
         <label className="grid gap-2">
-          <span className="label-caps text-[var(--text-secondary)]">Statement month</span>
+          <span className="label-caps text-muted-foreground">Statement month</span>
           <input
             className="field-input"
             max="2100-12"
@@ -158,7 +158,7 @@ export function BankStatementImporter({
           />
         </label>
         <button
-          className="min-h-11 self-end rounded-[var(--radius-control)] bg-[var(--text-primary)] px-5 text-[13px] font-bold text-[var(--text-on-light)] disabled:opacity-55"
+          className="min-h-11 self-end rounded-xl bg-primary px-5 text-[13px] font-bold text-primary-foreground disabled:opacity-55"
           disabled={pendingMode !== null}
           type="submit"
         >
@@ -166,28 +166,28 @@ export function BankStatementImporter({
         </button>
       </form>
 
-      <div className="mt-4 flex items-start gap-3 rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.02)] p-4">
-        <span aria-hidden="true" className="mt-0.5 text-[var(--accent-info)]">◈</span>
-        <p className="text-[12px] leading-[18px] text-[var(--text-tertiary)]">
+      <div className="mt-4 flex items-start gap-3 rounded-xl border border-border bg-[rgba(244,235,221,0.02)] p-4">
+        <span aria-hidden="true" className="mt-0.5 text-finance">◈</span>
+        <p className="text-[12px] leading-[18px] text-muted-foreground">
           Orbit validates the file type, size, PDF signature, page count, origin, and signed-in user on the server. It discards the document after parsing and stores only confirmed transactions plus a non-reversible duplicate fingerprint. Account and card numbers found in descriptions are masked.
         </p>
       </div>
 
       {error ? (
-        <p className="mt-4 rounded-[var(--radius-row)] border border-[var(--danger)]/25 bg-[var(--danger)]/10 p-4 text-[12px] leading-5 text-[var(--danger-text)]" role="alert">
+        <p className="mt-4 rounded-xl border border-[var(--destructive)]/25 bg-destructive/10 p-4 text-[12px] leading-5 text-destructive" role="alert">
           {error}
         </p>
       ) : null}
 
       {preview ? (
-        <section aria-labelledby="statement-preview-title" className="mt-6 border-t border-[var(--border-subtle)] pt-5">
+        <section aria-labelledby="statement-preview-title" className="mt-6 border-t border-border pt-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="label-caps text-[var(--text-tertiary)]">Review before import</p>
-              <h4 className="mt-1 text-[18px] font-semibold text-[var(--text-primary)]" id="statement-preview-title">
+              <p className="label-caps text-muted-foreground">Review before import</p>
+              <h4 className="mt-1 text-[18px] font-semibold text-foreground" id="statement-preview-title">
                 {preview.rows.length} transactions · {preview.pages} page{preview.pages === 1 ? "" : "s"}
               </h4>
-              <p className="mt-2 max-w-2xl text-[12px] leading-5 text-[var(--text-secondary)]">
+              <p className="mt-2 max-w-2xl text-[12px] leading-5 text-muted-foreground">
                 Correct any category below. Changes apply only to this import and
                 never alter the original PDF or duplicate fingerprint.
               </p>
@@ -195,7 +195,7 @@ export function BankStatementImporter({
             <div className="flex flex-wrap items-center gap-2">
               {correctedCategoryCount > 0 ? (
                 <button
-                  className="min-h-11 rounded-[var(--radius-control)] border border-[var(--border-strong)] px-4 text-[12px] font-semibold text-[var(--text-secondary)]"
+                  className="min-h-11 rounded-xl border border-input px-4 text-[12px] font-semibold text-muted-foreground"
                   disabled={pendingMode !== null}
                   onClick={() => setCategoryOverrides({})}
                   type="button"
@@ -204,7 +204,7 @@ export function BankStatementImporter({
                 </button>
               ) : null}
               <button
-                className="min-h-11 rounded-[var(--radius-control)] bg-[var(--accent-primary)] px-5 text-[13px] font-bold text-[var(--text-on-accent)] disabled:opacity-55"
+                className="min-h-11 rounded-xl bg-primary px-5 text-[13px] font-bold text-primary-foreground disabled:opacity-55"
                 disabled={pendingMode !== null}
                 onClick={() => void send("import")}
                 type="button"
@@ -221,7 +221,7 @@ export function BankStatementImporter({
           </div>
 
           {preview.warnings.length > 0 ? (
-            <div className="mt-4 rounded-[var(--radius-row)] border border-[var(--warning)]/25 bg-[var(--warning)]/10 p-4 text-[12px] leading-[18px] text-[var(--warning-text)]">
+            <div className="mt-4 rounded-xl border border-[var(--warning)]/25 bg-[var(--warning)]/10 p-4 text-[12px] leading-[18px] text-warning">
               {preview.warnings.map((warning, index) => (
                 <p key={`${index}-${warning}`}>• {warning}</p>
               ))}
@@ -230,27 +230,27 @@ export function BankStatementImporter({
 
           <div
             aria-label="Scrollable statement transaction review"
-            className="mt-4 max-h-[min(65vh,760px)] overflow-auto rounded-[var(--radius-row)] border border-[var(--border-subtle)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)]"
+            className="mt-4 max-h-[min(65vh,760px)] overflow-auto rounded-xl border border-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
             tabIndex={0}
           >
             <table className="w-full min-w-[760px] text-left text-[12px]">
               <caption className="sr-only">
                 All {preview.rows.length} transactions that will be imported
               </caption>
-              <thead className="sticky top-0 z-10 bg-[var(--surface-1)] text-[var(--text-tertiary)]">
+              <thead className="sticky top-0 z-10 bg-card text-muted-foreground">
                 <tr><th className="px-4 py-3">Date</th><th>Transaction</th><th>Category</th><th className="px-4 text-right">Amount</th></tr>
               </thead>
               <tbody>
                 {preview.rows.map((row, index) => (
-                  <tr className="border-t border-[var(--border-subtle)]" key={`${index}-${row.date}-${row.title}-${row.amount}`}>
-                    <td className="px-4 py-3 text-[var(--text-secondary)]">{row.date}</td>
-                    <td className="max-w-[320px] break-words pr-4 font-semibold leading-5 text-[var(--text-primary)]">{row.title}</td>
+                  <tr className="border-t border-border" key={`${index}-${row.date}-${row.title}-${row.amount}`}>
+                    <td className="px-4 py-3 text-muted-foreground">{row.date}</td>
+                    <td className="max-w-[320px] break-words pr-4 font-semibold leading-5 text-foreground">{row.title}</td>
                     <td className="min-w-[190px] pr-4">
                       <label className="sr-only" htmlFor={`statement-category-${index}`}>
                         Category for {row.title}
                       </label>
                       <select
-                        className="min-h-11 w-full rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[var(--surface-1)] px-3 text-[12px] font-semibold text-[var(--text-primary)]"
+                        className="min-h-11 w-full rounded-xl border border-input bg-card px-3 text-[12px] font-semibold text-foreground"
                         id={`statement-category-${index}`}
                         onChange={(event) => {
                           const category = event.target.value as BankStatementCategory;
@@ -268,7 +268,7 @@ export function BankStatementImporter({
                         ))}
                       </select>
                     </td>
-                    <td className={`metric-value whitespace-nowrap px-4 text-right font-semibold ${row.amount >= 0 ? "text-[var(--accent-primary)]" : "text-[var(--danger-text)]"}`}>
+                    <td className={`metric-value whitespace-nowrap px-4 text-right font-semibold ${row.amount >= 0 ? "text-primary" : "text-destructive"}`}>
                       {formatCurrency(row.amount, regional)}
                     </td>
                   </tr>
@@ -276,7 +276,7 @@ export function BankStatementImporter({
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-[12px] text-[var(--text-tertiary)]">
+          <p className="mt-2 text-[12px] text-muted-foreground">
             Showing all {preview.rows.length} transactions. Scroll horizontally
             and vertically to review names, categories, and amounts before import.
           </p>
@@ -315,9 +315,9 @@ async function readStatementResponse(response: Response): Promise<StatementRespo
 
 function PreviewMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[var(--radius-row)] border border-[var(--border-subtle)] bg-[rgba(244,235,221,0.025)] p-4">
-      <p className="label-caps text-[var(--text-tertiary)]">{label}</p>
-      <p className="metric-value mt-2 text-[18px] font-semibold text-[var(--text-primary)]">{value}</p>
+    <div className="rounded-xl border border-border bg-[rgba(244,235,221,0.025)] p-4">
+      <p className="label-caps text-muted-foreground">{label}</p>
+      <p className="metric-value mt-2 text-[18px] font-semibold text-foreground">{value}</p>
     </div>
   );
 }
