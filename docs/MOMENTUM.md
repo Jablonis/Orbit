@@ -87,7 +87,9 @@ yet` is only claimed against whole weeks inside that window, and a tie leaves
 the record with the earlier week.
 
 `RecapShare` renders the week as a 1080 × 1350 PNG on the device, in the same
-way as the day card.
+way as the day card. Both carry Pip, in the mood the day or the week earned,
+and both are set in the product's own two faces — a posted card is recognisably
+Orbit before a word of it is read.
 
 ## Where the code lives
 
@@ -96,6 +98,7 @@ way as the day card.
 | Engine (pure, unit tested) | `src/lib/momentum.ts` |
 | Weekly recap (pure, unit tested) | `src/lib/recap.ts` |
 | Share image renderers | `src/lib/day-card-canvas.ts`, `src/lib/recap-canvas.ts` |
+| Pip: geometry, then two renderers | `src/lib/pip-art.ts`, `src/components/brand/Pip.tsx`, `src/lib/pip-canvas.ts` |
 | Share plumbing (render, share sheet, download) | `src/lib/share-image.ts` |
 | Ring geometry (pure, unit tested) | `src/lib/activity-rings.ts` |
 | Daily rings | `src/components/ActivityRings.tsx` |

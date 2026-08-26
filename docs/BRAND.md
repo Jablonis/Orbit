@@ -85,6 +85,11 @@ Rules:
   The line under Pip states the situation and the next move: "Engine is lit. One
   more thing and the day holds."
 - Pip is not a reward and is never withheld. Progress is the reward.
+- Pip is drawn once. `src/lib/pip-art.ts` holds the geometry; the interface
+  renders it as SVG and the shared images draw it on canvas, so the character on
+  a posted card is the same character as the one on the dashboard.
+- On the dark share images the shell lifts to `#2B2634`: a black penguin on a
+  near-black card is a hole in the image, not a mascot.
 
 ## The climb
 

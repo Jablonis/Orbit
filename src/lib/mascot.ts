@@ -91,6 +91,24 @@ export function getPipState({
   };
 }
 
+/**
+ * Pip's mood for a finished week, for the recap and its shared image. A week
+ * is judged on days held, not on an average — the same rule as the recap.
+ */
+export function getWeekPipMood({
+  daysInOrbit,
+  isBestWeek,
+}: {
+  daysInOrbit: number;
+  isBestWeek: boolean;
+}): PipMood {
+  if (daysInOrbit === 7 || isBestWeek) return "sealed";
+  if (daysInOrbit >= 5) return "soaring";
+  if (daysInOrbit >= 3) return "cruising";
+  if (daysInOrbit > 0) return "lifting";
+  return "asleep";
+}
+
 export type Climb = {
   /** What today did to the orbit, as a multiplier: 1.24 means a quarter up. */
   multiplier: number;

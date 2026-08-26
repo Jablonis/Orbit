@@ -12,6 +12,8 @@
  */
 
 import { getAltitudeSeries, ORBIT_DAY_SCORE, getOrbitTier } from "@/lib/momentum";
+import { getWeekPipMood } from "@/lib/mascot";
+import type { PipMood } from "@/lib/mascot";
 import type { OrbitTier } from "@/lib/momentum";
 import type { ProductivityPoint } from "@/lib/productivity-score";
 
@@ -43,6 +45,8 @@ export type WeekRecap = {
   headline: string;
   isBestWeek: boolean;
   label: string;
+  /** How Pip stands on the recap and on its shared image. */
+  mood: PipMood;
   previousDaysInOrbit: number;
   previousScore: number;
   score: number;
@@ -128,6 +132,7 @@ export function getWeekRecap({
   const altitudeEnd = altitudeAt(series, weekEnd);
   const altitudeChange = altitudeEnd - altitudeStart;
 
+  const best = isBestWeek(points, weekStart, weekEnd, score);
   const tasks = week.reduce((total, point) => total + point.completedTasks, 0);
   const sessions = week.reduce(
     (total, point) => total + point.completedFitness,
@@ -148,8 +153,9 @@ export function getWeekRecap({
     focusMinutes,
     fresh,
     headline: getHeadline(daysInOrbit, score),
-    isBestWeek: isBestWeek(points, weekStart, weekEnd, score),
+    isBestWeek: best,
     label: formatWeekLabel(weekStart, weekEnd, locale),
+    mood: getWeekPipMood({ daysInOrbit, isBestWeek: best }),
     previousDaysInOrbit,
     previousScore,
     score,

@@ -7,12 +7,16 @@
  * can be rendered and looked at on its own.
  */
 
+import type { PipMood } from "@/lib/mascot";
+import { drawPip, pipWidth } from "@/lib/pip-canvas";
+
 export type RecapCardContent = {
   altitudeChange: number;
   days: Array<{ inOrbit: boolean; label: string; score: number }>;
   headline: string;
   isBestWeek: boolean;
   label: string;
+  mood: PipMood;
   stats: Array<{ label: string; value: string }>;
   tierName: string;
   verdict: string;
@@ -160,10 +164,27 @@ export function drawRecapCard(
     withTracking(context, "0em");
   });
 
+  // Pip carries the week's mood, and puts the character on a posted image.
+  const pipHeight = 210;
+  drawPip(context, {
+    burn: 0.85,
+    height: pipHeight,
+    mood: props.mood,
+    x: RECAP_CARD_WIDTH - 90 - pipWidth(pipHeight),
+    y: 928,
+  });
+
   // Tier and altitude movement, then the numbers.
   context.textAlign = "left";
   context.fillStyle = PAPER;
-  fittedText(context, props.tierName, 90, 1060, RECAP_CARD_WIDTH - 180, 56);
+  fittedText(
+    context,
+    props.tierName,
+    90,
+    1060,
+    RECAP_CARD_WIDTH - 180 - pipWidth(pipHeight) - 40,
+    56,
+  );
   context.fillStyle = props.altitudeChange >= 0 ? accent : MUTED;
   context.font = `600 30px ${SANS}`;
   context.fillText(

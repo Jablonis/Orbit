@@ -333,6 +333,14 @@ export function MomentumCard({
         date={dayCard.date}
         ghost={dayCard.ghost}
         metrics={dayCard.metrics}
+        mood={
+          getPipState({
+            allClosed: false,
+            altitude: momentum.projected,
+            streak: streak.streak,
+            todayScore: momentum.todayScore,
+          }).mood
+        }
         tierColor={dayCard.tier.color}
         tierName={dayCard.tier.name}
         trace={momentum.series.slice(-14).map((point) => point.altitude)}
@@ -1079,6 +1087,7 @@ export function RecapCard({ recap }: { recap: WeekRecap }) {
           headline={recap.headline}
           isBestWeek={recap.isBestWeek}
           label={recap.label}
+          mood={recap.mood}
           stats={recap.stats}
           tierColor={recap.tier.color}
           tierName={recap.tier.name}

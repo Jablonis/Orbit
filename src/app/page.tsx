@@ -429,6 +429,7 @@ export default async function Home({
               date={dayCard.date}
               ghost={dayCard.ghost}
               metrics={dayCard.metrics}
+              mood="sealed"
               tierColor={dayCard.tier.color}
               tierName={dayCard.tier.name}
               trace={momentum.series.slice(-14).map((point) => point.altitude)}
@@ -444,6 +445,7 @@ export default async function Home({
               headline={recap.headline}
               isBestWeek={recap.isBestWeek}
               label={recap.label}
+              mood={recap.mood}
               stats={recap.stats}
               tierColor={recap.tier.color}
               tierName={recap.tier.name}

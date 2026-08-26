@@ -39,6 +39,7 @@ const content = {
     { label: "Altitude", value: "65" },
     { label: "Streak", value: "14 d" },
   ],
+  mood: "soaring" as const,
   tierName: "Mid orbit",
   trace: [40, 55, 70, 0, 65],
 };
