@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Pip } from "@/components/brand/Pip";
+import { getPanelPip } from "@/lib/mascot";
 import { RepeatPicker } from "@/components/RepeatPicker";
 import { RoutineSetup } from "@/components/RoutineSetup";
 import { EmptyState } from "@/components/EmptyState";
@@ -322,10 +324,26 @@ export function TasksClient({
     }
   }
 
+  // The queue's own Pip, on the same ladder every panel uses.
+  const queuePip = getPanelPip(
+    stats.completedTasksCount,
+    stats.completedTasksCount + stats.activeTasksCount,
+    "today's queue",
+  );
+
   return (
     <section className="page-container py-8">
       <header className="mb-8 flex items-end justify-between gap-5 pr-14 md:pr-0">
-        <div>
+        <div className="flex items-start gap-4">
+          <Pip
+            burn={queuePip.burn}
+            className="h-12 w-auto shrink-0 sm:h-16"
+            mood={queuePip.mood}
+            seed={17}
+            size={64}
+            title={queuePip.title}
+          />
+          <div>
           <p className="label-caps text-finance">Task system</p>
           <h1 className="page-title mt-2 text-foreground">
             Today&apos;s work
@@ -334,6 +352,7 @@ export function TasksClient({
             Focus on what is due now. Unfinished work rolls forward; future work
             stays out of the way.
           </p>
+          </div>
         </div>
         <button
           className="hidden min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[13px] font-bold text-primary-foreground max-xl:block"
@@ -754,7 +773,6 @@ export function TasksClient({
                   description={filtersActive
                     ? "Adjust or clear the current search and filters to widen this view."
                     : "Plan only work that deserves a place in today or the days ahead."}
-                  icon="✓"
                   title={filtersActive ? "No tasks match this view" : "Your active queue is clear"}
                 />
               ) : null}

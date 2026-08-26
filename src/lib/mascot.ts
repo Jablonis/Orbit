@@ -120,6 +120,47 @@ export type Climb = {
   from: number;
 };
 
+export type PanelPip = {
+  burn: number;
+  mood: PipMood;
+  /** What Pip is reacting to, for anyone who cannot see him. */
+  title: string;
+};
+
+/**
+ * A panel's own Pip.
+ *
+ * The dashboard's Pip reads the whole day. A card only knows its own corner of
+ * it — how many tasks, how much of the training, how many milestones — so it
+ * gets the same ladder read from those two numbers instead. Same rule
+ * everywhere, so a penguin on the fitness card and a penguin on the tasks card
+ * mean the same thing by the same face.
+ *
+ * Derived, like every other Pip: nothing here can be chosen, and a card with
+ * nothing asked of it gets a penguin standing still rather than a cheerful one.
+ */
+export function getPanelPip(
+  done: number,
+  total: number,
+  subject = "this",
+): PanelPip {
+  const complete = Math.max(0, done);
+  const asked = Math.max(0, total);
+
+  if (asked === 0) {
+    return { burn: 0.15, mood: "grounded", title: `Nothing planned in ${subject}.` };
+  }
+
+  const ratio = Math.min(1, complete / asked);
+  const said = `${complete} of ${asked} in ${subject}.`;
+
+  if (complete >= asked) return { burn: 1, mood: "sealed", title: said };
+  if (ratio >= 0.8) return { burn: 0.9, mood: "soaring", title: said };
+  if (ratio >= 0.5) return { burn: 0.7, mood: "cruising", title: said };
+  if (ratio > 0) return { burn: 0.45, mood: "lifting", title: said };
+  return { burn: 0.2, mood: "grounded", title: said };
+}
+
 /** The lowest a day can multiply an orbit: doing nothing at all. */
 export const CLIMB_FLOOR = MOMENTUM_DECAY;
 

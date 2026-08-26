@@ -14,7 +14,8 @@ import { SystemDot, TintPanel } from "@/components/ui/tint-panel";
 import { CountUp } from "@/components/CountUp";
 import { Pip } from "@/components/brand/Pip";
 import { ClimbCurve } from "@/components/ClimbCurve";
-import { getClimb, getPipState } from "@/lib/mascot";
+import type { PanelPip } from "@/lib/mascot";
+import { getClimb, getPanelPip, getPipState } from "@/lib/mascot";
 import { getRingsSummary } from "@/lib/activity-rings";
 import { getAscent } from "@/lib/ascent";
 import { getClosingLines } from "@/lib/progression";
@@ -69,15 +70,30 @@ export function greeting(locale: string, timeZone: string) {
 export function CardHeading({
   action,
   eyebrow,
+  pip,
+  seed = 0,
   title,
 }: {
   action?: ReactNode;
   eyebrow: string;
+  /** The card's own Pip, derived from the card's own two numbers. */
+  pip?: PanelPip;
+  seed?: number;
   title: string;
 }) {
   return (
     <div className="flex items-start justify-between gap-3">
-      <div>
+      {pip ? (
+        <Pip
+          burn={pip.burn}
+          className="-mt-1 shrink-0"
+          mood={pip.mood}
+          seed={seed}
+          size={34}
+          title={pip.title}
+        />
+      ) : null}
+      <div className="min-w-0 flex-1">
         <p className="label-caps text-[var(--ink,var(--muted-foreground))]">{eyebrow}</p>
         <p className="mt-2 text-[17px] font-bold leading-6 tracking-[-0.02em]">
           {title}
@@ -336,6 +352,12 @@ export function TasksCard({
           </Badge>
         }
         eyebrow={pinnedCategory ? `Tasks · ${pinnedCategory}` : "Tasks"}
+        pip={getPanelPip(
+          taskStats.completedTasksCount,
+          taskStats.completedTasksCount + taskStats.activeTasksCount,
+          "tasks",
+        )}
+        seed={6}
         title={
           total === 0
             ? "The queue is clear."
@@ -464,6 +486,8 @@ export function FitnessCard({
           </Badge>
         }
         eyebrow="Fitness today"
+        pip={getPanelPip(done ? 1 : 0, resting ? 0 : 1, "training")}
+        seed={7}
         title={resting ? "Recovery day." : training.title}
       />
 
@@ -520,7 +544,10 @@ export function FinanceCard({
   finance,
   pendingFinance,
   pinnedFinance,
+  settled,
 }: {
+  /** Transactions settled out of this month's total, for Pip. */
+  settled: { done: number; total: number };
   finance: ReturnType<typeof getFinanceSummary>;
   pendingFinance?: import("@/lib/finance").FinanceTransaction;
   pinnedFinance: ReturnType<typeof getPinnedFinanceMetric>;
@@ -530,6 +557,8 @@ export function FinanceCard({
       <CardHeading
         action={<Badge variant="finance">This month</Badge>}
         eyebrow={pinnedFinance.label}
+        pip={getPanelPip(settled.done, settled.total, "money")}
+        seed={8}
         title={formatCurrency(pinnedFinance.value)}
       />
 
@@ -822,7 +851,9 @@ export function SetupCard({ setup }: { setup: SetupState }) {
   return (
     <TintPanel className="settle-in flex flex-col gap-5" system="plum">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="flex min-w-0 items-start gap-3">
+          <Pip burn={0.3} className="-mt-1 shrink-0" mood="grounded" seed={11} size={40} />
+          <div className="min-w-0">
           <p className="label-caps text-[var(--ink)]">Set up your Orbit</p>
           <p className="mt-2 text-[20px] font-bold tracking-[-0.02em]">
             {setup.next.label}
@@ -830,6 +861,7 @@ export function SetupCard({ setup }: { setup: SetupState }) {
           <p className="mt-1 text-[13px] text-muted-foreground">
             {setup.next.detail}
           </p>
+          </div>
         </div>
         <Button asChild>
           <Link href={setup.next.href}>
@@ -901,6 +933,8 @@ export function MilestonesCard({ milestones }: { milestones: Milestone[] }) {
           </Badge>
         }
         eyebrow="Milestones"
+        pip={getPanelPip(earned.length, milestones.length, "milestones")}
+        seed={9}
         title={
           earned.length === 0
             ? "Nothing earned yet — the first one is close."
@@ -964,6 +998,8 @@ export function RecapCard({ recap }: { recap: WeekRecap }) {
           )
         }
         eyebrow="Last week"
+        pip={getPanelPip(recap.days.filter((day) => day.inOrbit).length, recap.days.length, "last week")}
+        seed={10}
         title={recap.headline}
       />
 

@@ -345,9 +345,18 @@ export default async function Home({
         ])
       : [],
   );
+  const monthTransactions = transactions.filter((transaction) =>
+    transaction.date.startsWith(today.slice(0, 7)),
+  );
   const pendingFinance = [...transactions]
     .filter((transaction) => transaction.status !== "paid")
     .sort((a, b) => a.date.localeCompare(b.date))[0];
+  // What Pip reads on the finance card: how much of this month is settled.
+  const settledFinance = {
+    done: monthTransactions.filter((transaction) => transaction.status === "paid")
+      .length,
+    total: monthTransactions.length,
+  };
   const pinnedFinance = getPinnedFinanceMetric(
     preferences.pinnedFinanceMetric,
     finance,
@@ -380,6 +389,7 @@ export default async function Home({
         key="finance"
         pendingFinance={pendingFinance}
         pinnedFinance={pinnedFinance}
+        settled={settledFinance}
       />
     ),
     fitness: (

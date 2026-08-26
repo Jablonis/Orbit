@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { useState, useTransition } from "react";
 import { ActionToast } from "@/components/ActionToast";
+import { Pip } from "@/components/brand/Pip";
+import { getPanelPip } from "@/lib/mascot";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   SportType,
@@ -188,9 +190,26 @@ export function FitnessClient({
     }
   }
 
+  // The week's own Pip: the same ladder every card uses, read from this page's
+  // two numbers.
+  const weekPip = getPanelPip(
+    completedSessionsCount,
+    trainingDaysCount,
+    "this training week",
+  );
+
   return (
     <section className="page-container py-8">
       <header className="mb-7 flex flex-col gap-5 pr-14 md:pr-0 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex items-start gap-4">
+          <Pip
+            burn={weekPip.burn}
+            className="h-12 w-auto shrink-0 sm:h-16"
+            mood={weekPip.mood}
+            seed={16}
+            size={64}
+            title={weekPip.title}
+          />
         <div>
           <p className="label-caps text-primary">Fitness plan</p>
           <h1 className="page-title mt-2 text-foreground">
@@ -199,6 +218,7 @@ export function FitnessClient({
           <p className="mt-3 text-[14px] text-muted-foreground">
             {completedSessionsCount} of {trainingDaysCount} planned sessions complete
           </p>
+        </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div

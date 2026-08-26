@@ -6,6 +6,8 @@ import { ActionToast } from "@/components/ActionToast";
 import { BankStatementImporter } from "@/components/BankStatementImporter";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { EmptyState } from "@/components/EmptyState";
+import { Pip } from "@/components/brand/Pip";
+import { getPanelPip } from "@/lib/mascot";
 import {
   type FinanceStatementImport,
   type FinanceTransaction,
@@ -71,6 +73,18 @@ export function FinanceClient({
     }
   };
   const coverage = getFinanceStatementCoverage(statementImports);
+  // Settled against everything on the books this month: the one thing on this
+  // page that behaves like a day's worth of work being finished.
+  const monthPip = getPanelPip(
+    transactions.filter(
+      (transaction) =>
+        transaction.status === "paid" &&
+        transaction.date.startsWith(selectedMonth),
+    ).length,
+    transactions.filter((transaction) => transaction.date.startsWith(selectedMonth))
+      .length,
+    "this month",
+  );
   const monthOptions = [
     ...new Set([
       summary.currentMonth,
@@ -118,7 +132,16 @@ export function FinanceClient({
       data-finance-private={privacyMode}
     >
       <header className="mb-8 flex flex-col gap-5 pr-14 md:pr-0 lg:flex-row lg:items-end lg:justify-between">
-        <div>
+        <div className="flex items-start gap-4">
+          <Pip
+            burn={monthPip.burn}
+            className="h-12 w-auto shrink-0 sm:h-16"
+            mood={monthPip.mood}
+            seed={18}
+            size={64}
+            title={monthPip.title}
+          />
+          <div>
           <p className="label-caps text-primary">Finance system</p>
           <h1 className="page-title mt-2 text-foreground">
             {`${formatStatementMonth(selectedMonth, regional.locale)} cashflow`}
@@ -127,6 +150,7 @@ export function FinanceClient({
             {transactions.length} active transaction{transactions.length === 1 ? "" : "s"} across{" "}
             {statementImports.length} imported statement{statementImports.length === 1 ? "" : "s"}.
           </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-3">
           <label className="grid gap-1">
@@ -493,10 +517,10 @@ function StatementHistoryCard({
       ) : (
         <div className="mt-5">
           <EmptyState
+            seed={1}
             actionHref="/finance#bank-statement-import"
             actionLabel="Import bank PDF"
             description="Your confirmed monthly bank statements will appear here with income, spending, and net totals."
-            icon="PDF"
             title="No bank statements imported"
           />
         </div>
@@ -582,10 +606,10 @@ function CashflowCard({
         </div>
       ) : (
         <EmptyState
+            seed={2}
           actionHref="/finance#bank-statement-import"
           actionLabel="Import bank PDF"
           description="Import a monthly bank statement to compare income, expenses, and net cashflow over time."
-          icon="€"
           title="No cashflow history yet"
         />
       )}
@@ -663,10 +687,10 @@ function TransactionsCard({
         })}
         {transactions.length === 0 ? (
           <EmptyState
+            seed={3}
             actionHref="/finance#bank-statement-import"
             actionLabel="Import bank PDF"
             description="Your latest income and expenses will appear here after a statement import."
-            icon="€"
             title="No transactions this period"
           />
         ) : null}
@@ -708,10 +732,10 @@ function CategoryCard({
         ))}
         {summary.categorySpend.length === 0 ? (
           <EmptyState
+            seed={4}
             actionHref="/finance#bank-statement-import"
             actionLabel="Import bank PDF"
             description="Expense categories appear after a monthly statement is imported."
-            icon="◎"
             title="No category spending yet"
           />
         ) : null}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Pip } from "@/components/brand/Pip";
 
 export default function NotFound() {
   return (
@@ -8,7 +9,9 @@ export default function NotFound() {
       tabIndex={-1}
     >
       <section className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] w-full max-w-xl rounded-2xl p-7 text-center sm:p-10">
-        <p className="label-caps text-finance">404 · Off course</p>
+        {/* Off course is a place, and someone is out there in it. */}
+        <Pip burn={0.5} className="mx-auto" mood="lifting" seed={14} size={72} />
+        <p className="label-caps mt-5 text-finance">404 · Off course</p>
         <h1 className="editorial-display mt-4 text-[38px] leading-tight text-foreground sm:text-[48px]">
           This orbit does not exist.
         </h1>

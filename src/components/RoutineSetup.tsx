@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Pip } from "@/components/brand/Pip";
 import { DEFAULT_ROUTINE_KIT, ROUTINE_KIT } from "@/lib/routine-kit";
 import { describeRepeat } from "@/lib/routines";
 import { addRoutineKitAction } from "@/app/tasks/actions";
@@ -41,11 +42,14 @@ export function RoutineSetup({ hasRoutines }: { hasRoutines: boolean }) {
       <summary className="cursor-pointer text-[13px] font-semibold">
         {hasRoutines ? "Add more routines" : "Set up your week once"}
       </summary>
-      <p className="mt-2 max-w-[62ch] text-[13px] leading-5 text-muted-foreground">
-        Pick the parts of an ordinary week that are actually yours. They come
-        back on their own days, are ticked off per day, and can be edited or
-        archived like any other task.
-      </p>
+      <div className="mt-3 flex items-start gap-3">
+        <Pip burn={0.3} className="shrink-0" mood="grounded" seed={12} size={44} />
+        <p className="max-w-[62ch] text-[13px] leading-5 text-muted-foreground">
+          Pick the parts of an ordinary week that are actually yours. They come
+          back on their own days, are ticked off per day, and can be edited or
+          archived like any other task.
+        </p>
+      </div>
 
       <ul className="mt-4 grid gap-2 sm:grid-cols-2">
         {ROUTINE_KIT.map((item) => {

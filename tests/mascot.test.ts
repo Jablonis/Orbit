@@ -4,6 +4,7 @@ import {
   CLIMB_FLOOR,
   formatMultiplier,
   getClimb,
+  getPanelPip,
   getPipState,
 } from "../src/lib/mascot";
 
@@ -92,4 +93,19 @@ test("the multiplier prints to two decimals, always", () => {
   assert.equal(formatMultiplier(1.2), "×1.20");
   assert.equal(formatMultiplier(0.85), "×0.85");
   assert.equal(formatMultiplier(2), "×2.00");
+});
+
+test("a panel's Pip climbs the same ladder the day does", () => {
+  assert.equal(getPanelPip(0, 0).mood, "grounded", "nothing asked, nothing claimed");
+  assert.equal(getPanelPip(0, 4).mood, "grounded");
+  assert.equal(getPanelPip(1, 4).mood, "lifting");
+  assert.equal(getPanelPip(2, 4).mood, "cruising");
+  assert.equal(getPanelPip(4, 5).mood, "soaring");
+  assert.equal(getPanelPip(4, 4).mood, "sealed");
+  assert.equal(getPanelPip(9, 4).mood, "sealed", "past the ask is still done");
+});
+
+test("a panel's Pip says what he is reacting to", () => {
+  assert.equal(getPanelPip(2, 4, "tasks").title, "2 of 4 in tasks.");
+  assert.equal(getPanelPip(0, 0, "training").title, "Nothing planned in training.");
 });
