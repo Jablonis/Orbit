@@ -21,6 +21,8 @@ export type Task = {
   timeTo: string;
   dueDate: string;
   note: string;
+  /** Weekdays this task repeats on, 0 = Sunday. Empty means a one-off task. */
+  repeatDays: number[];
   completed: boolean;
   completedAt?: string;
   createdAt?: string;
@@ -80,6 +82,7 @@ type DbTask = {
   time_to: string | null;
   due_date: string | null;
   note: string | null;
+  repeat_days: number[] | null;
   completed: boolean;
   completed_at?: string | null;
   created_at?: string;
@@ -165,11 +168,26 @@ export function getDateInTimeZone(
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
+export function isRepeating(task: Task) {
+  return task.repeatDays.length > 0;
+}
+
 export function getTaskDayStatus(
   task: Task,
   today: string,
   timeZone = taskTimeZone,
 ): TaskDayStatus {
+  // A routine is never late and never finished: it either belongs to this day
+  // or it belongs to another one. Whether it was done is a fact about a date,
+  // and it lives in the completions rather than on the task.
+  if (isRepeating(task)) {
+    const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
+    const created = getDateInTimeZone(task.createdAt ?? "", timeZone);
+    return task.repeatDays.includes(weekday) && (!created || today >= created)
+      ? "today"
+      : "scheduled";
+  }
+
   if (task.completed) {
     return "completed";
   }
@@ -193,6 +211,10 @@ export function isTaskVisibleToday(
   today: string,
   timeZone = taskTimeZone,
 ) {
+  if (isRepeating(task)) {
+    return getTaskDayStatus(task, today, timeZone) === "today";
+  }
+
   if (!task.completed) {
     return true;
   }
@@ -264,6 +286,9 @@ export function mapDbTask(task: DbTask): Task {
     timeTo: task.time_to ?? "",
     dueDate: task.due_date ?? "",
     note: task.note ?? "",
+    repeatDays: (task.repeat_days ?? []).filter(
+      (day) => Number.isInteger(day) && day >= 0 && day <= 6,
+    ),
     completed: task.completed,
     completedAt: task.completed_at ?? undefined,
     createdAt: task.created_at,
@@ -285,6 +310,9 @@ export function toTaskInsert(input: TaskInput, userId: string) {
     time_to: input.timeTo || null,
     due_date: input.dueDate || null,
     note: input.note,
+    repeat_days: [...new Set(input.repeatDays)]
+      .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+      .sort((a, b) => a - b),
     completed: Boolean(input.completed),
   };
 }
@@ -297,7 +325,7 @@ export async function getTasks(
   const { data, error } = await supabase
     .from("tasks")
     .select(
-      "id,title,category,type,complexity,priority,estimate_mode,estimate_minutes,time_from,time_to,due_date,note,completed,completed_at,created_at,updated_at",
+      "id,title,category,type,complexity,priority,estimate_mode,estimate_minutes,time_from,time_to,due_date,note,repeat_days,completed,completed_at,created_at,updated_at",
     )
     .eq("user_id", userId)
     .is("archived_at", null)
@@ -328,7 +356,7 @@ export async function getArchivedTasks(
   const { data, error } = await supabase
     .from("tasks")
     .select(
-      "id,title,category,type,complexity,priority,estimate_mode,estimate_minutes,time_from,time_to,due_date,note,completed,completed_at,created_at,updated_at",
+      "id,title,category,type,complexity,priority,estimate_mode,estimate_minutes,time_from,time_to,due_date,note,repeat_days,completed,completed_at,created_at,updated_at",
     )
     .eq("user_id", userId)
     .not("archived_at", "is", null)

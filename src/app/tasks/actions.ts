@@ -8,9 +8,12 @@ import {
   TaskEstimateMode,
   TaskPriority,
   TaskType,
+  getDateInTimeZone,
   getMinutesBetweenTimes,
   toTaskInsert,
 } from "@/lib/tasks";
+import { normaliseRepeatDays } from "@/lib/routines";
+import { pickRoutineKit } from "@/lib/routine-kit";
 
 const presetEstimateMinutes: Record<Exclude<TaskEstimateMode, "other">, number> = {
   "1hr": 60,
@@ -83,6 +86,9 @@ export async function saveTaskAction(formData: FormData): Promise<TaskSaveResult
       priorities,
       "normal",
     ),
+    repeatDays: normaliseRepeatDays(
+      formData.getAll("repeatDays").map((day) => Number(day)),
+    ),
     timeFrom: estimateMode === "other" ? timeFrom : "",
     timeTo: estimateMode === "other" ? timeTo : "",
     title: String(formData.get("title") ?? "").trim().slice(0, 200),
@@ -118,15 +124,39 @@ export async function toggleTaskAction(formData: FormData) {
   const { supabase, user } = await getAuthenticatedUser();
   const id = String(formData.get("id") ?? "");
   const completed = String(formData.get("completed") ?? "") === "true";
+  const date = String(formData.get("date") ?? "");
 
   if (!id) return;
 
-  const { error } = await supabase
+  const { data: task, error: readError } = await supabase
     .from("tasks")
-    .update({ completed })
+    .select("repeat_days")
     .eq("id", id)
-    .eq("user_id", user.id);
-  if (error) throw new Error(error.message);
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (readError) throw new Error(readError.message);
+  if (!task) return;
+
+  // A routine is done for a day, not for good: ticking it writes that one day's
+  // completion and leaves the task itself open for tomorrow. Anything else and
+  // a daily habit would need reopening every morning.
+  if ((task.repeat_days as number[] | null)?.length) {
+    const { error } = await supabase.rpc("set_routine_completion", {
+      p_date: /^\d{4}-\d{2}-\d{2}$/.test(date)
+        ? date
+        : getDateInTimeZone(new Date()),
+      p_done: completed,
+      p_task_id: id,
+    });
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase
+      .from("tasks")
+      .update({ completed })
+      .eq("id", id)
+      .eq("user_id", user.id);
+    if (error) throw new Error(error.message);
+  }
 
   revalidatePath("/");
   revalidatePath("/tasks");
@@ -202,6 +232,26 @@ export async function bulkUpdateTasksAction(
     return { ok: false, error: "Choose a valid reschedule date." };
   }
 
+  // A routine has no single completed state to set, so bulk complete and
+  // reopen simply leave routines alone rather than half-applying to them.
+  let targets = ids;
+  if (intent === "complete" || intent === "reopen") {
+    const { data: rows, error: readError } = await supabase
+      .from("tasks")
+      .select("id,repeat_days")
+      .eq("user_id", user.id)
+      .in("id", ids);
+    if (readError) {
+      return { ok: false, error: "The selected tasks could not be updated." };
+    }
+    targets = (rows ?? [])
+      .filter((row) => !(row.repeat_days as number[] | null)?.length)
+      .map((row) => row.id as string);
+    if (targets.length === 0) {
+      return { ok: true, updated: 0 };
+    }
+  }
+
   const update =
     intent === "archive"
       ? { archived_at: new Date().toISOString() }
@@ -214,7 +264,7 @@ export async function bulkUpdateTasksAction(
     .from("tasks")
     .update(update)
     .eq("user_id", user.id)
-    .in("id", ids)
+    .in("id", targets)
     .select("id");
 
   if (error) {
@@ -224,4 +274,76 @@ export async function bulkUpdateTasksAction(
   revalidatePath("/");
   revalidatePath("/tasks");
   return { ok: true, updated: data?.length ?? 0 };
+}
+
+export type RoutineSetupResult =
+  | { ok: true; added: number }
+  | { ok: false; error: string };
+
+/**
+ * Set up a week's worth of routines in one go.
+ *
+ * The catalogue lives on the server, so this takes a list of ids rather than a
+ * list of tasks: nothing a client sends decides what gets written, only which
+ * of the known items to write.
+ */
+export async function addRoutineKitAction(
+  ids: string[],
+): Promise<RoutineSetupResult> {
+  const { supabase, user } = await getAuthenticatedUser();
+  const items = pickRoutineKit(ids);
+
+  if (items.length === 0) {
+    return { ok: false, error: "Choose at least one routine." };
+  }
+
+  const { data: existing, error: readError } = await supabase
+    .from("tasks")
+    .select("title")
+    .eq("user_id", user.id)
+    .is("archived_at", null);
+  if (readError) {
+    return { ok: false, error: "The routines could not be added." };
+  }
+
+  // Running the setup twice should not leave two morning routines behind.
+  const taken = new Set(
+    (existing ?? []).map((task) => String(task.title).trim().toLocaleLowerCase()),
+  );
+  const fresh = items.filter(
+    (item) => !taken.has(item.title.toLocaleLowerCase()),
+  );
+
+  if (fresh.length === 0) {
+    return { ok: true, added: 0 };
+  }
+
+  const { error } = await supabase.from("tasks").insert(
+    fresh.map((item) =>
+      toTaskInsert(
+        {
+          category: item.category,
+          complexity: "medium",
+          dueDate: "",
+          estimateMinutes: getMinutesBetweenTimes(item.from, item.to),
+          estimateMode: "other",
+          note: item.note,
+          priority: "normal",
+          repeatDays: item.days,
+          timeFrom: item.from,
+          timeTo: item.to,
+          title: item.title,
+          type: item.type,
+        },
+        user.id,
+      ),
+    ),
+  );
+  if (error) {
+    return { ok: false, error: "The routines could not be added." };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/tasks");
+  return { ok: true, added: fresh.length };
 }

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { Pip } from "@/components/brand/Pip";
 
 export function RouteError({
   error,
@@ -21,9 +22,9 @@ export function RouteError({
       tabIndex={-1}
     >
       <section className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] w-full max-w-lg rounded-2xl p-7 text-center sm:p-9">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[var(--destructive)]/25 bg-destructive/10 text-[22px] text-destructive">
-          !
-        </div>
+        {/* Engine off, feet down: the honest picture of a page that did not
+            load, and better company than an exclamation mark. */}
+        <Pip burn={0} className="mx-auto" mood="grounded" seed={13} size={68} />
         <p className="label-caps mt-6 text-tasks-ink">Orbit paused</p>
         <h1 className="mt-3 text-[28px] font-semibold text-foreground">
           This page couldn&apos;t load.

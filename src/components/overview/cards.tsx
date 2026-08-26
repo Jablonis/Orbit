@@ -14,7 +14,8 @@ import { SystemDot, TintPanel } from "@/components/ui/tint-panel";
 import { CountUp } from "@/components/CountUp";
 import { Pip } from "@/components/brand/Pip";
 import { ClimbCurve } from "@/components/ClimbCurve";
-import { getClimb, getPipState } from "@/lib/mascot";
+import type { PanelPip } from "@/lib/mascot";
+import { getClimb, getPanelPip, getPipState } from "@/lib/mascot";
 import { getRingsSummary } from "@/lib/activity-rings";
 import { getAscent } from "@/lib/ascent";
 import { getClosingLines } from "@/lib/progression";
@@ -46,7 +47,9 @@ import type {
 } from "@/lib/productivity-score";
 import { getProductivityChartPaths } from "@/lib/productivity-score";
 import type { Task } from "@/lib/tasks";
-import { formatRelativeTaskDate, getTaskStats } from "@/lib/tasks";
+import { formatRelativeTaskDate, getTaskStats, isRepeating } from "@/lib/tasks";
+import { describeRepeat } from "@/lib/routines";
+import { formatReward } from "@/lib/reward";
 import { toggleFitnessDoneFormAction } from "@/app/fitness/actions";
 import { toggleTaskAction } from "@/app/tasks/actions";
 
@@ -67,15 +70,30 @@ export function greeting(locale: string, timeZone: string) {
 export function CardHeading({
   action,
   eyebrow,
+  pip,
+  seed = 0,
   title,
 }: {
   action?: ReactNode;
   eyebrow: string;
+  /** The card's own Pip, derived from the card's own two numbers. */
+  pip?: PanelPip;
+  seed?: number;
   title: string;
 }) {
   return (
     <div className="flex items-start justify-between gap-3">
-      <div>
+      {pip ? (
+        <Pip
+          burn={pip.burn}
+          className="-mt-1 shrink-0"
+          mood={pip.mood}
+          seed={seed}
+          size={34}
+          title={pip.title}
+        />
+      ) : null}
+      <div className="min-w-0 flex-1">
         <p className="label-caps text-[var(--ink,var(--muted-foreground))]">{eyebrow}</p>
         <p className="mt-2 text-[17px] font-bold leading-6 tracking-[-0.02em]">
           {title}
@@ -294,19 +312,25 @@ export function GhostBar({
 }
 
 export function TasksCard({
+  doneToday,
   filter,
   overviewQuery,
   pinnedCategory,
   quickTasks,
+  rewards,
   taskStats,
   today,
   timeZone,
   total,
 }: {
+  /** Routines already ticked for today; a routine is never done for good. */
+  doneToday: string[];
   filter: OverviewTaskFilter;
   overviewQuery: OverviewQueryState;
   pinnedCategory: string;
   quickTasks: Task[];
+  /** What each task is worth today, in the voyage's own kilometres. */
+  rewards: Record<string, number>;
   taskStats: ReturnType<typeof getTaskStats>;
   today: string;
   timeZone: string;
@@ -328,6 +352,12 @@ export function TasksCard({
           </Badge>
         }
         eyebrow={pinnedCategory ? `Tasks · ${pinnedCategory}` : "Tasks"}
+        pip={getPanelPip(
+          taskStats.completedTasksCount,
+          taskStats.completedTasksCount + taskStats.activeTasksCount,
+          "tasks",
+        )}
+        seed={6}
         title={
           total === 0
             ? "The queue is clear."
@@ -359,49 +389,59 @@ export function TasksCard({
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {quickTasks.map((task) => (
-            <li key={task.id}>
-              <form action={toggleTaskAction}>
-                <input name="taskId" type="hidden" value={task.id} />
-                <input
-                  name="completed"
-                  type="hidden"
-                  value={task.completed ? "false" : "true"}
-                />
-                <input name="redirectTo" type="hidden" value="/" />
-                <button
-                  className="flex w-full items-center gap-3 rounded-xl bg-card/70 p-3 text-left transition hover:bg-card"
-                  type="submit"
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`grid size-5 shrink-0 place-items-center rounded-full border-2 transition ${
-                      task.completed
-                        ? "border-tasks bg-tasks text-white"
-                        : "border-tasks/35"
-                    }`}
+          {quickTasks.map((task) => {
+            const routine = isRepeating(task);
+            const done = routine ? doneToday.includes(task.id) : task.completed;
+            const reward = done ? 0 : rewards[task.id] ?? 0;
+            return (
+              <li key={task.id}>
+                <form action={toggleTaskAction}>
+                  <input name="id" type="hidden" value={task.id} />
+                  <input
+                    name="completed"
+                    type="hidden"
+                    value={done ? "false" : "true"}
+                  />
+                  <input name="date" type="hidden" value={today} />
+                  <input name="redirectTo" type="hidden" value="/" />
+                  <button
+                    className="flex w-full items-center gap-3 rounded-xl bg-card/70 p-3 text-left transition hover:bg-card"
+                    type="submit"
                   >
-                    {task.completed ? <CheckGlyph /> : null}
-                  </span>
-                  <span className="min-w-0 flex-1">
                     <span
-                      className={`block truncate text-[14px] font-semibold ${
-                        task.completed
-                          ? "text-muted-foreground line-through"
-                          : ""
+                      aria-hidden="true"
+                      className={`grid size-5 shrink-0 place-items-center rounded-full border-2 transition ${
+                        done ? "border-tasks bg-tasks text-white" : "border-tasks/35"
                       }`}
                     >
-                      {task.title}
+                      {done ? <CheckGlyph /> : null}
                     </span>
-                    <span className="mt-0.5 block text-[12px] text-muted-foreground">
-                      {task.category} ·{" "}
-                      {formatRelativeTaskDate(task, today, timeZone)}
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={`block truncate text-[14px] font-semibold ${
+                          done ? "text-muted-foreground line-through" : ""
+                        }`}
+                      >
+                        {task.title}
+                      </span>
+                      <span className="mt-0.5 block text-[12px] text-muted-foreground">
+                        {routine
+                          ? describeRepeat(task.repeatDays)
+                          : formatRelativeTaskDate(task, today, timeZone)}
+                        {" · "}
+                        {task.category}
+                      </span>
                     </span>
-                  </span>
-                </button>
-              </form>
-            </li>
-          ))}
+                    {reward > 0 ? (
+                      <span className="metric-value shrink-0 text-[12px] font-bold text-tasks-ink">
+                        {formatReward(reward)}
+                      </span>
+                    ) : null}
+                  </button>
+                </form>
+              </li>
+            );
+          })}
         </ul>
       )}
 
@@ -446,6 +486,8 @@ export function FitnessCard({
           </Badge>
         }
         eyebrow="Fitness today"
+        pip={getPanelPip(done ? 1 : 0, resting ? 0 : 1, "training")}
+        seed={7}
         title={resting ? "Recovery day." : training.title}
       />
 
@@ -502,7 +544,10 @@ export function FinanceCard({
   finance,
   pendingFinance,
   pinnedFinance,
+  settled,
 }: {
+  /** Transactions settled out of this month's total, for Pip. */
+  settled: { done: number; total: number };
   finance: ReturnType<typeof getFinanceSummary>;
   pendingFinance?: import("@/lib/finance").FinanceTransaction;
   pinnedFinance: ReturnType<typeof getPinnedFinanceMetric>;
@@ -512,6 +557,8 @@ export function FinanceCard({
       <CardHeading
         action={<Badge variant="finance">This month</Badge>}
         eyebrow={pinnedFinance.label}
+        pip={getPanelPip(settled.done, settled.total, "money")}
+        seed={8}
         title={formatCurrency(pinnedFinance.value)}
       />
 
@@ -724,28 +771,32 @@ export function ReviewCard({
         title={`${review.completedTasks} of ${review.plannedTasks} planned tasks done.`}
       />
 
-      <dl className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-4">
         <ReviewFigure
+          detail={`${review.sessionMinutes} min`}
+          href="/fitness"
           label="Sessions"
           value={`${review.sessions}`}
-          detail={`${review.sessionMinutes} min`}
         />
         <ReviewFigure
+          detail="overdue tasks"
+          href="/tasks?date=overdue"
           label="Carried"
           value={`${review.overdueCarried}`}
-          detail="overdue tasks"
         />
         <ReviewFigure
+          detail="of income"
+          href="/finance"
           label="Savings"
           value={`${review.savingsRate}%`}
-          detail="of income"
         />
         <ReviewFigure
+          detail="weekly average"
+          href="#trends-title"
           label="Score"
           value={`${review.score}%`}
-          detail="weekly average"
         />
-      </dl>
+      </div>
 
       <Progress
         aria-label={`Weekly score ${review.score} percent`}
@@ -757,105 +808,38 @@ export function ReviewCard({
   );
 }
 
+/**
+ * A figure from the week. Each one is somewhere you can go: a tile this size
+ * with a number this big is read as a control, so it leads to the page the
+ * number came from.
+ */
 export function ReviewFigure({
   detail,
+  href,
   label,
   value,
 }: {
   detail: string;
+  href: string;
   label: string;
   value: string;
 }) {
   return (
-    <div className="rounded-xl bg-muted p-4">
-      <dt className="label-caps text-muted-foreground">{label}</dt>
-      <dd className="metric-value mt-2 text-[22px] font-bold">{value}</dd>
-      <p className="mt-0.5 text-[12px] text-muted-foreground">{detail}</p>
-    </div>
+    <Link
+      className="rounded-xl bg-muted p-4 transition duration-150 hover:bg-secondary active:scale-[0.98]"
+      href={href}
+    >
+      <span className="label-caps block text-muted-foreground">{label}</span>
+      <span className="metric-value mt-2 block text-[22px] font-bold">
+        {value}
+      </span>
+      <span className="mt-0.5 block text-[12px] text-muted-foreground">
+        {detail}
+      </span>
+    </Link>
   );
 }
 
-
-/**
- * A week at a glance, borrowed from the day strips that calendar and journal
- * apps put above the fold: seven days, each one a ring filled by that day's
- * score, with today marked. It reuses the productivity points the dashboard
- * already computes.
- */
-export function WeekStrip({
-  points,
-  today,
-}: {
-  points: ProductivityPoint[];
-  today: string;
-}) {
-  return (
-    <section aria-label="This week" className="settle-in">
-      <ol className="flex items-stretch gap-1.5 sm:gap-2">
-        {points.map((point, index) => {
-          const isToday = point.date === today;
-          const score = point.score ?? 0;
-          const future = point.future || point.date > today;
-          const circumference = 2 * Math.PI * 14;
-          return (
-            <li className="min-w-0 flex-1" key={point.date}>
-              <div
-                className={`flex flex-col items-center gap-2 rounded-2xl px-1 py-3 transition ${
-                  isToday ? "bg-plum-tint" : "bg-card"
-                }`}
-              >
-                <span
-                  className={`label-caps ${
-                    isToday ? "text-plum-ink" : "text-muted-foreground"
-                  }`}
-                >
-                  {point.label.slice(0, 2)}
-                </span>
-                <span className="relative grid size-9 place-items-center">
-                  <svg className="size-9 -rotate-90" viewBox="0 0 36 36">
-                    <circle
-                      cx="18"
-                      cy="18"
-                      fill="none"
-                      r="14"
-                      stroke={future ? "var(--muted)" : "var(--secondary)"}
-                      strokeWidth="4"
-                    />
-                    {future ? null : (
-                      <circle
-                        className="ring-draw"
-                        cx="18"
-                        cy="18"
-                        fill="none"
-                        r="14"
-                        stroke={isToday ? "var(--plum)" : "var(--fitness)"}
-                        strokeDasharray={circumference}
-                        strokeDashoffset={
-                          circumference * (1 - Math.min(100, score) / 100)
-                        }
-                        strokeLinecap="round"
-                        strokeWidth="4"
-                        style={
-                          {
-                            "--ring-length": circumference,
-                            "--rise-index": index,
-                          } as React.CSSProperties
-                        }
-                      />
-                    )}
-                  </svg>
-                  <span className="metric-value absolute text-[11px] font-semibold">
-                    {future ? "" : score}
-                  </span>
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-    </section>
-  );
-}
 
 /**
  * The cold start. Shown only while an account still has something to set up,
@@ -867,7 +851,9 @@ export function SetupCard({ setup }: { setup: SetupState }) {
   return (
     <TintPanel className="settle-in flex flex-col gap-5" system="plum">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="flex min-w-0 items-start gap-3">
+          <Pip burn={0.3} className="-mt-1 shrink-0" mood="grounded" seed={11} size={40} />
+          <div className="min-w-0">
           <p className="label-caps text-[var(--ink)]">Set up your Orbit</p>
           <p className="mt-2 text-[20px] font-bold tracking-[-0.02em]">
             {setup.next.label}
@@ -875,6 +861,7 @@ export function SetupCard({ setup }: { setup: SetupState }) {
           <p className="mt-1 text-[13px] text-muted-foreground">
             {setup.next.detail}
           </p>
+          </div>
         </div>
         <Button asChild>
           <Link href={setup.next.href}>
@@ -946,6 +933,8 @@ export function MilestonesCard({ milestones }: { milestones: Milestone[] }) {
           </Badge>
         }
         eyebrow="Milestones"
+        pip={getPanelPip(earned.length, milestones.length, "milestones")}
+        seed={9}
         title={
           earned.length === 0
             ? "Nothing earned yet — the first one is close."
@@ -1009,6 +998,8 @@ export function RecapCard({ recap }: { recap: WeekRecap }) {
           )
         }
         eyebrow="Last week"
+        pip={getPanelPip(recap.days.filter((day) => day.inOrbit).length, recap.days.length, "last week")}
+        seed={10}
         title={recap.headline}
       />
 

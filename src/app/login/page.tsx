@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { OrbitWordmark } from "@/components/BrandMark";
+import { Pip } from "@/components/brand/Pip";
 import { getSafeReturnPath } from "@/lib/auth-return";
 import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
@@ -44,9 +45,13 @@ export default async function LoginPage({
     >
       <section className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] w-full max-w-[460px] rounded-2xl p-6 shadow-[0_24px_70px_rgba(0,0,0,0.32)]">
         <div className="mb-8">
-          <Link aria-label="About Orbit" className="inline-flex" href="/welcome">
-            <OrbitWordmark size={26} />
-          </Link>
+          <div className="flex items-center justify-between gap-4">
+            <Link aria-label="About Orbit" className="inline-flex" href="/welcome">
+              <OrbitWordmark size={26} />
+            </Link>
+            {/* Feet down until someone is actually flying. */}
+            <Pip burn={0.15} mood="grounded" seed={15} size={56} />
+          </div>
           <h1 className="mt-3 text-[34px] font-semibold leading-[40px] text-foreground">
             Sign in to your dashboard
           </h1>

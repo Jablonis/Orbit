@@ -5,6 +5,10 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Pip } from "@/components/brand/Pip";
+import { getPanelPip } from "@/lib/mascot";
+import { RepeatPicker } from "@/components/RepeatPicker";
+import { RoutineSetup } from "@/components/RoutineSetup";
 import { EmptyState } from "@/components/EmptyState";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import {
@@ -16,10 +20,12 @@ import {
   formatTaskTime,
   formatRelativeTaskDate,
   getTaskDayStatus,
+  isRepeating,
   taskComplexityLabels,
   taskPriorityLabels,
   taskTypeLabels,
 } from "@/lib/tasks";
+import { describeRepeat } from "@/lib/routines";
 import {
   archiveTaskAction,
   bulkUpdateTasksAction,
@@ -37,9 +43,14 @@ const taskStatusOptions = ["all", "open", "done"] as const;
 const taskDateOptions = ["all", "overdue", "today", "scheduled"] as const;
 type TaskSort = (typeof taskSortOptions)[number];
 
+export type RoutineHold = { done: number; due: number; percent: number };
+
 export function TasksClient({
   archivedTasks,
   categorySuggestions,
+  doneToday,
+  hasRoutines,
+  holds,
   stats,
   tasks,
   today,
@@ -48,6 +59,9 @@ export function TasksClient({
 }: {
   archivedTasks: Task[];
   categorySuggestions: string[];
+  doneToday: string[];
+  hasRoutines: boolean;
+  holds: Record<string, RoutineHold>;
   stats: ReturnType<typeof import("@/lib/tasks").getTaskStats>;
   tasks: Task[];
   today: string;
@@ -61,6 +75,7 @@ export function TasksClient({
   const [formOpen, setFormOpen] = useState(false);
   const [archivedTaskId, setArchivedTaskId] = useState<string | null>(null);
   const [estimateMode, setEstimateMode] = useState<TaskEstimateMode>("1hr");
+  const [repeatDays, setRepeatDays] = useState<number[]>([]);
   const [formVersion, setFormVersion] = useState(0);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [bulkDate, setBulkDate] = useState(today);
@@ -95,6 +110,11 @@ export function TasksClient({
     ["all", ...typeOptions] as const,
     "all",
   );
+  const complexity = valueFromOptions(
+    searchParams.get("complexity"),
+    ["all", ...complexityOptions] as const,
+    "all",
+  );
   const sort = valueFromOptions(
     searchParams.get("sort"),
     taskSortOptions,
@@ -106,6 +126,7 @@ export function TasksClient({
     dateFilter !== "all" ||
     priority !== "all" ||
     type !== "all" ||
+    complexity !== "all" ||
     sort !== "today";
   const filteredTasks = sortTaskList(
     displayTasks.filter((task) => {
@@ -117,6 +138,7 @@ export function TasksClient({
       if (dateFilter !== "all" && dayStatus !== dateFilter) return false;
       if (priority !== "all" && task.priority !== priority) return false;
       if (type !== "all" && task.type !== type) return false;
+      if (complexity !== "all" && task.complexity !== complexity) return false;
       return true;
     }),
     sort,
@@ -182,9 +204,24 @@ export function TasksClient({
     defaultValue = "all",
     replace = false,
   ) {
+    updateFilters({ [key]: value }, defaultValue, replace);
+  }
+
+  /**
+   * Several filters at once. Two `updateFilter` calls in a row would both build
+   * from the same rendered searchParams, so the second would quietly undo the
+   * first.
+   */
+  function updateFilters(
+    values: Record<string, string>,
+    defaultValue = "all",
+    replace = false,
+  ) {
     const next = new URLSearchParams(searchParams.toString());
-    if (!value || value === defaultValue) next.delete(key);
-    else next.set(key, value);
+    for (const [key, value] of Object.entries(values)) {
+      if (!value || value === defaultValue) next.delete(key);
+      else next.set(key, value);
+    }
     const href = next.size ? `${pathname}?${next.toString()}` : pathname;
     if (replace) window.history.replaceState(null, "", href);
     else window.history.pushState(null, "", href);
@@ -199,6 +236,7 @@ export function TasksClient({
       if (window.location.hash === "#new-task") {
         setEditing(null);
         setEstimateMode("1hr");
+        setRepeatDays([]);
         setFormOpen(true);
       }
     };
@@ -257,6 +295,7 @@ export function TasksClient({
       });
       setEditing(null);
       setEstimateMode("1hr");
+      setRepeatDays([]);
       setFormVersion((current) => current + 1);
       setFormOpen(false);
     } catch {
@@ -285,10 +324,26 @@ export function TasksClient({
     }
   }
 
+  // The queue's own Pip, on the same ladder every panel uses.
+  const queuePip = getPanelPip(
+    stats.completedTasksCount,
+    stats.completedTasksCount + stats.activeTasksCount,
+    "today's queue",
+  );
+
   return (
     <section className="page-container py-8">
       <header className="mb-8 flex items-end justify-between gap-5 pr-14 md:pr-0">
-        <div>
+        <div className="flex items-start gap-4">
+          <Pip
+            burn={queuePip.burn}
+            className="h-12 w-auto shrink-0 sm:h-16"
+            mood={queuePip.mood}
+            seed={17}
+            size={64}
+            title={queuePip.title}
+          />
+          <div>
           <p className="label-caps text-finance">Task system</p>
           <h1 className="page-title mt-2 text-foreground">
             Today&apos;s work
@@ -297,12 +352,14 @@ export function TasksClient({
             Focus on what is due now. Unfinished work rolls forward; future work
             stays out of the way.
           </p>
+          </div>
         </div>
         <button
           className="hidden min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[13px] font-bold text-primary-foreground max-xl:block"
           onClick={() => {
             setEditing(null);
             setEstimateMode("1hr");
+            setRepeatDays([]);
             setTaskSaveNotice(null);
             setFormOpen(true);
           }}
@@ -447,6 +504,9 @@ export function TasksClient({
                 <input className="field-input" defaultValue={editing?.dueDate ?? ""} name="dueDate" type="date" />
               </Field>
             </div>
+            <Field label="Repeats">
+              <RepeatPicker onChange={setRepeatDays} value={repeatDays} />
+            </Field>
             <Field label="Note">
               <textarea
                 className="field-input min-h-24 py-3"
@@ -467,6 +527,7 @@ export function TasksClient({
                   onClick={() => {
                     setEditing(null);
                     setEstimateMode("1hr");
+                    setRepeatDays([]);
                     setTaskSaveNotice(null);
                     setFormOpen(false);
                   }}
@@ -489,12 +550,54 @@ export function TasksClient({
         </dialog>
 
         <section className="space-y-6 xl:col-start-2 xl:row-start-1">
-          <dl className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] grid overflow-hidden rounded-2xl sm:grid-cols-4">
-            <Metric label="Active" value={stats.activeTasksCount} tone="text-foreground" />
-            <Metric label="Done" value={stats.completedTasksCount} tone="text-primary" />
-            <Metric label="Hard" value={stats.hardTasksCount} tone="text-warning" />
-            <Metric label="Focus min" value={stats.totalEstimateMinutes} tone="text-finance" />
-          </dl>
+          <RoutineSetup hasRoutines={hasRoutines} />
+          {/* Three of these four count something you can then look at, so
+              they filter the list rather than only reporting it. */}
+          <div className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] grid overflow-hidden rounded-2xl sm:grid-cols-4">
+            <Metric
+              active={status === "open" && complexity === "all"}
+              label="Active"
+              onClick={() =>
+                updateFilters({
+                  complexity: "all",
+                  status:
+                    status === "open" && complexity === "all" ? "all" : "open",
+                })
+              }
+              tone="text-foreground"
+              value={stats.activeTasksCount}
+            />
+            <Metric
+              active={status === "done"}
+              label="Done"
+              onClick={() =>
+                updateFilters({
+                  complexity: "all",
+                  status: status === "done" ? "all" : "done",
+                })
+              }
+              tone="text-primary"
+              value={stats.completedTasksCount}
+            />
+            <Metric
+              active={complexity === "hard"}
+              label="Hard"
+              onClick={() =>
+                updateFilters(
+                  complexity === "hard"
+                    ? { complexity: "all", status: "all" }
+                    : { complexity: "hard", status: "open" },
+                )
+              }
+              tone="text-warning"
+              value={stats.hardTasksCount}
+            />
+            <Metric
+              label="Focus min"
+              tone="text-finance"
+              value={stats.totalEstimateMinutes}
+            />
+          </div>
           <section
             aria-labelledby="task-view-controls"
             className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-4 sm:p-5"
@@ -627,13 +730,16 @@ export function TasksClient({
                   <div className="grid gap-3">
                     {group.tasks.map((task) => (
                       <TaskRow
+                        hold={holds[task.id]}
                         key={task.id}
+                        routineDone={doneToday.includes(task.id)}
                         onSelected={() => toggleSelected(task.id)}
                         selected={selectedTaskIds.includes(task.id)}
                         onArchived={() => setArchivedTaskId(task.id)}
                         onEdit={() => {
                           setEditing(task);
                           setEstimateMode(task.estimateMode);
+                          setRepeatDays(task.repeatDays);
                           setTaskSaveNotice(null);
                           setFormOpen(true);
                         }}
@@ -655,6 +761,7 @@ export function TasksClient({
                       onClick={() => {
                         setEditing(null);
                         setEstimateMode("1hr");
+                        setRepeatDays([]);
                         setTaskSaveNotice(null);
                         setFormOpen(true);
                       }}
@@ -666,7 +773,6 @@ export function TasksClient({
                   description={filtersActive
                     ? "Adjust or clear the current search and filters to widen this view."
                     : "Plan only work that deserves a place in today or the days ahead."}
-                  icon="✓"
                   title={filtersActive ? "No tasks match this view" : "Your active queue is clear"}
                 />
               ) : null}
@@ -679,14 +785,17 @@ export function TasksClient({
                   <div className="mt-3 grid gap-3">
                     {completedTasks.map((task) => (
                       <TaskRow
+                        hold={holds[task.id]}
                         key={task.id}
                         locale={locale}
+                        routineDone={doneToday.includes(task.id)}
                         onSelected={() => toggleSelected(task.id)}
                         selected={selectedTaskIds.includes(task.id)}
                         onArchived={() => setArchivedTaskId(task.id)}
                         onEdit={() => {
                           setEditing(task);
                           setEstimateMode(task.estimateMode);
+                          setRepeatDays(task.repeatDays);
                           setTaskSaveNotice(null);
                           setFormOpen(true);
                         }}
@@ -754,25 +863,36 @@ export function TasksClient({
 }
 
 function TaskRow({
+  hold,
   locale,
   onArchived,
   onEdit,
   onSelected,
+  routineDone,
   selected,
   task,
   today,
   timeZone,
 }: {
+  hold?: RoutineHold;
   locale: string;
   onArchived: () => void;
   onEdit: () => void;
   onSelected: () => void;
+  routineDone?: boolean;
   selected: boolean;
   task: Task;
   today: string;
   timeZone: string;
 }) {
-  const dayStatus = getTaskDayStatus(task, today, timeZone);
+  const routine = isRepeating(task);
+  // A routine is done for this day, not for good, so the row asks the day.
+  const done = routine ? Boolean(routineDone) : task.completed;
+  const dayStatus = routine
+    ? done
+      ? "completed"
+      : getTaskDayStatus(task, today, timeZone)
+    : getTaskDayStatus(task, today, timeZone);
   const tone = taskDayTones[dayStatus];
 
   return (
@@ -794,7 +914,9 @@ function TaskRow({
           </span>
         </div>
         <p className="mt-2 text-[12px] leading-[18px] text-muted-foreground">
+          {routine ? `${describeRepeat(task.repeatDays)} · ` : ""}
           {task.category} · {formatTaskTime(task)} · {taskComplexityLabels[task.complexity]} · {taskPriorityLabels[task.priority]}
+          {routine && hold && hold.due > 0 ? ` · held ${hold.done}/${hold.due}` : ""}
           {task.dueDate ? (
             <>
               {" · due "}
@@ -822,13 +944,14 @@ function TaskRow({
       <div className="flex flex-wrap items-center gap-2 lg:justify-end">
         <form action={toggleTaskAction}>
           <input name="id" type="hidden" value={task.id} />
-          <input name="completed" type="hidden" value={String(!task.completed)} />
+          <input name="completed" type="hidden" value={String(!done)} />
+          <input name="date" type="hidden" value={today} />
           <PendingSubmitButton
-            ariaLabel={task.completed ? "Reopen task" : "Complete task"}
+            ariaLabel={done ? "Reopen task" : "Complete task"}
             className="min-h-11 rounded-xl border border-input bg-secondary px-3 text-[12px] font-semibold text-foreground"
             pendingLabel="Saving…"
           >
-            {task.completed ? "Reopen" : "Done"}
+            {done ? "Reopen" : "Done"}
           </PendingSubmitButton>
         </form>
         <div className="flex gap-2 opacity-100 transition duration-150 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
@@ -989,11 +1112,48 @@ function Field({ children, label }: { children: ReactNode; label: string }) {
   );
 }
 
-function Metric({ label, tone, value }: { label: string; tone: string; value: number }) {
+/**
+ * A number from the queue. The three that name a subset of it filter the list;
+ * the one that does not stays a figure, and does not pretend otherwise.
+ */
+function Metric({
+  active = false,
+  label,
+  onClick,
+  tone,
+  value,
+}: {
+  active?: boolean;
+  label: string;
+  onClick?: () => void;
+  tone: string;
+  value: number;
+}) {
+  const inside = (
+    <>
+      <span className="label-caps block text-muted-foreground">{label}</span>
+      <span className={`metric-value mt-3 block text-[28px] font-semibold ${tone}`}>
+        {value}
+      </span>
+    </>
+  );
+  const frame =
+    "border-b border-border p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0";
+
+  if (!onClick) {
+    return <div className={frame}>{inside}</div>;
+  }
+
   return (
-    <div className="border-b border-border p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
-      <dt className="label-caps text-muted-foreground">{label}</dt>
-      <dd className={`metric-value mt-3 text-[28px] font-semibold ${tone}`}>{value}</dd>
-    </div>
+    <button
+      aria-pressed={active}
+      className={`${frame} text-left transition-colors ${
+        active ? "bg-primary/10" : "hover:bg-muted"
+      }`}
+      onClick={onClick}
+      type="button"
+    >
+      {inside}
+    </button>
   );
 }

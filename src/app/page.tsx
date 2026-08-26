@@ -4,7 +4,10 @@ import { DayCardShare } from "@/components/DayCardShare";
 import { DayComplete } from "@/components/DayComplete";
 import { RecapShare } from "@/components/RecapShare";
 import { WeekSealed } from "@/components/WeekSealed";
+import { Arrival } from "@/components/Arrival";
 import { NowCard } from "@/components/overview/NowCard";
+import { VoyageCard } from "@/components/overview/VoyageCard";
+import { WeekStrip } from "@/components/overview/WeekStrip";
 import {
   AnalyticsCard,
   FinanceCard,
@@ -17,7 +20,6 @@ import {
   RingsCard,
   SetupCard,
   TasksCard,
-  WeekStrip,
   greeting,
 } from "@/components/overview/cards";
 import { AppNavigation } from "@/components/AppNavigation";
@@ -27,6 +29,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import {
   type ProductivityDomain,
   getDailyRings,
+  getProductivityHistory,
   getProductivityRange,
   getProductivityWeeks,
   getWeeklyReflection,
@@ -58,6 +61,7 @@ import { getPinnedFinanceMetric } from "@/lib/finance-metric";
 import { getAscent } from "@/lib/ascent";
 import { hasCrew, publishSnapshot } from "@/lib/crew";
 import { getRecapWeek, getWeekRecap } from "@/lib/recap";
+import { daysOut, getVoyage } from "@/lib/voyage";
 import {
   getEarnedToday,
   getMilestones,
@@ -80,10 +84,16 @@ import {
   getTaskStats,
   getTasks,
   getVisibleTasks,
+  isRepeating,
   sortDashboardTasks,
 } from "@/lib/tasks";
+import { isRoutineDoneOn } from "@/lib/routines";
+import { getTaskReward } from "@/lib/reward";
 
 export const dynamic = "force-dynamic";
+
+/** Two years of days: long enough to be a voyage, bounded enough to be cheap. */
+const VOYAGE_HISTORY_DAYS = 730;
 
 export const metadata: Metadata = {
   title: "Overview",
@@ -100,7 +110,9 @@ export default async function Home({
   const calendar = preferences.regional;
   const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
   const currentWeek = getWeekDateKeys(today, calendar.weekStartsOn);
-  const historyFrom = shiftDate(today, -59);
+  // The voyage counts every day Orbit has ever scored, so the window that
+  // feeds it is the account, not the last two months.
+  const historyFrom = shiftDate(today, -VOYAGE_HISTORY_DAYS + 1);
   const historyTo = shiftDate(today, 1);
   const [
     taskHistory,
@@ -138,6 +150,7 @@ export default async function Home({
   const finance = getFinanceSummary(transactions, today.slice(0, 7));
   const dailyRings = getDailyRings(
     visibleTasks,
+    completions,
     fitnessStats.todayTraining,
     transactions,
     today,
@@ -200,6 +213,29 @@ export default async function Home({
     today,
   );
   const dayCard = getDayCard({ date: today, ghost, momentum, streak });
+  const voyage = getVoyage(
+    rescoreProductivity(
+      {
+        current: getProductivityHistory(
+          taskHistory,
+          completions,
+          sessions,
+          fitnessPlanHistory,
+          today,
+          VOYAGE_HISTORY_DAYS,
+          calendar,
+        ),
+        previous: [],
+      },
+      enabledDomains,
+      preferences.scoring,
+    ).current,
+  );
+  // Only the newest arrival is worth interrupting for, and only while it is
+  // still news.
+  const arrival = voyage.arrivals[voyage.arrivals.length - 1];
+  const freshArrival =
+    arrival && arrival.date >= shiftDate(today, -1) ? arrival : null;
   // Last week, out of the thirty days already loaded for momentum: no extra
   // query, and no recap table to fall out of sync with the days themselves.
   const recapWeek = getRecapWeek(today, calendar.weekStartsOn);
@@ -284,10 +320,43 @@ export default async function Home({
     calendar.timeZone,
   ).slice(0, 4);
   const pinnedTaskStats = getTaskStats(pinnedTasks);
-  const nextTask = orderedTasks.find((task) => !task.completed);
+  // A routine is done for a date, so today's completions decide whether it is
+  // still asking for something.
+  const doneToday = new Set(
+    orderedTasks
+      .filter(
+        (task) => isRepeating(task) && isRoutineDoneOn(completions, task.id, today),
+      )
+      .map((task) => task.id),
+  );
+  const nextTask = orderedTasks.find((task) =>
+    isRepeating(task) ? !doneToday.has(task.id) : !task.completed,
+  );
+  // What each open task is worth right now, in the same kilometres the voyage
+  // counts, so the reward on the button is the reward on the map.
+  const todayPoint = weeklyProductivity.current.find(
+    (point) => point.date === today,
+  );
+  const taskRewards = Object.fromEntries(
+    todayPoint
+      ? orderedTasks.map((task) => [
+          task.id,
+          getTaskReward(todayPoint, task, enabledDomains, preferences.scoring),
+        ])
+      : [],
+  );
+  const monthTransactions = transactions.filter((transaction) =>
+    transaction.date.startsWith(today.slice(0, 7)),
+  );
   const pendingFinance = [...transactions]
     .filter((transaction) => transaction.status !== "paid")
     .sort((a, b) => a.date.localeCompare(b.date))[0];
+  // What Pip reads on the finance card: how much of this month is settled.
+  const settledFinance = {
+    done: monthTransactions.filter((transaction) => transaction.status === "paid")
+      .length,
+    total: monthTransactions.length,
+  };
   const pinnedFinance = getPinnedFinanceMetric(
     preferences.pinnedFinanceMetric,
     finance,
@@ -320,6 +389,7 @@ export default async function Home({
         key="finance"
         pendingFinance={pendingFinance}
         pinnedFinance={pinnedFinance}
+        settled={settledFinance}
       />
     ),
     fitness: (
@@ -337,6 +407,7 @@ export default async function Home({
       <ReviewCard key="review" reflection={reflection} review={review} />
     ),
     milestones: <MilestonesCard key="milestones" milestones={milestones} />,
+    voyage: <VoyageCard key="voyage" locale={calendar.locale} voyage={voyage} />,
     recap: recap ? <RecapCard key="recap" recap={recap} /> : null,
     rings: (
       <RingsCard
@@ -348,11 +419,13 @@ export default async function Home({
     ),
     tasks: (
       <TasksCard
+        doneToday={[...doneToday]}
         filter={filter}
         key="tasks"
         overviewQuery={overviewQuery}
         pinnedCategory={preferences.pinnedTaskCategory}
         quickTasks={quickTasks}
+        rewards={taskRewards}
         taskStats={pinnedTaskStats}
         today={today}
         timeZone={calendar.timeZone}
@@ -366,6 +439,7 @@ export default async function Home({
   const trendCardIds: DashboardCardId[] = [
     "analytics",
     "milestones",
+    "voyage",
     "recap",
     "review",
   ];
@@ -435,6 +509,14 @@ export default async function Home({
           </DayComplete>
         ) : null}
 
+        {freshArrival ? (
+          <Arrival
+            arrival={freshArrival}
+            daysTaken={daysOut(voyage.startedOn, freshArrival.date)}
+            distance={voyage.distance}
+          />
+        ) : null}
+
         {recap && recap.fresh ? (
           <WeekSealed recap={recap}>
             <RecapShare
@@ -458,13 +540,18 @@ export default async function Home({
         <NowCard
           dailyRings={dailyRings}
           nextTask={nextTask}
+          reward={nextTask ? taskRewards[nextTask.id] ?? 0 : 0}
           timeZone={calendar.timeZone}
           today={today}
           todayScore={momentum.todayScore}
           training={fitnessStats.todayTraining}
         />
 
-        <WeekStrip points={weeklyProductivity.current} today={today} />
+        <WeekStrip
+          locale={calendar.locale}
+          points={weeklyProductivity.current}
+          today={today}
+        />
 
         {todayCards.length > 0 ? (
           <div className="grid gap-5 lg:grid-cols-2">

@@ -6,6 +6,8 @@ import { ActionToast } from "@/components/ActionToast";
 import { BankStatementImporter } from "@/components/BankStatementImporter";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { EmptyState } from "@/components/EmptyState";
+import { Pip } from "@/components/brand/Pip";
+import { getPanelPip } from "@/lib/mascot";
 import {
   type FinanceStatementImport,
   type FinanceTransaction,
@@ -57,7 +59,32 @@ export function FinanceClient({
   const currentNet = currentMonth ? currentMonth.income - currentMonth.expense : 0;
   const previousNet = previousMonth ? previousMonth.income - previousMonth.expense : 0;
   const netChange = currentNet - previousNet;
+  // The ledger's editor is lifted here so the recent-flow list can hand it a
+  // row: a row that looks like a control now is one, for the entries Orbit is
+  // allowed to change.
+  const [editingTransaction, setEditingTransaction] =
+    useState<FinanceTransaction | null>(null);
+  const editTransaction = (transaction: FinanceTransaction | null) => {
+    setEditingTransaction(transaction);
+    if (transaction) {
+      document
+        .getElementById("manual-ledger")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
   const coverage = getFinanceStatementCoverage(statementImports);
+  // Settled against everything on the books this month: the one thing on this
+  // page that behaves like a day's worth of work being finished.
+  const monthPip = getPanelPip(
+    transactions.filter(
+      (transaction) =>
+        transaction.status === "paid" &&
+        transaction.date.startsWith(selectedMonth),
+    ).length,
+    transactions.filter((transaction) => transaction.date.startsWith(selectedMonth))
+      .length,
+    "this month",
+  );
   const monthOptions = [
     ...new Set([
       summary.currentMonth,
@@ -105,7 +132,16 @@ export function FinanceClient({
       data-finance-private={privacyMode}
     >
       <header className="mb-8 flex flex-col gap-5 pr-14 md:pr-0 lg:flex-row lg:items-end lg:justify-between">
-        <div>
+        <div className="flex items-start gap-4">
+          <Pip
+            burn={monthPip.burn}
+            className="h-12 w-auto shrink-0 sm:h-16"
+            mood={monthPip.mood}
+            seed={18}
+            size={64}
+            title={monthPip.title}
+          />
+          <div>
           <p className="label-caps text-primary">Finance system</p>
           <h1 className="page-title mt-2 text-foreground">
             {`${formatStatementMonth(selectedMonth, regional.locale)} cashflow`}
@@ -114,6 +150,7 @@ export function FinanceClient({
             {transactions.length} active transaction{transactions.length === 1 ? "" : "s"} across{" "}
             {statementImports.length} imported statement{statementImports.length === 1 ? "" : "s"}.
           </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-3">
           <label className="grid gap-1">
@@ -179,7 +216,11 @@ export function FinanceClient({
         </article>
 
         <CashflowCard regional={regional} summary={periodSummary} />
-        <TransactionsCard regional={regional} transactions={periodSummary.recentTransactions} />
+        <TransactionsCard
+          onEdit={editTransaction}
+          regional={regional}
+          transactions={periodSummary.recentTransactions}
+        />
         <CategoryCard regional={regional} summary={periodSummary} />
         <StatementHistoryCard regional={regional} statementImports={statementImports} />
       </section>
@@ -188,7 +229,9 @@ export function FinanceClient({
         <h2 className="mt-1 text-[22px] font-semibold text-foreground" id="finance-utilities-title">Statement import and maintenance</h2>
         <div className="mt-4 grid gap-6 xl:grid-cols-12">
           <ManualTransactionsCard
+            editing={editingTransaction}
             onChanged={() => router.refresh()}
+            onEdit={editTransaction}
             regional={regional}
             selectedMonth={selectedMonth}
             transactions={transactions}
@@ -273,17 +316,20 @@ function FinanceDataStatus({
 }
 
 function ManualTransactionsCard({
+  editing,
   onChanged,
+  onEdit,
   regional,
   selectedMonth,
   transactions,
 }: {
+  editing: FinanceTransaction | null;
   onChanged: () => void;
+  onEdit: (transaction: FinanceTransaction | null) => void;
   regional: RegionalPreferences;
   selectedMonth: string;
   transactions: FinanceTransaction[];
 }) {
-  const [editing, setEditing] = useState<FinanceTransaction | null>(null);
   const [notice, setNotice] = useState("");
   const [pending, setPending] = useState(false);
   const visible = transactions
@@ -299,7 +345,7 @@ function ManualTransactionsCard({
         setNotice(result.error);
         return;
       }
-      setEditing(null);
+      onEdit(null);
       setNotice("Transaction saved.");
       onChanged();
     } catch {
@@ -310,7 +356,7 @@ function ManualTransactionsCard({
   }
 
   return (
-    <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-6 xl:col-span-12">
+    <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] scroll-mt-24 rounded-2xl p-6 xl:col-span-12" id="manual-ledger">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="label-caps text-finance">Manual ledger</p>
@@ -357,7 +403,7 @@ function ManualTransactionsCard({
             {pending ? "Saving…" : editing ? "Save" : "Add"}
           </button>
           {editing ? (
-            <button className="min-h-11 px-2 text-[12px] font-semibold text-muted-foreground" onClick={() => setEditing(null)} type="button">
+            <button className="min-h-11 px-2 text-[12px] font-semibold text-muted-foreground" onClick={() => onEdit(null)} type="button">
               Cancel
             </button>
           ) : null}
@@ -373,7 +419,7 @@ function ManualTransactionsCard({
             </div>
             <p className="metric-value text-[13px] text-foreground">{formatCurrency(transaction.amount, regional)}</p>
             <div className="flex gap-2">
-              <button className="min-h-11 px-2 text-[12px] font-semibold text-primary" onClick={() => setEditing(transaction)} type="button">Edit</button>
+              <button className="min-h-11 px-2 text-[12px] font-semibold text-primary" onClick={() => onEdit(transaction)} type="button">Edit</button>
               <ConfirmDialog
                 confirmLabel="Archive"
                 description={`“${transaction.title}” will leave active finance totals.`}
@@ -471,10 +517,10 @@ function StatementHistoryCard({
       ) : (
         <div className="mt-5">
           <EmptyState
+            seed={1}
             actionHref="/finance#bank-statement-import"
             actionLabel="Import bank PDF"
             description="Your confirmed monthly bank statements will appear here with income, spending, and net totals."
-            icon="PDF"
             title="No bank statements imported"
           />
         </div>
@@ -560,10 +606,10 @@ function CashflowCard({
         </div>
       ) : (
         <EmptyState
+            seed={2}
           actionHref="/finance#bank-statement-import"
           actionLabel="Import bank PDF"
           description="Import a monthly bank statement to compare income, expenses, and net cashflow over time."
-          icon="€"
           title="No cashflow history yet"
         />
       )}
@@ -585,9 +631,11 @@ function CashflowCard({
 }
 
 function TransactionsCard({
+  onEdit,
   regional,
   transactions,
 }: {
+  onEdit: (transaction: FinanceTransaction) => void;
   regional: RegionalPreferences;
   transactions: FinanceTransaction[];
 }) {
@@ -596,32 +644,53 @@ function TransactionsCard({
       <p className="label-caps text-muted-foreground">Latest transactions</p>
       <h2 className="mt-2 text-[24px] font-semibold text-foreground">Recent flow</h2>
       <div className="mt-5 space-y-3">
-        {transactions.map((transaction) => (
-          <div
-            className="scroll-mt-24 flex items-center gap-3 rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted/55 p-3"
-            id={`transaction-${transaction.id}`}
-            key={transaction.id}
-          >
-            <div className="grid h-10 w-10 place-items-center rounded-full bg-[rgba(244,235,221,0.08)] text-[13px] font-bold text-foreground">
-              {transaction.category.slice(0, 1)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[14px] font-semibold text-foreground">{transaction.title}</p>
-              <p className="text-[12px] text-muted-foreground">
-                {transaction.date} · {transaction.status}
+        {transactions.map((transaction) => {
+          // Imported rows are deliberately read-only, so they are drawn as a
+          // record and say why; a manual row opens in the ledger below.
+          const imported = Boolean(transaction.statementImportId);
+          const body = (
+            <>
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-[rgba(244,235,221,0.08)] text-[13px] font-bold text-foreground">
+                {transaction.category.slice(0, 1)}
+              </div>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="truncate text-[14px] font-semibold text-foreground">{transaction.title}</p>
+                <p className="text-[12px] text-muted-foreground">
+                  {transaction.date} · {transaction.status}
+                  {imported ? " · imported" : ""}
+                </p>
+              </div>
+              <p className={`metric-value text-[14px] font-semibold ${transaction.amount >= 0 ? "text-primary" : "text-destructive"}`}>
+                {formatCurrency(transaction.amount, regional)}
               </p>
+            </>
+          );
+          return imported ? (
+            <div
+              className="scroll-mt-24 flex items-center gap-3 rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted/55 p-3"
+              id={`transaction-${transaction.id}`}
+              key={transaction.id}
+            >
+              {body}
             </div>
-            <p className={`metric-value text-[14px] font-semibold ${transaction.amount >= 0 ? "text-primary" : "text-destructive"}`}>
-              {formatCurrency(transaction.amount, regional)}
-            </p>
-          </div>
-        ))}
+          ) : (
+            <button
+              className="scroll-mt-24 flex w-full items-center gap-3 rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted/55 p-3 transition duration-150 hover:border-primary/35 hover:bg-muted active:scale-[0.99]"
+              id={`transaction-${transaction.id}`}
+              key={transaction.id}
+              onClick={() => onEdit(transaction)}
+              type="button"
+            >
+              {body}
+            </button>
+          );
+        })}
         {transactions.length === 0 ? (
           <EmptyState
+            seed={3}
             actionHref="/finance#bank-statement-import"
             actionLabel="Import bank PDF"
             description="Your latest income and expenses will appear here after a statement import."
-            icon="€"
             title="No transactions this period"
           />
         ) : null}
@@ -663,10 +732,10 @@ function CategoryCard({
         ))}
         {summary.categorySpend.length === 0 ? (
           <EmptyState
+            seed={4}
             actionHref="/finance#bank-statement-import"
             actionLabel="Import bank PDF"
             description="Expense categories appear after a monthly statement is imported."
-            icon="◎"
             title="No category spending yet"
           />
         ) : null}

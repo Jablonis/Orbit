@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Pip } from "@/components/brand/Pip";
 import type { Ascent, AscentSystem } from "@/lib/ascent";
 
@@ -7,6 +8,14 @@ const fill: Record<AscentSystem, string> = {
   finance: "bg-finance",
   fitness: "bg-fitness",
   tasks: "bg-tasks",
+};
+
+// Where each column is actually worked on. A bar this size reads as a control,
+// so it is one: it goes to the page that moves it.
+const href: Record<AscentSystem, string> = {
+  finance: "/finance",
+  fitness: "/fitness",
+  tasks: "/tasks",
 };
 
 const ink: Record<AscentSystem, string> = {
@@ -50,11 +59,8 @@ export function DayAscent({
           }`}
           style={{ right: lane }}
         >
-          {ascent.columns.map((column, index) => (
-            <li
-              className="flex min-w-0 flex-1 justify-center"
-              key={column.system}
-            >
+          {ascent.columns.map((column, index) => {
+            const bar = (
               <div
                 className={`relative flex w-full items-end overflow-hidden rounded-t-2xl bg-muted/70 ${
                   compact ? "" : "max-w-[54px]"
@@ -71,8 +77,28 @@ export function DayAscent({
                   }}
                 />
               </div>
-            </li>
-          ))}
+            );
+            return (
+              <li
+                className="flex min-w-0 flex-1 justify-center"
+                key={column.system}
+              >
+                {compact ? (
+                  bar
+                ) : (
+                  // The compact badge already lives inside a link, so only the
+                  // full instrument carries its own.
+                  <Link
+                    aria-label={`${column.label}: ${column.value}`}
+                    className="flex w-full justify-center rounded-t-2xl transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.98]"
+                    href={href[column.system]}
+                  >
+                    {bar}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
         </ol>
 
         {/* Drawn after the columns, so the line that decides the day is read
@@ -119,22 +145,27 @@ export function DayAscent({
       </div>
 
       {compact ? null : (
-        <dl className="flex gap-3 sm:gap-4" style={{ paddingRight: lane }}>
+        <ul className="flex gap-3 sm:gap-4" style={{ paddingRight: lane }}>
           {ascent.columns.map((column) => (
-            <div className="min-w-0 flex-1 text-center" key={column.system}>
-              <dt className="label-caps truncate text-muted-foreground">
-                {column.label}
-              </dt>
-              <dd
-                className={`metric-value text-[15px] font-bold ${
-                  column.closed ? ink[column.system] : ""
-                }`}
+            <li className="min-w-0 flex-1 text-center" key={column.system}>
+              <Link
+                className="block rounded-xl py-1 transition-colors hover:bg-muted"
+                href={href[column.system]}
               >
-                {column.value}
-              </dd>
-            </div>
+                <span className="label-caps block truncate text-muted-foreground">
+                  {column.label}
+                </span>
+                <span
+                  className={`metric-value block text-[15px] font-bold ${
+                    column.closed ? ink[column.system] : ""
+                  }`}
+                >
+                  {column.value}
+                </span>
+              </Link>
+            </li>
           ))}
-        </dl>
+        </ul>
       )}
     </div>
   );

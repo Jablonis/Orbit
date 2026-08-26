@@ -7,7 +7,9 @@ import { TintPanel } from "@/components/ui/tint-panel";
 import { getAscent } from "@/lib/ascent";
 import type { getDailyRings } from "@/lib/dashboard";
 import type { TodayTraining } from "@/lib/fitness";
-import { type Task, formatRelativeTaskDate } from "@/lib/tasks";
+import { type Task, formatRelativeTaskDate, isRepeating } from "@/lib/tasks";
+import { describeRepeat } from "@/lib/routines";
+import { formatReward } from "@/lib/reward";
 import { toggleFitnessDoneFormAction } from "@/app/fitness/actions";
 import { toggleTaskAction } from "@/app/tasks/actions";
 
@@ -23,6 +25,7 @@ import { toggleTaskAction } from "@/app/tasks/actions";
 export function NowCard({
   dailyRings,
   nextTask,
+  reward,
   today,
   todayScore,
   timeZone,
@@ -30,6 +33,8 @@ export function NowCard({
 }: {
   dailyRings: ReturnType<typeof getDailyRings>;
   nextTask?: Task;
+  /** What finishing this move is worth today, in the voyage's kilometres. */
+  reward: number;
   today: string;
   todayScore: number | null;
   timeZone: string;
@@ -50,7 +55,11 @@ export function NowCard({
   // actually asks for them.
   const move = nextTask
     ? {
-        detail: `${nextTask.category} · ${formatRelativeTaskDate(nextTask, today, timeZone)}`,
+        detail: `${nextTask.category} · ${
+          isRepeating(nextTask)
+            ? describeRepeat(nextTask.repeatDays)
+            : formatRelativeTaskDate(nextTask, today, timeZone)
+        }`,
         title: nextTask.title,
       }
     : trainingDue
@@ -87,14 +96,15 @@ export function NowCard({
       <div className="flex flex-wrap gap-2">
         {nextTask ? (
           <form action={toggleTaskAction}>
-            <input name="taskId" type="hidden" value={nextTask.id} />
+            <input name="id" type="hidden" value={nextTask.id} />
             <input name="completed" type="hidden" value="true" />
+            <input name="date" type="hidden" value={today} />
             <input name="redirectTo" type="hidden" value="/" />
             <PendingSubmitButton
               className="ui-button ui-button--primary h-11 px-5"
               pendingLabel="Done…"
             >
-              Mark done
+              {reward > 0 ? `Mark done · ${formatReward(reward)}` : "Mark done"}
             </PendingSubmitButton>
           </form>
         ) : trainingDue ? (
