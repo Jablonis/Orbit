@@ -92,9 +92,16 @@ is documented in `docs/BRAND.md`.
 Orbit can send one notification in the evening carrying the score today still
 needs — "Finish today at 49 %". It is off until you turn it on in dashboard
 settings, it never arrives on a day already in orbit, and it arrives once:
-`/api/push/send` runs hourly, works out who is at their chosen local hour, and
-claims the day with an insert before it sends. Subscriptions that a push service
-reports as gone (404 or 410) are deleted immediately.
+`/api/push/send` works out who is at or past their chosen local hour and claims
+the day with an insert before it sends, so two overlapping runs cannot both
+deliver. Subscriptions that a push service reports as gone (404 or 410) are
+deleted immediately.
+
+`vercel.json` schedules it once a day, at 17:00 UTC — a Vercel Hobby project may
+only run a cron daily, and a deployment declaring anything more frequent is
+rejected. On a plan that allows more, change the schedule to `0 * * * *`: an
+hourly run reaches every timezone at its own chosen hour, and nothing else has
+to change.
 
 On iPhone, Safari only allows notifications for an app added to the home
 screen; the setting says so rather than failing silently.

@@ -54,6 +54,14 @@ export type DueInput = {
 /**
  * Four conditions, all of which must hold. The day being already in orbit is
  * the one that matters most: a reminder about a day you have finished is spam.
+ *
+ * The hour is a window rather than a match. The sender runs on a schedule the
+ * hosting plan decides — hourly where that is allowed, once a day where it is
+ * not — and a single daily run would never coincide with everyone's chosen
+ * hour. Being at or past that hour is the honest reading of "remind me at
+ * eight", and since the earliest hour on offer is late afternoon it cannot
+ * run past midnight; the once-per-day claim in the database keeps an hourly
+ * schedule from sending it again at nine.
  */
 export function isReminderDue({
   alreadySentToday,
@@ -65,7 +73,7 @@ export function isReminderDue({
   if (!reminders.enabled) return false;
   if (!hasSubscription) return false;
   if (alreadySentToday) return false;
-  if (localHour !== reminders.hour) return false;
+  if (localHour < reminders.hour) return false;
   return (todayScore ?? 0) < ORBIT_DAY_SCORE;
 }
 

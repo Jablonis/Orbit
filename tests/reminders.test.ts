@@ -30,6 +30,12 @@ test("a reminder is due only when every condition holds", () => {
 
   assert.equal(isReminderDue(base), true);
   assert.equal(isReminderDue({ ...base, localHour: 19 }), false);
+  // The hour is a floor, not a match: a once-a-day sender still lands.
+  assert.equal(isReminderDue({ ...base, localHour: 21 }), true);
+  assert.equal(isReminderDue({ ...base, localHour: 23 }), true);
+  // Past midnight it is no longer an evening reminder.
+  assert.equal(isReminderDue({ ...base, localHour: 0 }), false);
+  assert.equal(isReminderDue({ ...base, localHour: 8 }), false);
   assert.equal(isReminderDue({ ...base, alreadySentToday: true }), false);
   assert.equal(isReminderDue({ ...base, hasSubscription: false }), false);
   assert.equal(
