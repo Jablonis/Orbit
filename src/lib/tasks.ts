@@ -96,6 +96,51 @@ type DbTaskCompletion = {
   task_id: string;
 };
 
+/**
+ * The columns a task is read as. `repeat_days` arrived with routines, and a
+ * deploy can land before its migration does — so every read and write that
+ * touches it can fall back to the shape without it.
+ */
+const TASK_COLUMNS =
+  "id,title,category,type,complexity,priority,estimate_mode,estimate_minutes,time_from,time_to,due_date,note,repeat_days,completed,completed_at,created_at,updated_at";
+const TASK_COLUMNS_WITHOUT_ROUTINES = TASK_COLUMNS.replace(",repeat_days", "");
+
+type PostgrestErrorish = { code?: string; message?: string } | null;
+
+/**
+ * Postgres 42703 is "column does not exist". Reading it here means the routines
+ * migration has not been applied to this database yet, and the honest response
+ * is an app without routines rather than an app that does not load: the tasks
+ * query is on the dashboard's critical path, so failing it takes Orbit down.
+ */
+export function isMissingRoutineColumn(error: PostgrestErrorish) {
+  return (
+    error?.code === "42703" && (error.message ?? "").includes("repeat_days")
+  );
+}
+
+/** The same row, minus the column this database does not have yet. */
+export function withoutRoutineColumn(row: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(row).filter(([column]) => column !== "repeat_days"),
+  );
+}
+
+async function selectTasks(
+  run: (
+    columns: string,
+  ) => PromiseLike<{ data: unknown; error: PostgrestErrorish }>,
+) {
+  const first = await run(TASK_COLUMNS);
+  if (isMissingRoutineColumn(first.error)) {
+    const retry = await run(TASK_COLUMNS_WITHOUT_ROUTINES);
+    if (retry.error) throw new Error(retry.error.message);
+    return (retry.data ?? []) as DbTask[];
+  }
+  if (first.error) throw new Error(first.error.message);
+  return (first.data ?? []) as DbTask[];
+}
+
 export function getMinutesBetweenTimes(timeFrom: string, timeTo: string) {
   if (!timeFrom || !timeTo) {
     return 0;
@@ -322,20 +367,16 @@ export async function getTasks(
   userId: string,
   options: { includeHistory?: boolean; timeZone?: string; today?: string } = {},
 ) {
-  const { data, error } = await supabase
-    .from("tasks")
-    .select(
-      "id,title,category,type,complexity,priority,estimate_mode,estimate_minutes,time_from,time_to,due_date,note,repeat_days,completed,completed_at,created_at,updated_at",
-    )
-    .eq("user_id", userId)
-    .is("archived_at", null)
-    .order("created_at", { ascending: false });
+  const data = await selectTasks((columns) =>
+    supabase
+      .from("tasks")
+      .select(columns)
+      .eq("user_id", userId)
+      .is("archived_at", null)
+      .order("created_at", { ascending: false }),
+  );
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const tasks = (data ?? []).map((task) => mapDbTask(task as DbTask));
+  const tasks = data.map((task) => mapDbTask(task));
 
   if (options.includeHistory) {
     return tasks;
@@ -353,18 +394,17 @@ export async function getArchivedTasks(
   userId: string,
   limit = 50,
 ) {
-  const { data, error } = await supabase
-    .from("tasks")
-    .select(
-      "id,title,category,type,complexity,priority,estimate_mode,estimate_minutes,time_from,time_to,due_date,note,repeat_days,completed,completed_at,created_at,updated_at",
-    )
-    .eq("user_id", userId)
-    .not("archived_at", "is", null)
-    .order("archived_at", { ascending: false })
-    .limit(limit);
+  const data = await selectTasks((columns) =>
+    supabase
+      .from("tasks")
+      .select(columns)
+      .eq("user_id", userId)
+      .not("archived_at", "is", null)
+      .order("archived_at", { ascending: false })
+      .limit(limit),
+  );
 
-  if (error) throw new Error(error.message);
-  return (data ?? []).map((task) => mapDbTask(task as DbTask));
+  return data.map((task) => mapDbTask(task));
 }
 
 export async function getTaskCompletions(

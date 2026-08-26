@@ -10,7 +10,9 @@ import {
   TaskType,
   getDateInTimeZone,
   getMinutesBetweenTimes,
+  isMissingRoutineColumn,
   toTaskInsert,
+  withoutRoutineColumn,
 } from "@/lib/tasks";
 import { normaliseRepeatDays } from "@/lib/routines";
 import { pickRoutineKit } from "@/lib/routine-kit";
@@ -103,16 +105,21 @@ export async function saveTaskAction(formData: FormData): Promise<TaskSaveResult
     return { ok: false, error: "Add a task title." };
   }
 
-  if (id) {
-    const { error } = await supabase
-      .from("tasks")
-      .update(toTaskInsert(input, user.id))
-      .eq("id", id)
-      .eq("user_id", user.id);
-    if (error) return { ok: false, error: "The task could not be updated." };
-  } else {
-    const { error } = await supabase.from("tasks").insert(toTaskInsert(input, user.id));
-    if (error) return { ok: false, error: "The task could not be created." };
+  const row = toTaskInsert(input, user.id);
+  // A database without the routines migration still saves ordinary tasks.
+  const write = (values: Record<string, unknown>) =>
+    id
+      ? supabase.from("tasks").update(values).eq("id", id).eq("user_id", user.id)
+      : supabase.from("tasks").insert(values);
+  const failure = id
+    ? "The task could not be updated."
+    : "The task could not be created.";
+
+  const { error } = await write(row);
+  if (error) {
+    if (!isMissingRoutineColumn(error)) return { ok: false, error: failure };
+    const retry = await write(withoutRoutineColumn(row));
+    if (retry.error) return { ok: false, error: failure };
   }
 
   revalidatePath("/");
@@ -134,13 +141,16 @@ export async function toggleTaskAction(formData: FormData) {
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle();
-  if (readError) throw new Error(readError.message);
-  if (!task) return;
+  // No routines column means no routines: everything is a plain task.
+  if (readError && !isMissingRoutineColumn(readError)) {
+    throw new Error(readError.message);
+  }
+  if (!readError && !task) return;
 
   // A routine is done for a day, not for good: ticking it writes that one day's
   // completion and leaves the task itself open for tomorrow. Anything else and
   // a daily habit would need reopening every morning.
-  if ((task.repeat_days as number[] | null)?.length) {
+  if ((task?.repeat_days as number[] | null)?.length) {
     const { error } = await supabase.rpc("set_routine_completion", {
       p_date: /^\d{4}-\d{2}-\d{2}$/.test(date)
         ? date
@@ -241,12 +251,14 @@ export async function bulkUpdateTasksAction(
       .select("id,repeat_days")
       .eq("user_id", user.id)
       .in("id", ids);
-    if (readError) {
+    if (readError && !isMissingRoutineColumn(readError)) {
       return { ok: false, error: "The selected tasks could not be updated." };
     }
-    targets = (rows ?? [])
-      .filter((row) => !(row.repeat_days as number[] | null)?.length)
-      .map((row) => row.id as string);
+    targets = readError
+      ? ids
+      : (rows ?? [])
+          .filter((row) => !(row.repeat_days as number[] | null)?.length)
+          .map((row) => row.id as string);
     if (targets.length === 0) {
       return { ok: true, updated: 0 };
     }
@@ -340,7 +352,12 @@ export async function addRoutineKitAction(
     ),
   );
   if (error) {
-    return { ok: false, error: "The routines could not be added." };
+    return {
+      ok: false,
+      error: isMissingRoutineColumn(error)
+        ? "Routines need the latest database migration. Run supabase db push."
+        : "The routines could not be added.",
+    };
   }
 
   revalidatePath("/");
