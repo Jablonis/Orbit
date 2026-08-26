@@ -8,7 +8,8 @@ import { getWeekDateKeys, shiftDate } from "@/lib/fitness";
 import type { FinanceTransaction } from "@/lib/finance";
 import type { CalendarPreferences } from "@/lib/preferences";
 import type { Task, TaskCompletion } from "@/lib/tasks";
-import { getDateInTimeZone, getTaskDayStatus } from "@/lib/tasks";
+import { getDateInTimeZone, getTaskDayStatus, isRepeating } from "@/lib/tasks";
+import { getDayTasks, isRoutineDueOn } from "@/lib/routines";
 import type { ProductivityPoint } from "@/lib/productivity-score";
 export {
   type ProductivityDomain,
@@ -56,13 +57,16 @@ function toRingMetric(completed: number, total: number): DailyRingMetric {
 
 export function getDailyRings(
   tasks: Task[],
+  completions: TaskCompletion[],
   training: TodayTraining,
   transactions: FinanceTransaction[],
   today: string,
   timeZone: CalendarPreferences["timeZone"],
 ): DailyRings {
-  const dailyTasks = tasks.filter(
-    (task) => getTaskDayStatus(task, today, timeZone) !== "scheduled",
+  // A routine is done for a date rather than for good, so the ring reads the
+  // completions for today instead of the flag on the task.
+  const dailyTasks = getDayTasks(tasks, completions, today, timeZone).filter(
+    (entry) => getTaskDayStatus(entry.task, today, timeZone) !== "scheduled",
   );
   const todayTransactions = transactions.filter(
     (transaction) => transaction.date === today,
@@ -80,7 +84,7 @@ export function getDailyRings(
       fitnessTotal,
     ),
     tasks: toRingMetric(
-      dailyTasks.filter((task) => task.completed).length,
+      dailyTasks.filter((entry) => entry.done).length,
       dailyTasks.length,
     ),
   };
@@ -105,6 +109,9 @@ function plannedTaskIds(
   const ids = new Set(
     tasks
       .filter((task) => {
+        // A routine is planned for every day it repeats onto, which is the
+        // whole point of writing it down once.
+        if (isRepeating(task)) return isRoutineDueOn(task, date, timeZone);
         if (task.dueDate) return task.dueDate === date;
         if (tasksWithCompletionHistory.has(task.id)) return false;
         const created = getDateInTimeZone(task.createdAt ?? "", timeZone);

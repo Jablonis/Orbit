@@ -46,7 +46,9 @@ import type {
 } from "@/lib/productivity-score";
 import { getProductivityChartPaths } from "@/lib/productivity-score";
 import type { Task } from "@/lib/tasks";
-import { formatRelativeTaskDate, getTaskStats } from "@/lib/tasks";
+import { formatRelativeTaskDate, getTaskStats, isRepeating } from "@/lib/tasks";
+import { describeRepeat } from "@/lib/routines";
+import { formatReward } from "@/lib/reward";
 import { toggleFitnessDoneFormAction } from "@/app/fitness/actions";
 import { toggleTaskAction } from "@/app/tasks/actions";
 
@@ -294,19 +296,25 @@ export function GhostBar({
 }
 
 export function TasksCard({
+  doneToday,
   filter,
   overviewQuery,
   pinnedCategory,
   quickTasks,
+  rewards,
   taskStats,
   today,
   timeZone,
   total,
 }: {
+  /** Routines already ticked for today; a routine is never done for good. */
+  doneToday: string[];
   filter: OverviewTaskFilter;
   overviewQuery: OverviewQueryState;
   pinnedCategory: string;
   quickTasks: Task[];
+  /** What each task is worth today, in the voyage's own kilometres. */
+  rewards: Record<string, number>;
   taskStats: ReturnType<typeof getTaskStats>;
   today: string;
   timeZone: string;
@@ -359,49 +367,59 @@ export function TasksCard({
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {quickTasks.map((task) => (
-            <li key={task.id}>
-              <form action={toggleTaskAction}>
-                <input name="taskId" type="hidden" value={task.id} />
-                <input
-                  name="completed"
-                  type="hidden"
-                  value={task.completed ? "false" : "true"}
-                />
-                <input name="redirectTo" type="hidden" value="/" />
-                <button
-                  className="flex w-full items-center gap-3 rounded-xl bg-card/70 p-3 text-left transition hover:bg-card"
-                  type="submit"
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`grid size-5 shrink-0 place-items-center rounded-full border-2 transition ${
-                      task.completed
-                        ? "border-tasks bg-tasks text-white"
-                        : "border-tasks/35"
-                    }`}
+          {quickTasks.map((task) => {
+            const routine = isRepeating(task);
+            const done = routine ? doneToday.includes(task.id) : task.completed;
+            const reward = done ? 0 : rewards[task.id] ?? 0;
+            return (
+              <li key={task.id}>
+                <form action={toggleTaskAction}>
+                  <input name="id" type="hidden" value={task.id} />
+                  <input
+                    name="completed"
+                    type="hidden"
+                    value={done ? "false" : "true"}
+                  />
+                  <input name="date" type="hidden" value={today} />
+                  <input name="redirectTo" type="hidden" value="/" />
+                  <button
+                    className="flex w-full items-center gap-3 rounded-xl bg-card/70 p-3 text-left transition hover:bg-card"
+                    type="submit"
                   >
-                    {task.completed ? <CheckGlyph /> : null}
-                  </span>
-                  <span className="min-w-0 flex-1">
                     <span
-                      className={`block truncate text-[14px] font-semibold ${
-                        task.completed
-                          ? "text-muted-foreground line-through"
-                          : ""
+                      aria-hidden="true"
+                      className={`grid size-5 shrink-0 place-items-center rounded-full border-2 transition ${
+                        done ? "border-tasks bg-tasks text-white" : "border-tasks/35"
                       }`}
                     >
-                      {task.title}
+                      {done ? <CheckGlyph /> : null}
                     </span>
-                    <span className="mt-0.5 block text-[12px] text-muted-foreground">
-                      {task.category} ·{" "}
-                      {formatRelativeTaskDate(task, today, timeZone)}
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={`block truncate text-[14px] font-semibold ${
+                          done ? "text-muted-foreground line-through" : ""
+                        }`}
+                      >
+                        {task.title}
+                      </span>
+                      <span className="mt-0.5 block text-[12px] text-muted-foreground">
+                        {routine
+                          ? describeRepeat(task.repeatDays)
+                          : formatRelativeTaskDate(task, today, timeZone)}
+                        {" · "}
+                        {task.category}
+                      </span>
                     </span>
-                  </span>
-                </button>
-              </form>
-            </li>
-          ))}
+                    {reward > 0 ? (
+                      <span className="metric-value shrink-0 text-[12px] font-bold text-tasks-ink">
+                        {formatReward(reward)}
+                      </span>
+                    ) : null}
+                  </button>
+                </form>
+              </li>
+            );
+          })}
         </ul>
       )}
 

@@ -84,8 +84,11 @@ import {
   getTaskStats,
   getTasks,
   getVisibleTasks,
+  isRepeating,
   sortDashboardTasks,
 } from "@/lib/tasks";
+import { isRoutineDoneOn } from "@/lib/routines";
+import { getTaskReward } from "@/lib/reward";
 
 export const dynamic = "force-dynamic";
 
@@ -147,6 +150,7 @@ export default async function Home({
   const finance = getFinanceSummary(transactions, today.slice(0, 7));
   const dailyRings = getDailyRings(
     visibleTasks,
+    completions,
     fitnessStats.todayTraining,
     transactions,
     today,
@@ -316,7 +320,31 @@ export default async function Home({
     calendar.timeZone,
   ).slice(0, 4);
   const pinnedTaskStats = getTaskStats(pinnedTasks);
-  const nextTask = orderedTasks.find((task) => !task.completed);
+  // A routine is done for a date, so today's completions decide whether it is
+  // still asking for something.
+  const doneToday = new Set(
+    orderedTasks
+      .filter(
+        (task) => isRepeating(task) && isRoutineDoneOn(completions, task.id, today),
+      )
+      .map((task) => task.id),
+  );
+  const nextTask = orderedTasks.find((task) =>
+    isRepeating(task) ? !doneToday.has(task.id) : !task.completed,
+  );
+  // What each open task is worth right now, in the same kilometres the voyage
+  // counts, so the reward on the button is the reward on the map.
+  const todayPoint = weeklyProductivity.current.find(
+    (point) => point.date === today,
+  );
+  const taskRewards = Object.fromEntries(
+    todayPoint
+      ? orderedTasks.map((task) => [
+          task.id,
+          getTaskReward(todayPoint, task, enabledDomains, preferences.scoring),
+        ])
+      : [],
+  );
   const pendingFinance = [...transactions]
     .filter((transaction) => transaction.status !== "paid")
     .sort((a, b) => a.date.localeCompare(b.date))[0];
@@ -381,11 +409,13 @@ export default async function Home({
     ),
     tasks: (
       <TasksCard
+        doneToday={[...doneToday]}
         filter={filter}
         key="tasks"
         overviewQuery={overviewQuery}
         pinnedCategory={preferences.pinnedTaskCategory}
         quickTasks={quickTasks}
+        rewards={taskRewards}
         taskStats={pinnedTaskStats}
         today={today}
         timeZone={calendar.timeZone}
@@ -500,6 +530,7 @@ export default async function Home({
         <NowCard
           dailyRings={dailyRings}
           nextTask={nextTask}
+          reward={nextTask ? taskRewards[nextTask.id] ?? 0 : 0}
           timeZone={calendar.timeZone}
           today={today}
           todayScore={momentum.todayScore}

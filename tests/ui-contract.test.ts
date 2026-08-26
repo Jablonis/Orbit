@@ -172,3 +172,28 @@ test("the UI quality matrix covers reflow, zoom, routes, and dense states", () =
   assert.ok(quality.dataStates.includes("dense"));
   assert.ok(quality.dataStates.includes("long-content"));
 });
+
+test("every form posts the field its server action actually reads", () => {
+  // The dashboard sent `taskId` while toggleTaskAction read `id`, so ticking a
+  // task from the Overview silently did nothing for as long as the card
+  // existed. A form and its action agreeing is not something to eyeball.
+  const actions = read("src/app/tasks/actions.ts");
+  const toggle = actions.slice(actions.indexOf("export async function toggleTaskAction"));
+  const field = /formData\.get\("([a-zA-Z]+)"\)/.exec(toggle)?.[1];
+
+  assert.equal(field, "id");
+
+  for (const file of [
+    "src/components/overview/cards.tsx",
+    "src/components/overview/NowCard.tsx",
+    "src/app/tasks/TasksClient.tsx",
+  ]) {
+    const source = read(file);
+    if (!source.includes("toggleTaskAction")) continue;
+    assert.match(
+      source,
+      new RegExp(`name="${field}"`),
+      `${file} posts to toggleTaskAction without a "${field}" field`,
+    );
+  }
+});

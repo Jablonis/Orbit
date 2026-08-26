@@ -118,6 +118,43 @@ counts down to the next place at the last seven days' pace, because "the Moon in
 38 days" moves people and "distance 4 200" does not. Arriving is a moment, shown
 once, ever: a day and a week come round again, a place does not.
 
+## What one task is worth
+
+"Complete task" is an instruction. "+8 km" is a reward, and most of the reason
+one planner gets opened on a Tuesday evening and another does not.
+
+The number is not a made-up currency. The voyage adds each day's score as
+kilometres, so the kilometres a task is worth are exactly the score the day
+gains when it is ticked: the same arithmetic, asked twice, once with the task
+done and once without. Two tasks left and each is worth more; ten left and each
+is worth less — which is the honest answer, and the one that makes finishing the
+last one feel like something.
+
+Because it is derived, it cannot lie. A day already at 100 shows nothing, and
+nothing is the truth.
+
+## Routines
+
+Most of a week is the same week: the morning, the working block, the training,
+the ten minutes that close the evening. Typing those in every morning is work
+about work, and it is why a planner gets abandoned in week two.
+
+A routine is not a new kind of thing. It is a task carrying the weekdays it
+repeats on — one `repeat_days` column — because `task_completions.planned_for`
+already lets one task be completed on many dates, which is exactly the shape a
+repeating task needs and exactly what the scoring engine already reads.
+
+So a routine never flips `completed`. It is done **for a date**: ticking it
+writes that day's completion and unticking removes it, both through one
+`security definer` function, since the table grants insert but not delete. It is
+never overdue and never finished; on a day it does not repeat onto, it is simply
+not there. Held is a rate — four of the last six Mondays — not a streak, because
+a rate survives one bad Tuesday.
+
+The setup offers the shape of an ordinary week rather than an empty list, and
+everything it writes is an ordinary task afterwards: editable, skippable,
+archivable.
+
 ## Where the code lives
 
 | Concern | File |
@@ -125,6 +162,8 @@ once, ever: a day and a week come round again, a place does not.
 | Engine (pure, unit tested) | `src/lib/momentum.ts` |
 | Weekly recap (pure, unit tested) | `src/lib/recap.ts` |
 | The voyage (pure, unit tested) | `src/lib/voyage.ts` |
+| What a task is worth (pure, unit tested) | `src/lib/reward.ts` |
+| Routines (pure, unit tested) | `src/lib/routines.ts`, `src/lib/routine-kit.ts` |
 | Share image renderers | `src/lib/day-card-canvas.ts`, `src/lib/recap-canvas.ts` |
 | Pip: geometry, then two renderers | `src/lib/pip-art.ts`, `src/components/brand/Pip.tsx`, `src/lib/pip-canvas.ts` |
 | Share plumbing (render, share sheet, download) | `src/lib/share-image.ts` |
@@ -135,7 +174,8 @@ once, ever: a day and a week come round again, a place does not.
 | The week closing | `src/components/WeekSealed.tsx` |
 | Arriving somewhere | `src/components/Arrival.tsx`, `src/components/overview/VoyageCard.tsx` |
 | Overview card | `MomentumCard` in `src/app/page.tsx` |
-| Tests | `tests/momentum.test.ts`, `tests/voyage.test.ts`, `tests/recap.test.ts`, `tests/day-card.test.ts`, `tests/activity-rings.test.ts` |
+| Repeat days and the week's setup | `src/components/RepeatPicker.tsx`, `src/components/RoutineSetup.tsx` |
+| Tests | `tests/momentum.test.ts`, `tests/voyage.test.ts`, `tests/routines.test.ts`, `tests/reward.test.ts`, `tests/recap.test.ts`, `tests/day-card.test.ts`, `tests/activity-rings.test.ts` |
 
 ## The visual language
 

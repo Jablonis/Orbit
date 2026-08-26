@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { RepeatPicker } from "@/components/RepeatPicker";
+import { RoutineSetup } from "@/components/RoutineSetup";
 import { EmptyState } from "@/components/EmptyState";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import {
@@ -16,10 +18,12 @@ import {
   formatTaskTime,
   formatRelativeTaskDate,
   getTaskDayStatus,
+  isRepeating,
   taskComplexityLabels,
   taskPriorityLabels,
   taskTypeLabels,
 } from "@/lib/tasks";
+import { describeRepeat } from "@/lib/routines";
 import {
   archiveTaskAction,
   bulkUpdateTasksAction,
@@ -37,9 +41,14 @@ const taskStatusOptions = ["all", "open", "done"] as const;
 const taskDateOptions = ["all", "overdue", "today", "scheduled"] as const;
 type TaskSort = (typeof taskSortOptions)[number];
 
+export type RoutineHold = { done: number; due: number; percent: number };
+
 export function TasksClient({
   archivedTasks,
   categorySuggestions,
+  doneToday,
+  hasRoutines,
+  holds,
   stats,
   tasks,
   today,
@@ -48,6 +57,9 @@ export function TasksClient({
 }: {
   archivedTasks: Task[];
   categorySuggestions: string[];
+  doneToday: string[];
+  hasRoutines: boolean;
+  holds: Record<string, RoutineHold>;
   stats: ReturnType<typeof import("@/lib/tasks").getTaskStats>;
   tasks: Task[];
   today: string;
@@ -61,6 +73,7 @@ export function TasksClient({
   const [formOpen, setFormOpen] = useState(false);
   const [archivedTaskId, setArchivedTaskId] = useState<string | null>(null);
   const [estimateMode, setEstimateMode] = useState<TaskEstimateMode>("1hr");
+  const [repeatDays, setRepeatDays] = useState<number[]>([]);
   const [formVersion, setFormVersion] = useState(0);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [bulkDate, setBulkDate] = useState(today);
@@ -199,6 +212,7 @@ export function TasksClient({
       if (window.location.hash === "#new-task") {
         setEditing(null);
         setEstimateMode("1hr");
+        setRepeatDays([]);
         setFormOpen(true);
       }
     };
@@ -257,6 +271,7 @@ export function TasksClient({
       });
       setEditing(null);
       setEstimateMode("1hr");
+      setRepeatDays([]);
       setFormVersion((current) => current + 1);
       setFormOpen(false);
     } catch {
@@ -303,6 +318,7 @@ export function TasksClient({
           onClick={() => {
             setEditing(null);
             setEstimateMode("1hr");
+            setRepeatDays([]);
             setTaskSaveNotice(null);
             setFormOpen(true);
           }}
@@ -447,6 +463,9 @@ export function TasksClient({
                 <input className="field-input" defaultValue={editing?.dueDate ?? ""} name="dueDate" type="date" />
               </Field>
             </div>
+            <Field label="Repeats">
+              <RepeatPicker onChange={setRepeatDays} value={repeatDays} />
+            </Field>
             <Field label="Note">
               <textarea
                 className="field-input min-h-24 py-3"
@@ -467,6 +486,7 @@ export function TasksClient({
                   onClick={() => {
                     setEditing(null);
                     setEstimateMode("1hr");
+                    setRepeatDays([]);
                     setTaskSaveNotice(null);
                     setFormOpen(false);
                   }}
@@ -489,6 +509,7 @@ export function TasksClient({
         </dialog>
 
         <section className="space-y-6 xl:col-start-2 xl:row-start-1">
+          <RoutineSetup hasRoutines={hasRoutines} />
           <dl className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] grid overflow-hidden rounded-2xl sm:grid-cols-4">
             <Metric label="Active" value={stats.activeTasksCount} tone="text-foreground" />
             <Metric label="Done" value={stats.completedTasksCount} tone="text-primary" />
@@ -627,13 +648,16 @@ export function TasksClient({
                   <div className="grid gap-3">
                     {group.tasks.map((task) => (
                       <TaskRow
+                        hold={holds[task.id]}
                         key={task.id}
+                        routineDone={doneToday.includes(task.id)}
                         onSelected={() => toggleSelected(task.id)}
                         selected={selectedTaskIds.includes(task.id)}
                         onArchived={() => setArchivedTaskId(task.id)}
                         onEdit={() => {
                           setEditing(task);
                           setEstimateMode(task.estimateMode);
+                          setRepeatDays(task.repeatDays);
                           setTaskSaveNotice(null);
                           setFormOpen(true);
                         }}
@@ -655,6 +679,7 @@ export function TasksClient({
                       onClick={() => {
                         setEditing(null);
                         setEstimateMode("1hr");
+                        setRepeatDays([]);
                         setTaskSaveNotice(null);
                         setFormOpen(true);
                       }}
@@ -679,14 +704,17 @@ export function TasksClient({
                   <div className="mt-3 grid gap-3">
                     {completedTasks.map((task) => (
                       <TaskRow
+                        hold={holds[task.id]}
                         key={task.id}
                         locale={locale}
+                        routineDone={doneToday.includes(task.id)}
                         onSelected={() => toggleSelected(task.id)}
                         selected={selectedTaskIds.includes(task.id)}
                         onArchived={() => setArchivedTaskId(task.id)}
                         onEdit={() => {
                           setEditing(task);
                           setEstimateMode(task.estimateMode);
+                          setRepeatDays(task.repeatDays);
                           setTaskSaveNotice(null);
                           setFormOpen(true);
                         }}
@@ -754,25 +782,36 @@ export function TasksClient({
 }
 
 function TaskRow({
+  hold,
   locale,
   onArchived,
   onEdit,
   onSelected,
+  routineDone,
   selected,
   task,
   today,
   timeZone,
 }: {
+  hold?: RoutineHold;
   locale: string;
   onArchived: () => void;
   onEdit: () => void;
   onSelected: () => void;
+  routineDone?: boolean;
   selected: boolean;
   task: Task;
   today: string;
   timeZone: string;
 }) {
-  const dayStatus = getTaskDayStatus(task, today, timeZone);
+  const routine = isRepeating(task);
+  // A routine is done for this day, not for good, so the row asks the day.
+  const done = routine ? Boolean(routineDone) : task.completed;
+  const dayStatus = routine
+    ? done
+      ? "completed"
+      : getTaskDayStatus(task, today, timeZone)
+    : getTaskDayStatus(task, today, timeZone);
   const tone = taskDayTones[dayStatus];
 
   return (
@@ -794,7 +833,9 @@ function TaskRow({
           </span>
         </div>
         <p className="mt-2 text-[12px] leading-[18px] text-muted-foreground">
+          {routine ? `${describeRepeat(task.repeatDays)} · ` : ""}
           {task.category} · {formatTaskTime(task)} · {taskComplexityLabels[task.complexity]} · {taskPriorityLabels[task.priority]}
+          {routine && hold && hold.due > 0 ? ` · held ${hold.done}/${hold.due}` : ""}
           {task.dueDate ? (
             <>
               {" · due "}
@@ -822,13 +863,14 @@ function TaskRow({
       <div className="flex flex-wrap items-center gap-2 lg:justify-end">
         <form action={toggleTaskAction}>
           <input name="id" type="hidden" value={task.id} />
-          <input name="completed" type="hidden" value={String(!task.completed)} />
+          <input name="completed" type="hidden" value={String(!done)} />
+          <input name="date" type="hidden" value={today} />
           <PendingSubmitButton
-            ariaLabel={task.completed ? "Reopen task" : "Complete task"}
+            ariaLabel={done ? "Reopen task" : "Complete task"}
             className="min-h-11 rounded-xl border border-input bg-secondary px-3 text-[12px] font-semibold text-foreground"
             pendingLabel="Saving…"
           >
-            {task.completed ? "Reopen" : "Done"}
+            {done ? "Reopen" : "Done"}
           </PendingSubmitButton>
         </form>
         <div className="flex gap-2 opacity-100 transition duration-150 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
