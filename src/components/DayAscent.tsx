@@ -111,6 +111,7 @@ export function DayAscent({
                     ? "soaring"
                     : "lifting"
               }
+              seed={2}
               size={36}
             />
           </div>

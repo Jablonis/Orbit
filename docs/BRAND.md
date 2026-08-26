@@ -77,8 +77,22 @@ Rules:
 
 - Pip is derived, never chosen. `getPipState` reads the day, the orbit and the
   run, in that order — a finished day beats everything.
-- Pip animates when something happened and is still otherwise: the flame
-  flickers three times and rests, the hop plays once. Nothing loops forever.
+- **Pip is the one exception to "nothing loops forever."** That rule is right
+  for interface motion — a progress bar that pulses forever is noise — and
+  wrong for a character: something that never moves is an icon, not a
+  creature. Pip therefore idles, on a budget:
+  - he **blinks** every 6.4 seconds, and only for a fifth of a second;
+  - **airborne he drifts** five pixels; **on the ground he breathes**, 1.8 %.
+    Hovering while standing is what made the first version read as a sticker;
+  - the **flame flickers** continuously, because a flame that holds still is a
+    drawing of a flame;
+  - every Pip on a screen takes a `seed`, so two of them never blink in unison
+    — nothing betrays a puppet faster than synchronised eyes.
+- The idle is `transform` and `opacity` only, small enough not to catch the eye
+  of someone reading the words beside it, and it stops entirely under reduced
+  motion.
+- The things that mark an event still play once and rest: the hop when a day is
+  sealed, the ride up the climb.
 - Minimum size 22 px; below that the helmet swallows the face.
 - Feet on the ground mean the engine is off. Pip only burns while leaving.
 - Pip never speaks in exclamation marks, never nags, and never asks to be fed.

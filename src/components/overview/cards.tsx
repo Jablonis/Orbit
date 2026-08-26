@@ -1108,6 +1108,7 @@ export function PipGreeting({
         burn={pip.burn}
         className="shrink-0"
         mood={pip.mood}
+        seed={1}
         size={64}
         title={`Pip: ${pip.line}`}
       />
