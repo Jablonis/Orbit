@@ -1,6 +1,7 @@
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { CrewCodePanel } from "@/components/crew/CrewCodePanel";
 import { AppNavigation } from "@/components/AppNavigation";
+import { Pip } from "@/components/brand/Pip";
 import { Badge } from "@/components/ui/badge";
 import { TintPanel } from "@/components/ui/tint-panel";
 import { ORBIT_DAY_SCORE } from "@/lib/momentum";
@@ -184,7 +185,14 @@ export function CrewBoard({
           </h2>
 
           {feed.length === 0 ? (
-            <TintPanel system="quiet">
+            <TintPanel className="flex items-center gap-4" system="quiet">
+              <Pip
+                burn={0.2}
+                className="shrink-0"
+                mood={crew.members.length === 0 ? "asleep" : "grounded"}
+                size={56}
+              />
+              <div>
               <p className="text-[14px] font-semibold">
                 {crew.members.length === 0
                   ? "Your crew is empty."
@@ -195,6 +203,7 @@ export function CrewBoard({
                   ? "Send someone your code. Two people is already a race."
                   : "A day shows up here once they open Orbit on it."}
               </p>
+              </div>
             </TintPanel>
           ) : (
             <ul className="flex flex-col gap-3">

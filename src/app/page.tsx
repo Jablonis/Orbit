@@ -10,6 +10,7 @@ import {
   FitnessCard,
   MilestonesCard,
   MomentumCard,
+  PipGreeting,
   RecapCard,
   ReviewCard,
   RingsCard,
@@ -395,12 +396,21 @@ export default async function Home({
 
       <div className="page-container flex flex-col gap-8 py-7 md:py-10">
         <header className="settle-in flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <p className="label-caps text-muted-foreground">{dateLabel}</p>
-            <h1 className="mt-2 text-[30px] font-bold leading-9 tracking-[-0.03em] sm:text-[34px]">
-              {greeting(preferences.regional.locale, calendar.timeZone)}
-            </h1>
-            <p className="mt-1.5 text-[14px] text-muted-foreground">
+            <div className="mt-2">
+              <PipGreeting
+                allClosed={earnedToday.allClosed}
+                altitude={momentum.projected}
+                streak={streak.streak}
+                todayScore={momentum.todayScore}
+              >
+                <h1 className="text-[30px] font-bold leading-9 tracking-[-0.03em] sm:text-[34px]">
+                  {greeting(preferences.regional.locale, calendar.timeZone)}
+                </h1>
+              </PipGreeting>
+            </div>
+            <p className="mt-2 text-[13px] text-muted-foreground">
               {todaySectionDetail}
             </p>
           </div>

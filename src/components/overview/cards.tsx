@@ -13,6 +13,9 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { SystemDot, TintPanel } from "@/components/ui/tint-panel";
 import { CountUp } from "@/components/CountUp";
+import { Pip } from "@/components/brand/Pip";
+import { RocketClimb } from "@/components/RocketClimb";
+import { getClimb, getPipState } from "@/lib/mascot";
 import { getRingsSummary } from "@/lib/activity-rings";
 import { getClosingLines } from "@/lib/progression";
 import type { getEarnedToday } from "@/lib/progression";
@@ -243,6 +246,10 @@ export function MomentumCard({
         ? `${momentum.tier.name} holds even on an empty day.`
         : `Finish today at ${momentum.holdScore}% to stay in ${momentum.tier.name}.`;
   const ghostTotal = Math.max(ghost.current, ghost.previous, 1);
+  // Yesterday's altitude against today's: the multiplier is the real one.
+  const yesterday =
+    momentum.series[momentum.series.length - 2]?.altitude ?? momentum.altitude;
+  const climb = getClimb(yesterday, momentum.projected);
 
   return (
     <TintPanel
@@ -283,6 +290,20 @@ export function MomentumCard({
               value={`${momentum.weekChange >= 0 ? "+" : ""}${momentum.weekChange}`}
             />
           </dl>
+
+          <div className="rounded-xl bg-card/70 p-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="label-caps text-[var(--ink,var(--muted-foreground))]">
+                Today&rsquo;s climb
+              </p>
+              <p className="text-[12px] text-muted-foreground">
+                {climb.rising
+                  ? "What today did to the orbit."
+                  : "An empty day multiplies by 0.85."}
+              </p>
+            </div>
+            <RocketClimb climb={climb} />
+          </div>
 
           <div className="rounded-xl bg-card/70 p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -1094,5 +1115,42 @@ export function RecapWeekBars({ days }: { days: WeekRecap["days"] }) {
         </li>
       ))}
     </ol>
+  );
+}
+
+/**
+ * Pip, next to the greeting: the state of the day as a face, before a single
+ * number is read. The heading stays with the page; Pip only brings the mood.
+ */
+export function PipGreeting({
+  allClosed,
+  altitude,
+  children,
+  streak,
+  todayScore,
+}: {
+  allClosed: boolean;
+  altitude: number;
+  /** The page heading, so the route keeps owning its h1. */
+  children: ReactNode;
+  streak: number;
+  todayScore: number | null;
+}) {
+  const pip = getPipState({ allClosed, altitude, streak, todayScore });
+
+  return (
+    <div className="flex items-center gap-4">
+      <Pip
+        burn={pip.burn}
+        className="shrink-0"
+        mood={pip.mood}
+        size={64}
+        title={`Pip: ${pip.line}`}
+      />
+      <div className="min-w-0">
+        {children}
+        <p className="mt-1 text-[14px] text-muted-foreground">{pip.line}</p>
+      </div>
+    </div>
   );
 }

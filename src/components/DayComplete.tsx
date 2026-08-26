@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { CountUp } from "@/components/CountUp";
+import { Pip } from "@/components/brand/Pip";
 import { Button } from "@/components/ui/button";
 
 const STORAGE_PREFIX = "orbit-day-sealed:";
@@ -92,7 +93,9 @@ export function DayComplete({
         className="day-complete w-full max-w-sm rounded-2xl bg-card p-8 text-center shadow-[0_40px_80px_-40px_rgba(27,26,31,0.5)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mx-auto grid size-28 place-items-center">
+        <Pip burn={1} className="mx-auto" mood="sealed" size={72} />
+
+        <div className="mx-auto mt-2 grid size-28 place-items-center">
           <svg className="size-28 -rotate-90" viewBox="0 0 112 112">
             <circle cx="56" cy="56" r="48" fill="none" stroke="var(--tasks-tint)" strokeWidth="9" />
             <circle cx="56" cy="56" r="48" fill="none" stroke="var(--tasks)" strokeWidth="9" strokeLinecap="round" pathLength={100} strokeDasharray="100" className="day-complete-arc" />

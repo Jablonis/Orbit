@@ -53,6 +53,48 @@ small version of the interface.
 - Never rotate, outline, add a gradient to, or place the mark inside another
   shape. It already is a shape.
 
+## Pip
+
+The mark is the system; Pip is the character. A small rocket with one visor and
+six moods, drawn as one SVG that takes the account's state — so the face on the
+dashboard is never a decoration that disagrees with the numbers.
+
+| Mood | When |
+| --- | --- |
+| `asleep` | Nothing today and a decayed orbit |
+| `grounded` | Nothing today, but yesterday still holding it up |
+| `lifting` | The day has started |
+| `cruising` | The day already counts (50 %+) |
+| `soaring` | A full day (80 %+) |
+| `sealed` | Every ring closed |
+
+Rules:
+
+- Pip is derived, never chosen. `getPipState` reads the day, the orbit and the
+  run, in that order — a finished day beats everything.
+- Pip animates when something happened and is still otherwise: the flame
+  flickers three times and rests, the hop plays once. Nothing loops forever.
+- Minimum size 22 px; below that the visor closes up and Pip becomes a blob.
+- Pip never speaks in exclamation marks, never nags, and never asks to be fed.
+  The line under Pip states the situation and the next move: "Engine is lit. One
+  more thing and the day holds."
+- Pip is not a reward and is never withheld. Progress is the reward.
+
+## The climb
+
+The one deliberately playful surface: Pip riding a curve while a multiplier
+counts up, in the visual language people already know from betting apps —
+borrowed only for the shape of the feeling.
+
+What keeps it honest, and what must stay true of it:
+
+- The multiplier is real: the orbit now over the orbit yesterday. A day with
+  nothing on it lands on ×0.85, because that is exactly what decay does.
+- Nothing is wagered, nothing is random, and nothing crashes. The curve stops
+  where the day stopped.
+- It is never the only place a number appears, and never the thing that decides
+  one.
+
 ## Colour
 
 The product palette is the brand palette; there is no separate marketing set.
