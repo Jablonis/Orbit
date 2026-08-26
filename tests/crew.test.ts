@@ -81,7 +81,7 @@ test("the headline names what happened, in order of what matters", () => {
     viewerId: me,
   });
 
-  assert.equal(closed.headline, "Ada closed every ring.");
+  assert.equal(closed.headline, "Ada cleared every stage.");
   assert.equal(deep.headline, "Ada is 12 days deep.");
   assert.equal(held.headline, "Ada held orbit.");
   assert.equal(light.headline, "Ada logged a light day.");

@@ -85,6 +85,21 @@ Corners are machined, not soft: `--radius-control` 2 px, `--radius-row` 4 px,
 - Elevation: `--shadow-panel`, `--shadow-overlay` — wide, soft, and heavily
   negative-spread. Depth comes from hairlines first, shadow second.
 
+## The day: the ascent
+
+The day is drawn as a launch, not as rings. Three columns of thrust — tasks,
+fitness, finance — rise from a pad; a dashed line crosses the frame at
+`ORBIT_DAY_SCORE`, the score above which a day counted; the day's own score
+rides in a lane at the right and crosses that line when it does.
+
+Concentric rings are Apple's idea and read as borrowed however well they are
+drawn. Orbit's mechanic is altitude, not laps, and it has a real threshold — so
+the picture is a height with a line in it. It is also wide rather than square,
+which is the shape a phone has to spare.
+
+`src/lib/ascent.ts` holds the geometry and the words; `DayAscent` draws it, in
+a full form with labels and Pip, and a compact one at badge size.
+
 ## Typography
 
 Figtree for everything the product says, including labels. DM Mono is kept for

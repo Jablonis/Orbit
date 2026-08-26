@@ -170,7 +170,7 @@ export function getEarnedToday({
   return {
     allClosed,
     headline: allClosed
-      ? "Every ring closed."
+      ? "Every stage done."
       : inOrbit
         ? "Today already counts."
         : null,
@@ -197,8 +197,8 @@ const systemNoun: Record<ClosingLine["system"], [string, string]> = {
 };
 
 /**
- * How close each open ring is to closing, nearest first. Naming the last mile
- * is what makes it worth walking — "one task" moves people, "72%" does not.
+ * How close each open stage is to done, nearest first. Naming the last mile is
+ * what makes it worth walking — "one task" moves people, "72%" does not.
  */
 export function getClosingLines(rings: {
   finance: RingProgress;
@@ -219,8 +219,8 @@ export function getClosingLines(rings: {
         system,
         text:
           remaining === 1
-            ? `One ${one} from closing ${system}.`
-            : `${remaining} ${many} from closing ${system}.`,
+            ? `One ${one} from clearing ${system}.`
+            : `${remaining} ${many} from clearing ${system}.`,
       };
     })
     .sort((a, b) => a.remaining - b.remaining);

@@ -55,6 +55,7 @@ import type {
   OverviewTaskFilter,
 } from "@/lib/overview-query";
 import { getPinnedFinanceMetric } from "@/lib/finance-metric";
+import { getAscent } from "@/lib/ascent";
 import { hasCrew, publishSnapshot } from "@/lib/crew";
 import { getRecapWeek, getWeekRecap } from "@/lib/recap";
 import {
@@ -229,6 +230,14 @@ export default async function Home({
   const ringsActiveToday = Object.values(dailyRings).filter(
     (area) => area.total > 0,
   ).length;
+  const dayAscent = getAscent({
+    areas: [
+      { ...dailyRings.tasks, label: "Tasks", system: "tasks" as const },
+      { ...dailyRings.fitness, label: "Fitness", system: "fitness" as const },
+      { ...dailyRings.finance, label: "Finance", system: "finance" as const },
+    ],
+    todayScore: momentum.todayScore,
+  });
   const earnedToday = getEarnedToday({
     ringsClosed: ringsClosedToday,
     ringsTotal: ringsActiveToday,
@@ -329,7 +338,14 @@ export default async function Home({
     ),
     milestones: <MilestonesCard key="milestones" milestones={milestones} />,
     recap: recap ? <RecapCard key="recap" recap={recap} /> : null,
-    rings: <RingsCard dailyRings={dailyRings} earned={earnedToday} key="rings" />,
+    rings: (
+      <RingsCard
+        dailyRings={dailyRings}
+        earned={earnedToday}
+        key="rings"
+        todayScore={momentum.todayScore}
+      />
+    ),
     tasks: (
       <TasksCard
         filter={filter}
@@ -401,6 +417,7 @@ export default async function Home({
         {earnedToday.allClosed ? (
           <DayComplete
             altitude={momentum.projected}
+            ascent={dayAscent}
             date={today}
             streak={streak.streak}
             tier={momentum.tier.name}
@@ -443,6 +460,7 @@ export default async function Home({
           nextTask={nextTask}
           timeZone={calendar.timeZone}
           today={today}
+          todayScore={momentum.todayScore}
           training={fitnessStats.todayTraining}
         />
 

@@ -2,7 +2,9 @@ import Link from "next/link";
 import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { OpenQuickAddButton } from "@/components/OpenQuickAddButton";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
+import { DayAscent } from "@/components/DayAscent";
 import { TintPanel } from "@/components/ui/tint-panel";
+import { getAscent } from "@/lib/ascent";
 import type { getDailyRings } from "@/lib/dashboard";
 import type { TodayTraining } from "@/lib/fitness";
 import { type Task, formatRelativeTaskDate } from "@/lib/tasks";
@@ -22,19 +24,27 @@ export function NowCard({
   dailyRings,
   nextTask,
   today,
+  todayScore,
   timeZone,
   training,
 }: {
   dailyRings: ReturnType<typeof getDailyRings>;
   nextTask?: Task;
   today: string;
+  todayScore: number | null;
   timeZone: string;
   training: TodayTraining;
 }) {
   const trainingDue =
     training.day.sport !== "rest" && !training.day.log.completed;
-  const areas = Object.values(dailyRings).filter((area) => area.total > 0);
-  const closed = areas.filter((area) => area.percent >= 100).length;
+  const ascent = getAscent({
+    areas: [
+      { ...dailyRings.tasks, label: "Tasks", system: "tasks" as const },
+      { ...dailyRings.fitness, label: "Fitness", system: "fitness" as const },
+      { ...dailyRings.finance, label: "Finance", system: "finance" as const },
+    ],
+    todayScore,
+  });
 
   // A task first, then an unlogged session, then nothing — in the order the day
   // actually asks for them.
@@ -66,11 +76,11 @@ export function NowCard({
         </div>
 
         <Link
-          aria-label={`${closed} of ${areas.length} rings closed today`}
-          className="shrink-0 rounded-full transition-transform duration-150 active:scale-[0.96]"
+          aria-label={`${ascent.closed} of ${ascent.total} stages done today`}
+          className="shrink-0 rounded-xl transition-transform duration-150 active:scale-[0.96]"
           href="#today-rings"
         >
-          <RingBadge closed={closed} dailyRings={dailyRings} total={areas.length} />
+          <DayAscent ascent={ascent} compact />
         </Link>
       </div>
 
@@ -114,61 +124,5 @@ export function NowCard({
         ) : null}
       </div>
     </TintPanel>
-  );
-}
-
-/** The three rings at the size a glance needs, not the size a chart wants. */
-function RingBadge({
-  closed,
-  dailyRings,
-  total,
-}: {
-  closed: number;
-  dailyRings: ReturnType<typeof getDailyRings>;
-  total: number;
-}) {
-  const rings = [
-    { color: "var(--tasks)", percent: dailyRings.tasks.percent, radius: 25 },
-    { color: "var(--fitness)", percent: dailyRings.fitness.percent, radius: 18 },
-    { color: "var(--finance)", percent: dailyRings.finance.percent, radius: 11 },
-  ];
-
-  return (
-    <span className="relative grid size-16 place-items-center">
-      <svg className="size-16 -rotate-90" viewBox="0 0 64 64">
-        {rings.map((ring) => {
-          const length = 2 * Math.PI * ring.radius;
-          return (
-            <g key={ring.radius}>
-              <circle
-                cx="32"
-                cy="32"
-                fill="none"
-                r={ring.radius}
-                stroke={ring.color}
-                strokeOpacity="0.18"
-                strokeWidth="5"
-              />
-              <circle
-                className="ring-draw"
-                cx="32"
-                cy="32"
-                fill="none"
-                r={ring.radius}
-                stroke={ring.color}
-                strokeDasharray={length}
-                strokeDashoffset={length * (1 - Math.min(100, ring.percent) / 100)}
-                strokeLinecap="round"
-                strokeWidth="5"
-                style={{ "--ring-length": length } as React.CSSProperties}
-              />
-            </g>
-          );
-        })}
-      </svg>
-      <span className="metric-value absolute text-[11px] font-bold">
-        {closed}/{total}
-      </span>
-    </span>
   );
 }

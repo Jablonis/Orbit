@@ -106,6 +106,14 @@ What keeps it honest, and what must stay true of it:
 - It is never the only place a number appears, and never the thing that decides
   one.
 
+## The day is a launch, not a ring
+
+Three concentric rings belong to Apple. Orbit's day is drawn as an ascent:
+columns of thrust, a line where orbit begins, and the day riding at its own
+altitude. The rule this follows is worth keeping: **when a form is famous for
+belonging to somebody else, it cannot carry your brand** — however well it is
+executed, the first thing anyone reads is whose it is.
+
 ## Colour
 
 The product palette is the brand palette; there is no separate marketing set.

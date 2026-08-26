@@ -413,6 +413,35 @@
   }
 }
 
+/* The stages light in turn, left to right, and the day's rider settles after
+   them — the order the launch actually happens in. */
+@keyframes ascent-rise {
+  from { transform: scaleY(0); }
+}
+
+.ascent-column {
+  animation: ascent-rise 560ms var(--ease-ring) both;
+  transform-origin: bottom;
+}
+
+@keyframes ascent-ride {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.ascent-rider {
+  animation: ascent-ride 520ms var(--ease-orbit) 320ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ascent-column,
+  .ascent-rider {
+    animation-delay: 0ms;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

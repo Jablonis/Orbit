@@ -3,7 +3,9 @@
 import type { ReactNode } from "react";
 import { CountUp } from "@/components/CountUp";
 import { Moment } from "@/components/Moment";
+import { DayAscent } from "@/components/DayAscent";
 import { Pip } from "@/components/brand/Pip";
+import type { Ascent } from "@/lib/ascent";
 
 /**
  * The moment the last ring closes. Shown once per day, on the device where it
@@ -12,12 +14,14 @@ import { Pip } from "@/components/brand/Pip";
  */
 export function DayComplete({
   altitude,
+  ascent,
   children,
   date,
   streak,
   tier,
 }: {
   altitude: number;
+  ascent: Ascent;
   /** The share control, handed in so the moment can carry it. */
   children?: ReactNode;
   date: string;
@@ -33,23 +37,16 @@ export function DayComplete({
       <div className="text-center">
         <Pip burn={1} className="mx-auto" mood="sealed" size={72} />
 
-        <div className="mx-auto mt-2 grid size-28 place-items-center">
-          <svg className="size-28 -rotate-90" viewBox="0 0 112 112">
-            <circle cx="56" cy="56" r="48" fill="none" stroke="var(--tasks-tint)" strokeWidth="9" />
-            <circle cx="56" cy="56" r="48" fill="none" stroke="var(--tasks)" strokeWidth="9" strokeLinecap="round" pathLength={100} strokeDasharray="100" className="day-complete-arc" />
-            <circle cx="56" cy="56" r="36" fill="none" stroke="var(--fitness-tint)" strokeWidth="9" />
-            <circle cx="56" cy="56" r="36" fill="none" stroke="var(--fitness)" strokeWidth="9" strokeLinecap="round" pathLength={100} strokeDasharray="100" className="day-complete-arc day-complete-arc-2" />
-            <circle cx="56" cy="56" r="24" fill="none" stroke="var(--finance-tint)" strokeWidth="9" />
-            <circle cx="56" cy="56" r="24" fill="none" stroke="var(--finance)" strokeWidth="9" strokeLinecap="round" pathLength={100} strokeDasharray="100" className="day-complete-arc day-complete-arc-3" />
-          </svg>
+        <div className="mt-4 text-left">
+          <DayAscent ascent={ascent} />
         </div>
 
-        <p className="label-caps mt-6 text-muted-foreground">Day sealed</p>
+        <p className="label-caps mt-5 text-muted-foreground">Day sealed</p>
         <h2
           className="mt-2 text-[26px] font-bold tracking-[-0.03em]"
           id="day-complete-title"
         >
-          Every ring closed.
+          Every stage done.
         </h2>
 
         <dl className="mt-6 grid grid-cols-3 gap-2">
