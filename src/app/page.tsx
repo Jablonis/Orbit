@@ -4,7 +4,9 @@ import { DayCardShare } from "@/components/DayCardShare";
 import { DayComplete } from "@/components/DayComplete";
 import { RecapShare } from "@/components/RecapShare";
 import { WeekSealed } from "@/components/WeekSealed";
+import { Arrival } from "@/components/Arrival";
 import { NowCard } from "@/components/overview/NowCard";
+import { VoyageCard } from "@/components/overview/VoyageCard";
 import {
   AnalyticsCard,
   FinanceCard,
@@ -27,6 +29,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import {
   type ProductivityDomain,
   getDailyRings,
+  getProductivityHistory,
   getProductivityRange,
   getProductivityWeeks,
   getWeeklyReflection,
@@ -58,6 +61,7 @@ import { getPinnedFinanceMetric } from "@/lib/finance-metric";
 import { getAscent } from "@/lib/ascent";
 import { hasCrew, publishSnapshot } from "@/lib/crew";
 import { getRecapWeek, getWeekRecap } from "@/lib/recap";
+import { daysOut, getVoyage } from "@/lib/voyage";
 import {
   getEarnedToday,
   getMilestones,
@@ -85,6 +89,9 @@ import {
 
 export const dynamic = "force-dynamic";
 
+/** Two years of days: long enough to be a voyage, bounded enough to be cheap. */
+const VOYAGE_HISTORY_DAYS = 730;
+
 export const metadata: Metadata = {
   title: "Overview",
 };
@@ -100,7 +107,9 @@ export default async function Home({
   const calendar = preferences.regional;
   const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
   const currentWeek = getWeekDateKeys(today, calendar.weekStartsOn);
-  const historyFrom = shiftDate(today, -59);
+  // The voyage counts every day Orbit has ever scored, so the window that
+  // feeds it is the account, not the last two months.
+  const historyFrom = shiftDate(today, -VOYAGE_HISTORY_DAYS + 1);
   const historyTo = shiftDate(today, 1);
   const [
     taskHistory,
@@ -200,6 +209,29 @@ export default async function Home({
     today,
   );
   const dayCard = getDayCard({ date: today, ghost, momentum, streak });
+  const voyage = getVoyage(
+    rescoreProductivity(
+      {
+        current: getProductivityHistory(
+          taskHistory,
+          completions,
+          sessions,
+          fitnessPlanHistory,
+          today,
+          VOYAGE_HISTORY_DAYS,
+          calendar,
+        ),
+        previous: [],
+      },
+      enabledDomains,
+      preferences.scoring,
+    ).current,
+  );
+  // Only the newest arrival is worth interrupting for, and only while it is
+  // still news.
+  const arrival = voyage.arrivals[voyage.arrivals.length - 1];
+  const freshArrival =
+    arrival && arrival.date >= shiftDate(today, -1) ? arrival : null;
   // Last week, out of the thirty days already loaded for momentum: no extra
   // query, and no recap table to fall out of sync with the days themselves.
   const recapWeek = getRecapWeek(today, calendar.weekStartsOn);
@@ -337,6 +369,7 @@ export default async function Home({
       <ReviewCard key="review" reflection={reflection} review={review} />
     ),
     milestones: <MilestonesCard key="milestones" milestones={milestones} />,
+    voyage: <VoyageCard key="voyage" locale={calendar.locale} voyage={voyage} />,
     recap: recap ? <RecapCard key="recap" recap={recap} /> : null,
     rings: (
       <RingsCard
@@ -366,6 +399,7 @@ export default async function Home({
   const trendCardIds: DashboardCardId[] = [
     "analytics",
     "milestones",
+    "voyage",
     "recap",
     "review",
   ];
@@ -433,6 +467,14 @@ export default async function Home({
               trace={momentum.series.slice(-14).map((point) => point.altitude)}
             />
           </DayComplete>
+        ) : null}
+
+        {freshArrival ? (
+          <Arrival
+            arrival={freshArrival}
+            daysTaken={daysOut(voyage.startedOn, freshArrival.date)}
+            distance={voyage.distance}
+          />
         ) : null}
 
         {recap && recap.fresh ? (

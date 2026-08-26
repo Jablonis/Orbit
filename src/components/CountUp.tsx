@@ -9,10 +9,13 @@ import { useEffect, useRef, useState } from "react";
 export function CountUp({
   className,
   duration = 900,
+  grouped = false,
   value,
 }: {
   className?: string;
   duration?: number;
+  /** Spaces the thousands: 14 400 rather than 14400. */
+  grouped?: boolean;
   value: number;
 }) {
   const [shown, setShown] = useState(value);
@@ -41,5 +44,9 @@ export function CountUp({
     return () => window.cancelAnimationFrame(frame.current);
   }, [duration, value]);
 
-  return <span className={className}>{shown}</span>;
+  return (
+    <span className={className}>
+      {grouped ? shown.toLocaleString("en-GB").replace(/,/g, "\u2009") : shown}
+    </span>
+  );
 }

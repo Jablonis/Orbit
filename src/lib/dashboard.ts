@@ -213,6 +213,28 @@ export function getProductivityWeeks(
   };
 }
 
+/**
+ * One point per day over a long window, oldest first, with no comparison
+ * window behind it. The voyage needs the whole account rather than a rolling
+ * thirty days, and scoring twice as many days to throw half of them away is
+ * the kind of cost that only shows up on somebody else's phone.
+ */
+export function getProductivityHistory(
+  tasks: Task[],
+  completions: TaskCompletion[],
+  sessions: FitnessSession[],
+  plan: DatedFitnessPlan[],
+  today: string,
+  days: number,
+  calendar: CalendarPreferences,
+): ProductivityPoint[] {
+  return Array.from({ length: days }, (_, index) =>
+    shiftDate(today, index - days + 1),
+  ).map((date) =>
+    pointForDate(date, tasks, completions, sessions, plan, today, false, calendar),
+  );
+}
+
 export function getProductivityRange(
   tasks: Task[],
   completions: TaskCompletion[],

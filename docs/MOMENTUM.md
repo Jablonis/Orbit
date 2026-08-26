@@ -91,12 +91,40 @@ way as the day card. Both carry Pip, in the mood the day or the week earned,
 and both are set in the product's own two faces — a posted card is recognisably
 Orbit before a word of it is read.
 
+## The voyage
+
+Momentum is a decaying number: it says how you are flying today, and takes 15 %
+of itself every day nothing happens. That is half of a habit — the pressure —
+and on its own it reads as punishment, because there is nothing to keep.
+
+So there is a second number with the opposite job. **Distance** is the sum of
+every day Orbit has ever scored, and it never goes down. A day off adds nothing;
+it does not take anything back. You cannot un-visit the Moon.
+
+| | Altitude | Distance |
+| --- | --- | --- |
+| Says | How you are flying now | How far you have come |
+| Moves | Up and down | Only up |
+| Job | The pressure | The reward |
+
+Ten places sit along it, from the pad to the heliopause. The map is paced for a
+human year rather than drawn to scale — a real Mars transfer would take a
+lifetime of perfect days, and a ladder nobody can climb is not a ladder — but
+the names and the facts are real.
+
+Everything is derived from the same daily scores, including **the date each
+place was reached**, which falls out of walking the days in order. The card
+counts down to the next place at the last seven days' pace, because "the Moon in
+38 days" moves people and "distance 4 200" does not. Arriving is a moment, shown
+once, ever: a day and a week come round again, a place does not.
+
 ## Where the code lives
 
 | Concern | File |
 | --- | --- |
 | Engine (pure, unit tested) | `src/lib/momentum.ts` |
 | Weekly recap (pure, unit tested) | `src/lib/recap.ts` |
+| The voyage (pure, unit tested) | `src/lib/voyage.ts` |
 | Share image renderers | `src/lib/day-card-canvas.ts`, `src/lib/recap-canvas.ts` |
 | Pip: geometry, then two renderers | `src/lib/pip-art.ts`, `src/components/brand/Pip.tsx`, `src/lib/pip-canvas.ts` |
 | Share plumbing (render, share sheet, download) | `src/lib/share-image.ts` |
@@ -105,8 +133,9 @@ Orbit before a word of it is read.
 | Orbit visual | `src/components/MomentumOrbit.tsx` |
 | Share controls | `src/components/DayCardShare.tsx`, `src/components/RecapShare.tsx` |
 | The week closing | `src/components/WeekSealed.tsx` |
+| Arriving somewhere | `src/components/Arrival.tsx`, `src/components/overview/VoyageCard.tsx` |
 | Overview card | `MomentumCard` in `src/app/page.tsx` |
-| Tests | `tests/momentum.test.ts`, `tests/recap.test.ts`, `tests/day-card.test.ts`, `tests/activity-rings.test.ts` |
+| Tests | `tests/momentum.test.ts`, `tests/voyage.test.ts`, `tests/recap.test.ts`, `tests/day-card.test.ts`, `tests/activity-rings.test.ts` |
 
 ## The visual language
 
