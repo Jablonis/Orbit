@@ -6,8 +6,9 @@
  * number is read — and so the app has something to send you, put on a card, and
  * be recognised by.
  *
- * Pip is the same rocket the app is about. Everything here is derived; there is
- * no mascot state to store and nothing that can disagree with the numbers.
+ * Pip is a penguin: the bird that cannot fly, in the one place flying is the
+ * whole point. Everything here is derived; there is no mascot state to store
+ * and nothing that can disagree with the numbers.
  */
 
 import { MOMENTUM_DECAY } from "@/lib/momentum";

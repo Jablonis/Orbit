@@ -21,8 +21,8 @@ export type RecapCardContent = {
 export const RECAP_CARD_WIDTH = 1080;
 export const RECAP_CARD_HEIGHT = 1350;
 
-const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
-const SANS = "ui-sans-serif, system-ui, -apple-system, sans-serif";
+const MONO = '"DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace';
+const SANS = 'Figtree, ui-sans-serif, system-ui, -apple-system, sans-serif';
 
 const INK = "#141219";
 const PAPER = "#F4F1F7";

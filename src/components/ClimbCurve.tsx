@@ -24,7 +24,7 @@ const CEILING = 18;
  * and the curve sags to prove it. Nothing here is a wager and nothing crashes:
  * the only thing being multiplied is work already done.
  */
-export function RocketClimb({
+export function ClimbCurve({
   climb,
   label,
 }: {
@@ -82,11 +82,11 @@ export function RocketClimb({
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       >
         <defs>
-          <linearGradient id="rocket-climb-line" x1="0" x2="1" y1="1" y2="0">
+          <linearGradient id="climb-line" x1="0" x2="1" y1="1" y2="0">
             <stop offset="0" stopColor="var(--plum)" stopOpacity="0.25" />
             <stop offset="1" stopColor="var(--plum)" />
           </linearGradient>
-          <linearGradient id="rocket-climb-fill" x1="0" x2="0" y1="0" y2="1">
+          <linearGradient id="climb-fill" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0" stopColor="var(--plum)" stopOpacity="0.22" />
             <stop offset="1" stopColor="var(--plum)" stopOpacity="0" />
           </linearGradient>
@@ -94,14 +94,14 @@ export function RocketClimb({
 
         <path
           d={`${path} L ${END_X} ${START_Y} L ${START_X} ${START_Y} Z`}
-          fill="url(#rocket-climb-fill)"
-          className={ready ? "rocket-climb-area" : "opacity-0"}
+          fill="url(#climb-fill)"
+          className={ready ? "climb-area" : "opacity-0"}
         />
         <path
-          className={ready ? "rocket-climb-line" : "opacity-0"}
+          className={ready ? "climb-line" : "opacity-0"}
           d={path}
           fill="none"
-          stroke="url(#rocket-climb-line)"
+          stroke="url(#climb-line)"
           strokeLinecap="round"
           strokeWidth="3"
         />
@@ -110,7 +110,7 @@ export function RocketClimb({
       <span className="pointer-events-none absolute inset-0">
         <span
           className={`absolute -translate-x-1/2 -translate-y-1/2 ${
-            ready ? "rocket-climb-pip" : "opacity-0"
+            ready ? "climb-pip" : "opacity-0"
           }`}
           style={
             {

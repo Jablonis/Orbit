@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { SystemDot, TintPanel } from "@/components/ui/tint-panel";
 import { CountUp } from "@/components/CountUp";
 import { Pip } from "@/components/brand/Pip";
-import { RocketClimb } from "@/components/RocketClimb";
+import { ClimbCurve } from "@/components/ClimbCurve";
 import { getClimb, getPipState } from "@/lib/mascot";
 import { getRingsSummary } from "@/lib/activity-rings";
 import { getClosingLines } from "@/lib/progression";
@@ -302,7 +302,7 @@ export function MomentumCard({
                   : "An empty day multiplies by 0.85."}
               </p>
             </div>
-            <RocketClimb climb={climb} />
+            <ClimbCurve climb={climb} />
           </div>
 
           <div className="rounded-xl bg-card/70 p-4">

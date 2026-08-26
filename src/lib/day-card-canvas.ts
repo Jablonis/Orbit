@@ -15,8 +15,8 @@ export type DayCardContent = {
 export const DAY_CARD_WIDTH = 1080;
 export const DAY_CARD_HEIGHT = 1350;
 
-const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
-const SANS = "ui-sans-serif, system-ui, -apple-system, sans-serif";
+const MONO = '"DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace';
+const SANS = 'Figtree, ui-sans-serif, system-ui, -apple-system, sans-serif';
 
 /** Letter spacing is not in every engine; ignore it where it is missing. */
 function withTracking(context: CanvasRenderingContext2D, value: string) {
