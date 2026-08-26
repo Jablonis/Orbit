@@ -132,9 +132,12 @@ stated in words or numbers.
   person wrote it and not like a terminal printed it. Close to the type an
   iPhone sets — familiar enough to disappear — but warmer, which is the whole
   difference between Bloom and a dashboard.
-- **DM Mono for every label**: eyebrows, axis ticks, figure captions, codes.
-  Uppercase, 12 px, 0.08em tracking, weight 500 — `.label-caps`. Softer than
-  the technical monos; it marks a label without shouting *system*.
+- **Labels are spoken, not stamped.** Eyebrows, figure captions and axis ticks
+  are Figtree at 12.5 px, 600, sentence case — `.label-caps`. Tracked mono
+  capitals read as a machine printing at you; the same words in the product's
+  own face read as a person having written them.
+- **DM Mono is for codes**, and only codes: a crew code, an identifier,
+  something read out character by character — `.code-caps`.
 - Numbers are always tabular (`.metric-value`), so a figure that changes does
   not move the layout under it.
 - The landing sets the name at `.display-mega`; the wordmark is the artwork.

@@ -87,9 +87,9 @@ Corners are machined, not soft: `--radius-control` 2 px, `--radius-row` 4 px,
 
 ## Typography
 
-Figtree for everything the product says, DM Mono for labels. Both are loaded
-through `next/font`, so they are self-hosted and there is no third-party
-request on a page view.
+Figtree for everything the product says, including labels. DM Mono is kept for
+the few things that genuinely are codes. Both are loaded through `next/font`,
+so they are self-hosted and there is no third-party request on a page view.
 
 | Role | Current class | Standard |
 | --- | --- | --- |
@@ -97,7 +97,8 @@ request on a page view.
 | Card title | `.card-title` | 18–20 px, 600 |
 | Body | `.body-copy` | 14 px / 24 px |
 | Metadata | `.metadata-copy` | 12 px / 18 px minimum |
-| Uppercase label | `.label-caps` | DM Mono, 12 px, 0.08em tracking, 500 — the only shouting in the product |
+| Section label | `.label-caps` | Figtree, 12.5 px, 600, sentence case — a label is spoken, not stamped |
+| Code | `.code-caps` | DM Mono, 12 px, 0.08em, uppercase — crew codes and identifiers only |
 | Numeric datum | `.metric-value` | tabular figures |
 | Editorial statement | `.editorial-display` | Brief and reflection only |
 | Landing wordmark | `.display-mega` | Uppercase, 115% stretch, one per page |

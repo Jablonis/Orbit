@@ -10,7 +10,6 @@ import { WeeklyReflectionForm } from "@/components/WeeklyReflectionForm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { SystemDot, TintPanel } from "@/components/ui/tint-panel";
 import { CountUp } from "@/components/CountUp";
 import { Pip } from "@/components/brand/Pip";
@@ -89,17 +88,9 @@ export function CardHeading({
 export function RingsCard({
   dailyRings,
   earned,
-  nextTask,
-  today,
-  timeZone,
-  training,
 }: {
   dailyRings: ReturnType<typeof getDailyRings>;
   earned: ReturnType<typeof getEarnedToday>;
-  nextTask?: Task;
-  today: string;
-  timeZone: string;
-  training: import("@/lib/fitness").TodayTraining;
 }) {
   const summary = getRingsSummary(
     Object.values(dailyRings)
@@ -112,26 +103,21 @@ export function RingsCard({
       ? "All rings closed."
       : `${summary.closed} of ${summary.total} rings closed.`;
   const closing = getClosingLines(dailyRings)[0] ?? null;
-  const action = nextTask
-    ? { href: "/tasks", label: "Open next task" }
-    : training.day.sport !== "rest" && !training.day.log.completed
-      ? { href: "/fitness#training-calendar", label: "Log the session" }
-      : { href: "/tasks#new-task", label: "Plan the next move" };
-
   return (
     <TintPanel
       className="settle-in settle-1 flex flex-col gap-6 lg:col-span-2"
+      id="today-rings"
       system={earned.allClosed ? "fitness" : "neutral"}
     >
       <div className="grid gap-6 sm:grid-cols-[minmax(0,180px)_minmax(0,1fr)] sm:items-center">
-        <div className="mx-auto w-full max-w-[180px]">
+        <div className="order-2 mx-auto w-full max-w-[130px] sm:order-none sm:max-w-[180px]">
           <ActivityRings
             finance={dailyRings.finance.percent}
             fitness={dailyRings.fitness.percent}
             tasks={dailyRings.tasks.percent}
           />
         </div>
-        <div className="flex flex-col gap-5">
+        <div className="order-1 flex flex-col gap-5 sm:order-none">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="label-caps text-[var(--ink,var(--muted-foreground))]">
@@ -178,32 +164,6 @@ export function RingsCard({
         </div>
       </div>
 
-      <Separator />
-
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="min-w-0">
-          <p className="label-caps text-muted-foreground">Next clear move</p>
-          <p className="mt-1.5 truncate text-[16px] font-semibold">
-            {nextTask?.title ??
-              (training.day.sport !== "rest"
-                ? training.title
-                : "Your schedule is clear")}
-          </p>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">
-            {nextTask
-              ? `${nextTask.category} · ${formatRelativeTaskDate(nextTask, today, timeZone)}`
-              : training.day.sport !== "rest"
-                ? `${training.day.plannedDurationMinutes} min planned · ${training.focus}`
-                : "Add something only if it deserves your attention."}
-          </p>
-        </div>
-        <Button asChild>
-          <Link href={action.href}>
-            {action.label}
-            <LinkPendingIndicator label={`Opening ${action.label}`} />
-          </Link>
-        </Button>
-      </div>
     </TintPanel>
   );
 }
@@ -228,15 +188,11 @@ export function RingChip({
 
 export function MomentumCard({
   dayCard,
-  ghost,
   momentum,
-  records,
   streak,
 }: {
   dayCard: ReturnType<typeof getDayCard>;
-  ghost: GhostRace;
   momentum: Momentum;
-  records: MomentumRecords;
   streak: StreakState;
 }) {
   const holdLine =
@@ -245,7 +201,6 @@ export function MomentumCard({
       : momentum.holdScore === 0
         ? `${momentum.tier.name} holds even on an empty day.`
         : `Finish today at ${momentum.holdScore}% to stay in ${momentum.tier.name}.`;
-  const ghostTotal = Math.max(ghost.current, ghost.previous, 1);
   // Yesterday's altitude against today's: the multiplier is the real one.
   const yesterday =
     momentum.series[momentum.series.length - 2]?.altitude ?? momentum.altitude;
@@ -281,16 +236,6 @@ export function MomentumCard({
         </div>
 
         <div className="flex flex-col gap-4">
-          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Figure label="Days in orbit" value={`${streak.streak}`} />
-            <Figure label="Best run" value={`${streak.bestStreak}`} />
-            <Figure label="Peak" value={`${records.bestAltitude}`} />
-            <Figure
-              label="7-day"
-              value={`${momentum.weekChange >= 0 ? "+" : ""}${momentum.weekChange}`}
-            />
-          </dl>
-
           <div className="rounded-xl bg-card/70 p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p className="label-caps text-[var(--ink,var(--muted-foreground))]">
@@ -305,26 +250,6 @@ export function MomentumCard({
             <ClimbCurve climb={climb} />
           </div>
 
-          <div className="rounded-xl bg-card/70 p-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="label-caps text-[var(--ink,var(--muted-foreground))]">Ghost of last week</p>
-              <p className="text-[12px] text-muted-foreground">{ghost.verdict}</p>
-            </div>
-            <div className="mt-3 space-y-2">
-              <GhostBar
-                color="var(--plum)"
-                label="This week"
-                total={ghostTotal}
-                value={ghost.current}
-              />
-              <GhostBar
-                color="color-mix(in srgb, var(--plum) 28%, transparent)"
-                label="Last week"
-                total={ghostTotal}
-                value={ghost.previous}
-              />
-            </div>
-          </div>
         </div>
       </div>
 
@@ -647,12 +572,20 @@ export function FinanceCard({
 
 export function AnalyticsCard({
   enabledDomains,
+  ghost,
   overviewQuery,
   productivity,
   rangeDays,
+  records,
   review,
+  streak,
   today,
+  weekChange,
 }: {
+  ghost: GhostRace;
+  records: MomentumRecords;
+  streak: StreakState;
+  weekChange: number;
   enabledDomains: ProductivityDomain[];
   overviewQuery: OverviewQueryState;
   productivity: { current: ProductivityPoint[]; previous: ProductivityPoint[] };
@@ -661,6 +594,7 @@ export function AnalyticsCard({
   today: string;
 }) {
   const points = productivity.current;
+  const ghostTotal = Math.max(ghost.current, ghost.previous, 1);
   const width = 640;
   const height = 200;
   const chartX = (index: number) =>
@@ -751,6 +685,37 @@ export function AnalyticsCard({
           </figcaption>
         </figure>
       )}
+
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Figure label="Days in orbit" value={`${streak.streak}`} />
+            <Figure label="Best run" value={`${streak.bestStreak}`} />
+            <Figure label="Peak" value={`${records.bestAltitude}`} />
+            <Figure
+              label="7-day"
+              value={`${weekChange >= 0 ? "+" : ""}${weekChange}`}
+            />
+      </dl>
+
+          <div className="rounded-xl bg-muted p-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="label-caps text-[var(--ink,var(--muted-foreground))]">Ghost of last week</p>
+              <p className="text-[12px] text-muted-foreground">{ghost.verdict}</p>
+            </div>
+            <div className="mt-3 space-y-2">
+              <GhostBar
+                color="var(--plum)"
+                label="This week"
+                total={ghostTotal}
+                value={ghost.current}
+              />
+              <GhostBar
+                color="color-mix(in srgb, var(--plum) 28%, transparent)"
+                label="Last week"
+                total={ghostTotal}
+                value={ghost.previous}
+              />
+            </div>
+          </div>
     </TintPanel>
   );
 }
