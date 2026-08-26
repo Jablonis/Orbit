@@ -324,6 +324,82 @@
 .settle-3 { animation-delay: 180ms; }
 .settle-4 { animation-delay: 240ms; }
 
+/* A list arriving. One shape, one curve, 45 ms apart, and the stagger stops
+   after eight — past that it is a queue rather than an entrance. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.rise-in {
+  animation: rise-in 380ms var(--ease-orbit) both;
+  animation-delay: calc(min(var(--rise-index, 0), 8) * 45ms);
+}
+
+/* Every native dialog in the product. The class was referenced by four of them
+   and defined by none, so they appeared and vanished with a cut. */
+.modal-animate {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  transition:
+    display var(--duration-state) allow-discrete,
+    opacity var(--duration-state) var(--ease-orbit),
+    overlay var(--duration-state) allow-discrete,
+    transform var(--duration-state) var(--ease-orbit);
+}
+
+.modal-animate[open] {
+  opacity: 1;
+  transform: none;
+}
+
+/* The entering state has to be declared after the open state to be read. */
+@starting-style {
+  .modal-animate[open] {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+.modal-animate::backdrop {
+  opacity: 0;
+  transition:
+    display var(--duration-state) allow-discrete,
+    opacity var(--duration-state) var(--ease-orbit),
+    overlay var(--duration-state) allow-discrete;
+}
+
+.modal-animate[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  .modal-animate[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* The rings of the week strip draw themselves once, left to right. */
+@keyframes ring-draw {
+  from {
+    stroke-dashoffset: var(--ring-length);
+  }
+}
+
+.ring-draw {
+  animation: ring-draw 620ms var(--ease-ring) both;
+  animation-delay: calc(var(--rise-index, 0) * 60ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise-in,
+  .ring-draw {
+    animation-delay: 0ms;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -342,20 +418,45 @@
   }
 }
 
-/* ---------- The day-sealed moment ---------- */
+/* ---------- The moments ---------- */
 
-@keyframes day-complete-in {
-  from { opacity: 0; transform: translateY(14px) scale(0.96); }
-  to { opacity: 1; transform: none; }
+@keyframes moment-veil-in {
+  from { opacity: 0; }
 }
+
+@keyframes moment-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+}
+
+@keyframes moment-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.moment-veil {
+  animation: moment-veil-in var(--duration-state) var(--ease-orbit) both;
+}
+
+.moment-panel {
+  animation: moment-in 420ms var(--ease-orbit) both;
+}
+
+/* Leaving is the same path, faster: the decision is already made. */
+.moment-veil[data-state="closing"],
+.moment-panel[data-state="closing"] {
+  animation: moment-out 170ms var(--ease-orbit) both;
+}
+
+/* ---------- The day-sealed moment ---------- */
 
 @keyframes day-complete-sweep {
   from { stroke-dashoffset: 100; }
   to { stroke-dashoffset: 0; }
-}
-
-.day-complete {
-  animation: day-complete-in 420ms var(--ease-orbit) both;
 }
 
 .day-complete-arc {

@@ -132,12 +132,13 @@ export function CrewBoard({
 
           <TintPanel padding="sm">
             <ol className="flex flex-col">
-              {leaderboard.map((row) => (
+              {leaderboard.map((row, index) => (
                 <li
-                  className={`flex items-center gap-3 rounded-xl px-3 py-3 ${
+                  className={`rise-in flex items-center gap-3 rounded-xl px-3 py-3 ${
                     row.isYou ? "bg-plum-tint" : ""
                   }`}
                   key={row.userId}
+                  style={{ "--rise-index": index } as React.CSSProperties}
                 >
                   <span
                     className={`metric-value w-7 text-[15px] font-bold ${
@@ -207,8 +208,12 @@ export function CrewBoard({
             </TintPanel>
           ) : (
             <ul className="flex flex-col gap-3">
-              {feed.map((entry) => (
-                <li key={`${entry.userId}-${entry.day}`}>
+              {feed.map((entry, index) => (
+                <li
+                  className="rise-in"
+                  key={`${entry.userId}-${entry.day}`}
+                  style={{ "--rise-index": index } as React.CSSProperties}
+                >
                   <TintPanel className="flex flex-col gap-3" padding="sm">
                     <div className="flex items-start gap-3 px-1 pt-1">
                       <CrewAvatar
@@ -243,7 +248,7 @@ export function CrewBoard({
                           <input name="toUser" type="hidden" value={entry.userId} />
                           <PendingSubmitButton
                             ariaLabel={`${reactionLabels[reaction.kind]} on ${entry.displayName}'s ${entry.day}`}
-                            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition ${
+                            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-[background-color,color,transform] duration-150 active:scale-[0.96] ${
                               reaction.mine
                                 ? "bg-plum-tint text-plum-ink"
                                 : "bg-muted text-muted-foreground hover:text-foreground"

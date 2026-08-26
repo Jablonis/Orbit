@@ -845,7 +845,7 @@ export function WeekStrip({
   return (
     <section aria-label="This week" className="settle-in">
       <ol className="flex items-stretch gap-1.5 sm:gap-2">
-        {points.map((point) => {
+        {points.map((point, index) => {
           const isToday = point.date === today;
           const score = point.score ?? 0;
           const future = point.future || point.date > today;
@@ -876,6 +876,7 @@ export function WeekStrip({
                     />
                     {future ? null : (
                       <circle
+                        className="ring-draw"
                         cx="18"
                         cy="18"
                         fill="none"
@@ -887,6 +888,12 @@ export function WeekStrip({
                         }
                         strokeLinecap="round"
                         strokeWidth="4"
+                        style={
+                          {
+                            "--ring-length": circumference,
+                            "--rise-index": index,
+                          } as React.CSSProperties
+                        }
                       />
                     )}
                   </svg>
@@ -1000,12 +1007,13 @@ export function MilestonesCard({ milestones }: { milestones: Milestone[] }) {
       />
 
       <ul className="grid gap-2 sm:grid-cols-2">
-        {[...earned, ...next].map((item) => (
+        {[...earned, ...next].map((item, index) => (
           <li
-            className={`flex items-center gap-3 rounded-xl p-3 ${
+            className={`rise-in flex items-center gap-3 rounded-xl p-3 ${
               item.achieved ? "bg-fitness-tint" : "bg-muted"
             }`}
             key={item.id}
+            style={{ "--rise-index": index } as React.CSSProperties}
           >
             <span
               aria-hidden="true"

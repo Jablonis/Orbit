@@ -1,28 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { CountUp } from "@/components/CountUp";
+import { Moment } from "@/components/Moment";
 import { Pip } from "@/components/brand/Pip";
-import { Button } from "@/components/ui/button";
-
-const STORAGE_PREFIX = "orbit-day-sealed:";
-
-function alreadySeen(date: string) {
-  try {
-    return window.localStorage.getItem(STORAGE_PREFIX + date) === "1";
-  } catch {
-    return true;
-  }
-}
-
-function remember(date: string) {
-  try {
-    window.localStorage.setItem(STORAGE_PREFIX + date, "1");
-  } catch {
-    // A private window will not keep it. Showing it twice is not a failure.
-  }
-}
 
 /**
  * The moment the last ring closes. Shown once per day, on the device where it
@@ -43,56 +24,13 @@ export function DayComplete({
   streak: number;
   tier: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const dismissRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (alreadySeen(date)) return;
-    const id = window.setTimeout(() => {
-      setOpen(true);
-      // A short double tap where the device supports it. Silent everywhere
-      // else, and never a substitute for what is on screen.
-      try {
-        navigator.vibrate?.([14, 45, 22]);
-      } catch {
-        // Some browsers reject it outside a user gesture; that is fine.
-      }
-    }, 350);
-    return () => window.clearTimeout(id);
-  }, [date]);
-
-  const close = () => {
-    remember(date);
-    setOpen(false);
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
-    };
-    window.addEventListener("keydown", onKey);
-    const id = window.setTimeout(() => dismissRef.current?.focus(), 60);
-    return () => {
-      window.clearTimeout(id);
-      window.removeEventListener("keydown", onKey);
-    };
-  });
-
-  if (!open) return null;
-
   return (
-    <div
-      aria-labelledby="day-complete-title"
-      aria-modal="true"
-      className="fixed inset-0 z-50 grid place-items-center bg-foreground/25 p-4 backdrop-blur-sm"
-      onClick={close}
-      role="dialog"
+    <Moment
+      labelledBy="day-complete-title"
+      storageKey={`orbit-day-sealed:${date}`}
+      subdued={Boolean(children)}
     >
-      <div
-        className="day-complete w-full max-w-sm rounded-2xl bg-card p-8 text-center shadow-[0_40px_80px_-40px_rgba(27,26,31,0.5)]"
-        onClick={(event) => event.stopPropagation()}
-      >
+      <div className="text-center">
         <Pip burn={1} className="mx-auto" mood="sealed" size={72} />
 
         <div className="mx-auto mt-2 grid size-28 place-items-center">
@@ -138,16 +76,7 @@ export function DayComplete({
             {children}
           </div>
         ) : null}
-
-        <Button
-          className="mt-4 w-full"
-          onClick={close}
-          ref={dismissRef}
-          variant={children ? "ghost" : "default"}
-        >
-          Close
-        </Button>
       </div>
-    </div>
+    </Moment>
   );
 }
