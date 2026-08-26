@@ -3,11 +3,15 @@
  * the shareable image can be rendered and reviewed on its own.
  */
 
+import type { PipMood } from "@/lib/mascot";
+import { drawPip, pipWidth } from "@/lib/pip-canvas";
+
 export type DayCardContent = {
   altitude: number;
   date: string;
   ghost: string;
   metrics: Array<{ label: string; value: string }>;
+  mood: PipMood;
   tierName: string;
   trace: number[];
 };
@@ -15,8 +19,12 @@ export type DayCardContent = {
 export const DAY_CARD_WIDTH = 1080;
 export const DAY_CARD_HEIGHT = 1350;
 
-const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
-const SANS = "ui-sans-serif, system-ui, -apple-system, sans-serif";
+const INK = "#141219";
+const PAPER = "#F4F1F7";
+const MUTED = "#8A8296";
+
+const MONO = '"DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace';
+const SANS = 'Figtree, ui-sans-serif, system-ui, -apple-system, sans-serif';
 
 /** Letter spacing is not in every engine; ignore it where it is missing. */
 function withTracking(context: CanvasRenderingContext2D, value: string) {
@@ -39,7 +47,7 @@ export function drawDayCard(
   const start = -Math.PI / 2;
   const sweep = (clamp(props.altitude) / 100) * Math.PI * 2;
 
-  context.fillStyle = "#100f0d";
+  context.fillStyle = INK;
   context.fillRect(0, 0, DAY_CARD_WIDTH, DAY_CARD_HEIGHT);
 
   const glow = context.createRadialGradient(
@@ -51,7 +59,7 @@ export function drawDayCard(
     380,
   );
   glow.addColorStop(0, `${accent}26`);
-  glow.addColorStop(1, "#100f0d00");
+  glow.addColorStop(1, `${INK}00`);
   context.fillStyle = glow;
   context.fillRect(0, 0, DAY_CARD_WIDTH, DAY_CARD_HEIGHT);
 
@@ -86,7 +94,7 @@ export function drawDayCard(
     const angle = (index / props.trace.length) * Math.PI * 2 + start;
     const reached = score >= 50;
     const length = 8 + (clamp(score) / 100) * 34;
-    context.strokeStyle = reached ? accent : "rgba(244, 235, 221,0.22)";
+    context.strokeStyle = reached ? accent : "rgba(244,241,247,0.22)";
     context.globalAlpha = reached
       ? 0.4 + (index / props.trace.length) * 0.6
       : 0.75;
@@ -107,31 +115,41 @@ export function drawDayCard(
   context.lineCap = "butt";
 
   context.textAlign = "center";
-  context.fillStyle = "#f4ebdd";
+  context.fillStyle = PAPER;
   context.font = `700 132px ${SANS}`;
   context.fillText(String(Math.round(props.altitude)), centerX, centerY + 26);
   withTracking(context, "0.18em");
   context.font = `600 20px ${MONO}`;
-  context.fillStyle = "#7c736a";
+  context.fillStyle = MUTED;
   context.fillText("ALTITUDE", centerX + 4, centerY + 76);
 
   context.textAlign = "left";
-  context.fillStyle = "#f4ebdd";
+  context.fillStyle = PAPER;
   context.font = `700 30px ${SANS}`;
   context.fillText("ORBIT", 90, 130);
   context.font = `500 22px ${MONO}`;
-  context.fillStyle = "#7c736a";
+  context.fillStyle = MUTED;
   context.fillText(props.date.toUpperCase(), 90, 176);
   withTracking(context, "0em");
 
-  context.fillStyle = "#f4ebdd";
+  // Pip stands where the day is named, so the character travels with the card.
+  const pipHeight = 230;
+  drawPip(context, {
+    burn: 0.9,
+    height: pipHeight,
+    mood: props.mood,
+    x: DAY_CARD_WIDTH - 90 - pipWidth(pipHeight),
+    y: 866,
+  });
+
+  context.fillStyle = PAPER;
   context.font = `700 74px ${SANS}`;
   context.fillText(props.tierName, 90, 1030);
-  context.fillStyle = "#c3b9ab";
+  context.fillStyle = MUTED;
   context.font = `500 30px ${SANS}`;
   context.fillText(props.ghost.slice(0, 64), 90, 1084);
 
-  context.strokeStyle = "rgba(244, 235, 221,0.08)";
+  context.strokeStyle = "rgba(244,241,247,0.10)";
   context.lineWidth = 2;
   context.beginPath();
   context.moveTo(90, 1140);
@@ -142,11 +160,11 @@ export function drawDayCard(
   props.metrics.forEach((metric, index) => {
     const x = 90 + columnWidth * index;
     withTracking(context, "0.16em");
-    context.fillStyle = "#7c736a";
+    context.fillStyle = MUTED;
     context.font = `600 20px ${MONO}`;
     context.fillText(metric.label.toUpperCase(), x, 1210);
     withTracking(context, "0em");
-    context.fillStyle = "#f4ebdd";
+    context.fillStyle = PAPER;
     context.font = `700 52px ${SANS}`;
     context.fillText(metric.value, x, 1272);
   });

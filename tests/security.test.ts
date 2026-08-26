@@ -29,6 +29,7 @@ test("every interactive route stays dynamic, because the CSP nonce demands it", 
     "src/app/fitness/page.tsx",
     "src/app/finance/page.tsx",
     "src/app/login/page.tsx",
+    "src/app/crew/page.tsx",
   ]) {
     assert.match(
       read(route),
@@ -90,4 +91,88 @@ test("the statement import keeps layered request limits ahead of PDF parsing", (
   assert.ok(rateLimitCheck > contentLengthCheck);
   assert.ok(boundedRead > rateLimitCheck);
   assert.ok(parse > boundedRead);
+});
+
+test("a crew member can read a published day and nothing underneath it", () => {
+  const migration = read("supabase/migrations/20260825140000_add_crew.sql");
+
+  // Every crew table is locked to reads, and every read is gated on a link.
+  for (const table of [
+    "orbit_profiles",
+    "friendships",
+    "orbit_snapshots",
+    "orbit_reactions",
+  ]) {
+    assert.match(
+      migration,
+      new RegExp(`alter table public\\.${table} enable row level security`, "i"),
+      `${table} must have RLS on`,
+    );
+    assert.match(
+      migration,
+      new RegExp(`revoke all on table public\\.${table} from public, anon`, "i"),
+      `${table} must be unavailable to anonymous clients`,
+    );
+    assert.match(
+      migration,
+      new RegExp(
+        `revoke insert, update, delete on table public\\.${table}\\s+from authenticated`,
+        "i",
+      ),
+      `${table} must only be written through a function`,
+    );
+  }
+
+  // A snapshot is readable by its owner or an accepted crew member, never
+  // anyone else, and a pending request only ever exposes a name.
+  assert.match(
+    migration,
+    /create policy "orbit_snapshots_select_crew"[\s\S]+?using \([\s\S]+?public\.is_crew\(\(select auth\.uid\(\)\), user_id\)/i,
+  );
+  assert.match(
+    migration,
+    /create policy "orbit_profiles_select_crew"[\s\S]+?public\.has_crew_link/i,
+  );
+  assert.match(
+    migration,
+    /create policy "friendships_select_own"[\s\S]+?in \(requester_id, addressee_id\)/i,
+  );
+
+  // Every crew function is security definer with a pinned search path, and
+  // none of them is reachable anonymously.
+  const functions = [
+    "ensure_orbit_profile",
+    "request_friendship",
+    "respond_to_friendship",
+    "remove_friendship",
+    "publish_orbit_snapshot",
+    "react_to_day",
+    "is_crew",
+    "has_crew_link",
+  ];
+  for (const name of functions) {
+    assert.match(
+      migration,
+      new RegExp(
+        `create or replace function public\\.${name}\\([\\s\\S]*?security definer\\s+set search_path = public, pg_temp`,
+        "i",
+      ),
+      `${name} must be a security-definer function with a pinned search path`,
+    );
+    assert.match(
+      migration,
+      new RegExp(`revoke all on function public\\.${name}\\([\\s\\S]*?from public, anon`, "i"),
+      `${name} must be unavailable to anonymous clients`,
+    );
+  }
+
+  // A snapshot is keyed on the caller, never on anything the client sends.
+  assert.doesNotMatch(
+    migration,
+    /create or replace function public\.publish_orbit_snapshot\([\s\S]+?p_user_id/i,
+  );
+  assert.match(
+    migration,
+    /create or replace function public\.react_to_day[\s\S]+?if not public\.is_crew\(v_user_id, p_to_user\) then\s+raise exception/i,
+  );
 });

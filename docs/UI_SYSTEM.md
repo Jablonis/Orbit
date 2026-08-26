@@ -87,13 +87,17 @@ Corners are machined, not soft: `--radius-control` 2 px, `--radius-row` 4 px,
 
 ## Typography
 
+Figtree for everything the product says, DM Mono for labels. Both are loaded
+through `next/font`, so they are self-hosted and there is no third-party
+request on a page view.
+
 | Role | Current class | Standard |
 | --- | --- | --- |
 | Page title | `.page-title` | 32–40 px, 600 |
 | Card title | `.card-title` | 18–20 px, 600 |
 | Body | `.body-copy` | 14 px / 24 px |
 | Metadata | `.metadata-copy` | 12 px / 18 px minimum |
-| Uppercase label | `.label-caps` | Geist Mono, 12 px, 0.12em tracking — the only shouting in the product |
+| Uppercase label | `.label-caps` | DM Mono, 12 px, 0.08em tracking, 500 — the only shouting in the product |
 | Numeric datum | `.metric-value` | tabular figures |
 | Editorial statement | `.editorial-display` | Brief and reflection only |
 | Landing wordmark | `.display-mega` | Uppercase, 115% stretch, one per page |

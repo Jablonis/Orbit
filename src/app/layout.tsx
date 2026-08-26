@@ -1,15 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { DM_Mono, Figtree } from "next/font/google";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
+// Figtree carries the product: humanist rather than geometric, so it reads
+// like a person wrote it and not like a terminal printed it.
+const figtree = Figtree({
   subsets: ["latin"],
-  variable: "--font-jakarta",
+  variable: "--font-figtree",
 });
 
-const plexMono = IBM_Plex_Mono({
+// DM Mono only for labels and codes — warmer than the technical monos, and it
+// stops at 500, which is the weight the labels use anyway.
+const dmMono = DM_Mono({
   subsets: ["latin"],
-  variable: "--font-plex-mono",
+  variable: "--font-dm-mono",
   weight: ["400", "500"],
 });
 
@@ -45,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${plexMono.variable} h-full bg-background`}>
+    <html lang="en" className={`${figtree.variable} ${dmMono.variable} h-full bg-background`}>
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <a className="skip-link" href="#main-content">
           Skip to main content

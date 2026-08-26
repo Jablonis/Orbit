@@ -53,6 +53,59 @@ small version of the interface.
 - Never rotate, outline, add a gradient to, or place the mark inside another
   shape. It already is a shape.
 
+## Pip
+
+The mark is the system; Pip is the character: a penguin in a helmet, drawn as
+one SVG that takes the account's state — so the face on the dashboard is never a
+decoration that disagrees with the numbers.
+
+The joke is the point. A penguin is the bird that cannot fly, and Orbit is
+about altitude: nothing about a day is impossible, it just needs something
+under it. The helmet is the Orbit mark worn — the same ring, the same geometry
+— so the brand and the character are one drawing.
+
+| Mood | When |
+| --- | --- |
+| `asleep` | Nothing today and a decayed orbit — eyes shut, feet down |
+| `grounded` | Nothing today, but yesterday still holding it up |
+| `lifting` | The day has started |
+| `cruising` | The day already counts (50 %+) |
+| `soaring` | A full day (80 %+) |
+| `sealed` | Every ring closed |
+
+Rules:
+
+- Pip is derived, never chosen. `getPipState` reads the day, the orbit and the
+  run, in that order — a finished day beats everything.
+- Pip animates when something happened and is still otherwise: the flame
+  flickers three times and rests, the hop plays once. Nothing loops forever.
+- Minimum size 22 px; below that the helmet swallows the face.
+- Feet on the ground mean the engine is off. Pip only burns while leaving.
+- Pip never speaks in exclamation marks, never nags, and never asks to be fed.
+  The line under Pip states the situation and the next move: "Engine is lit. One
+  more thing and the day holds."
+- Pip is not a reward and is never withheld. Progress is the reward.
+- Pip is drawn once. `src/lib/pip-art.ts` holds the geometry; the interface
+  renders it as SVG and the shared images draw it on canvas, so the character on
+  a posted card is the same character as the one on the dashboard.
+- On the dark share images the shell lifts to `#2B2634`: a black penguin on a
+  near-black card is a hole in the image, not a mascot.
+
+## The climb
+
+The one deliberately playful surface: Pip riding a curve out of the corner
+while a multiplier counts up, in the visual language people already know from betting apps —
+borrowed only for the shape of the feeling.
+
+What keeps it honest, and what must stay true of it:
+
+- The multiplier is real: the orbit now over the orbit yesterday. A day with
+  nothing on it lands on ×0.85, because that is exactly what decay does.
+- Nothing is wagered, nothing is random, and nothing crashes. The curve stops
+  where the day stopped.
+- It is never the only place a number appears, and never the thing that decides
+  one.
+
 ## Colour
 
 The product palette is the brand palette; there is no separate marketing set.
@@ -74,14 +127,20 @@ stated in words or numbers.
 
 ## Typography
 
-- System sans (Geist) for structure; numbers always tabular.
-- **Geist Mono for every label**: eyebrows, axis ticks, chapter codes, figure
-  captions. Uppercase, 12 px, 0.12em tracking. This is the detail that makes
-  Orbit read as an instrument rather than a web page.
-- The landing sets the name at `.display-mega` — uppercase, 115% stretch, one
-  per page. The wordmark is the artwork; there is no illustration behind it.
-- The serif (`.editorial-display`) is reserved for one statement per screen.
+- **Figtree** carries everything the product says. It is humanist rather than
+  geometric: the letters have a hand in them, so the interface reads like a
+  person wrote it and not like a terminal printed it. Close to the type an
+  iPhone sets — familiar enough to disappear — but warmer, which is the whole
+  difference between Bloom and a dashboard.
+- **DM Mono for every label**: eyebrows, axis ticks, figure captions, codes.
+  Uppercase, 12 px, 0.08em tracking, weight 500 — `.label-caps`. Softer than
+  the technical monos; it marks a label without shouting *system*.
+- Numbers are always tabular (`.metric-value`), so a figure that changes does
+  not move the layout under it.
+- The landing sets the name at `.display-mega`; the wordmark is the artwork.
 - Tracking tightens as type grows and never goes positive above 20 px.
+- Two families, and no third. A face added for one screen is a face that has to
+  be argued about on every screen after it.
 
 ## Form
 

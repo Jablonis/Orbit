@@ -113,3 +113,42 @@ export async function saveWeeklyReflectionAction(
   revalidatePath("/");
   return { message: "Weekly reflection saved.", ok: true };
 }
+
+export type ReminderActionState = { message: string; ok: boolean };
+
+/**
+ * The reminder switch saves on its own rather than through the settings form:
+ * turning it on also has to ask the browser for permission, which only a
+ * client can do.
+ */
+export async function saveReminderPreferencesAction(
+  _state: ReminderActionState,
+  formData: FormData,
+): Promise<ReminderActionState> {
+  const { supabase, user } = await getAuthenticatedUser();
+  const current = await getDashboardPreferences(supabase, user.id);
+  const preferences = parseDashboardPreferences({
+    ...current,
+    reminders: {
+      enabled: formData.get("enabled") === "true",
+      hour: Number(formData.get("hour")),
+    },
+  });
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ dashboard_preferences: preferences })
+    .eq("id", user.id);
+
+  if (error) {
+    return { message: "The reminder setting could not be saved.", ok: false };
+  }
+
+  revalidatePath("/", "layout");
+  return {
+    message: preferences.reminders.enabled
+      ? `Reminder set for ${preferences.reminders.hour}:00.`
+      : "Evening reminder turned off.",
+    ok: true,
+  };
+}

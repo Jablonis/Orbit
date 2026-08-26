@@ -26,6 +26,23 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 `NEXT_PUBLIC_SUPABASE_ANON_KEY` remains supported for older projects. Never put a
 service-role or secret key in a client-visible environment variable.
 
+The evening reminder needs four more, all server-side except the public VAPID
+key:
+
+```bash
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
+VAPID_PRIVATE_KEY=your-vapid-private-key
+VAPID_SUBJECT=mailto:you@example.com
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+CRON_SECRET=a-long-random-string
+```
+
+Generate the VAPID pair once with `npx web-push generate-vapid-keys`. The
+private key, the service-role key and the cron secret must never appear in a
+`NEXT_PUBLIC_*` variable — that ships them to the browser. The service-role key
+exists for one job: the scheduled sender has to read every account's reminder
+settings, which row-level security correctly forbids.
+
 Start the application:
 
 ```bash
@@ -70,6 +87,25 @@ system, and states pricing honestly. Shared links render the branded preview in
 `src/app/opengraph-image.tsx`. The brand system — voice, mark, colour, motion —
 is documented in `docs/BRAND.md`.
 
+## The evening reminder
+
+Orbit can send one notification in the evening carrying the score today still
+needs — "Finish today at 49 %". It is off until you turn it on in dashboard
+settings, it never arrives on a day already in orbit, and it arrives once:
+`/api/push/send` works out who is at or past their chosen local hour and claims
+the day with an insert before it sends, so two overlapping runs cannot both
+deliver. Subscriptions that a push service reports as gone (404 or 410) are
+deleted immediately.
+
+`vercel.json` schedules it once a day, at 17:00 UTC — a Vercel Hobby project may
+only run a cron daily, and a deployment declaring anything more frequent is
+rejected. On a plan that allows more, change the schedule to `0 * * * *`: an
+hourly run reaches every timezone at its own chosen hour, and nothing else has
+to change.
+
+On iPhone, Safari only allows notifications for an app added to the home
+screen; the setting says so rather than failing silently.
+
 ## Daily rings
 
 Today is shown as three activity rings — tasks, fitness, finance — in the Apple
@@ -85,6 +121,16 @@ the current tier, the exact score needed today to hold it, days in orbit, and a
 running race against the same week seven days ago. The day can be exported as a
 shareable PNG rendered entirely on the device. The mechanics and formulas are
 documented in `docs/MOMENTUM.md`.
+
+## Crew
+
+A private circle, joined only by a code someone gives you: no search, no
+directory, nothing public. A crew member sees a published day — score,
+altitude, tier, run and rings closed — and never a task, a session, or a
+number with a currency on it. The page carries this week's table, a fortnight
+of days, and three one-tap reactions. An account with nobody in its crew
+publishes nothing at all. The model, the policies and the guarantees are
+documented in `docs/CREW.md`.
 
 ## Install on a phone
 

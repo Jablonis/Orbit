@@ -177,3 +177,51 @@ export function getEarnedToday({
     inOrbit,
   };
 }
+
+export type RingProgress = {
+  completed: number;
+  percent: number;
+  total: number;
+};
+
+export type ClosingLine = {
+  remaining: number;
+  system: "tasks" | "fitness" | "finance";
+  text: string;
+};
+
+const systemNoun: Record<ClosingLine["system"], [string, string]> = {
+  finance: ["payment", "payments"],
+  fitness: ["session", "sessions"],
+  tasks: ["task", "tasks"],
+};
+
+/**
+ * How close each open ring is to closing, nearest first. Naming the last mile
+ * is what makes it worth walking — "one task" moves people, "72%" does not.
+ */
+export function getClosingLines(rings: {
+  finance: RingProgress;
+  fitness: RingProgress;
+  tasks: RingProgress;
+}): ClosingLine[] {
+  const entries = Object.entries(rings) as Array<
+    [ClosingLine["system"], RingProgress]
+  >;
+
+  return entries
+    .filter(([, ring]) => ring.total > 0 && ring.percent < 100)
+    .map(([system, ring]) => {
+      const remaining = Math.max(0, ring.total - ring.completed);
+      const [one, many] = systemNoun[system];
+      return {
+        remaining,
+        system,
+        text:
+          remaining === 1
+            ? `One ${one} from closing ${system}.`
+            : `${remaining} ${many} from closing ${system}.`,
+      };
+    })
+    .sort((a, b) => a.remaining - b.remaining);
+}

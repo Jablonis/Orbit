@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ActivityRings } from "@/components/ActivityRings";
 import { DayCardShare } from "@/components/DayCardShare";
+import { RecapShare } from "@/components/RecapShare";
 import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { MomentumOrbit } from "@/components/MomentumOrbit";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
@@ -11,7 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { SystemDot, TintPanel } from "@/components/ui/tint-panel";
+import { CountUp } from "@/components/CountUp";
+import { Pip } from "@/components/brand/Pip";
+import { ClimbCurve } from "@/components/ClimbCurve";
+import { getClimb, getPipState } from "@/lib/mascot";
 import { getRingsSummary } from "@/lib/activity-rings";
+import { getClosingLines } from "@/lib/progression";
 import type { getEarnedToday } from "@/lib/progression";
 import type { Milestone, SetupState } from "@/lib/progression";
 import type {
@@ -28,6 +34,7 @@ import type {
   StreakState,
   getDayCard,
 } from "@/lib/momentum";
+import type { WeekRecap } from "@/lib/recap";
 import type {
   OverviewQueryState,
   OverviewTaskFilter,
@@ -104,6 +111,7 @@ export function RingsCard({
     : summary.allClosed
       ? "All rings closed."
       : `${summary.closed} of ${summary.total} rings closed.`;
+  const closing = getClosingLines(dailyRings)[0] ?? null;
   const action = nextTask
     ? { href: "/tasks", label: "Open next task" }
     : training.day.sport !== "rest" && !training.day.log.completed
@@ -138,6 +146,11 @@ export function RingsCard({
             <p className="mt-2 text-[26px] font-bold leading-8 tracking-[-0.03em]">
               {headline}
             </p>
+            {closing ? (
+              <p className="mt-1.5 text-[14px] font-semibold text-[var(--ink,var(--muted-foreground))]">
+                {closing.text}
+              </p>
+            ) : null}
           </div>
           <dl className="flex flex-wrap gap-2">
             <RingChip
@@ -233,6 +246,10 @@ export function MomentumCard({
         ? `${momentum.tier.name} holds even on an empty day.`
         : `Finish today at ${momentum.holdScore}% to stay in ${momentum.tier.name}.`;
   const ghostTotal = Math.max(ghost.current, ghost.previous, 1);
+  // Yesterday's altitude against today's: the multiplier is the real one.
+  const yesterday =
+    momentum.series[momentum.series.length - 2]?.altitude ?? momentum.altitude;
+  const climb = getClimb(yesterday, momentum.projected);
 
   return (
     <TintPanel
@@ -256,7 +273,7 @@ export function MomentumCard({
           <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
             <div>
               <p className="metric-value display-figure text-[36px]">
-                {momentum.projected}
+                <CountUp value={momentum.projected} />
               </p>
               <p className="label-caps mt-1 text-[var(--ink,var(--muted-foreground))]">Altitude</p>
             </div>
@@ -273,6 +290,20 @@ export function MomentumCard({
               value={`${momentum.weekChange >= 0 ? "+" : ""}${momentum.weekChange}`}
             />
           </dl>
+
+          <div className="rounded-xl bg-card/70 p-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="label-caps text-[var(--ink,var(--muted-foreground))]">
+                Today&rsquo;s climb
+              </p>
+              <p className="text-[12px] text-muted-foreground">
+                {climb.rising
+                  ? "What today did to the orbit."
+                  : "An empty day multiplies by 0.85."}
+              </p>
+            </div>
+            <ClimbCurve climb={climb} />
+          </div>
 
           <div className="rounded-xl bg-card/70 p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -302,6 +333,14 @@ export function MomentumCard({
         date={dayCard.date}
         ghost={dayCard.ghost}
         metrics={dayCard.metrics}
+        mood={
+          getPipState({
+            allClosed: false,
+            altitude: momentum.projected,
+            streak: streak.streak,
+            todayScore: momentum.todayScore,
+          }).mood
+        }
         tierColor={dayCard.tier.color}
         tierName={dayCard.tier.name}
         trace={momentum.series.slice(-14).map((point) => point.altitude)}
@@ -806,7 +845,7 @@ export function WeekStrip({
   return (
     <section aria-label="This week" className="settle-in">
       <ol className="flex items-stretch gap-1.5 sm:gap-2">
-        {points.map((point) => {
+        {points.map((point, index) => {
           const isToday = point.date === today;
           const score = point.score ?? 0;
           const future = point.future || point.date > today;
@@ -837,6 +876,7 @@ export function WeekStrip({
                     />
                     {future ? null : (
                       <circle
+                        className="ring-draw"
                         cx="18"
                         cy="18"
                         fill="none"
@@ -848,6 +888,12 @@ export function WeekStrip({
                         }
                         strokeLinecap="round"
                         strokeWidth="4"
+                        style={
+                          {
+                            "--ring-length": circumference,
+                            "--rise-index": index,
+                          } as React.CSSProperties
+                        }
                       />
                     )}
                   </svg>
@@ -961,12 +1007,13 @@ export function MilestonesCard({ milestones }: { milestones: Milestone[] }) {
       />
 
       <ul className="grid gap-2 sm:grid-cols-2">
-        {[...earned, ...next].map((item) => (
+        {[...earned, ...next].map((item, index) => (
           <li
-            className={`flex items-center gap-3 rounded-xl p-3 ${
+            className={`rise-in flex items-center gap-3 rounded-xl p-3 ${
               item.achieved ? "bg-fitness-tint" : "bg-muted"
             }`}
             key={item.id}
+            style={{ "--rise-index": index } as React.CSSProperties}
           >
             <span
               aria-hidden="true"
@@ -996,5 +1043,131 @@ export function MilestonesCard({ milestones }: { milestones: Milestone[] }) {
         ))}
       </ul>
     </TintPanel>
+  );
+}
+
+export function RecapCard({ recap }: { recap: WeekRecap }) {
+  return (
+    <TintPanel className="flex flex-col gap-5" system="plum">
+      <CardHeading
+        action={
+          recap.isBestWeek ? (
+            <Badge className="bg-plum text-white" variant="plum">
+              Best week yet
+            </Badge>
+          ) : (
+            <Badge className="bg-card" variant="muted">
+              {recap.label}
+            </Badge>
+          )
+        }
+        eyebrow="Last week"
+        title={recap.headline}
+      />
+
+      <p className="-mt-2 text-[13px] text-muted-foreground">{recap.verdict}</p>
+
+      <RecapWeekBars days={recap.days} />
+
+      <dl className="grid grid-cols-3 gap-2">
+        {recap.stats.map((stat) => (
+          <div className="rounded-xl bg-card p-3" key={stat.label}>
+            <dt className="label-caps text-muted-foreground">{stat.label}</dt>
+            <dd className="metric-value mt-1 text-[20px] font-bold">
+              {stat.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[13px] text-muted-foreground">
+          {recap.tier.name} ·{" "}
+          <span className="font-semibold text-foreground">
+            {recap.altitudeChange >= 0 ? "+" : "−"}
+            {Math.abs(recap.altitudeChange)}
+          </span>{" "}
+          altitude across the week
+        </p>
+        <RecapShare
+          altitudeChange={recap.altitudeChange}
+          days={recap.days}
+          headline={recap.headline}
+          isBestWeek={recap.isBestWeek}
+          label={recap.label}
+          mood={recap.mood}
+          stats={recap.stats}
+          tierColor={recap.tier.color}
+          tierName={recap.tier.name}
+          verdict={recap.verdict}
+          weekStart={recap.weekStart}
+        />
+      </div>
+    </TintPanel>
+  );
+}
+
+/** The seven days of the finished week, lit where the day held orbit. */
+export function RecapWeekBars({ days }: { days: WeekRecap["days"] }) {
+  return (
+    <ol className="flex items-end gap-1.5 sm:gap-2" aria-label="Last week by day">
+      {days.map((day) => (
+        <li className="flex min-w-0 flex-1 flex-col items-center gap-2" key={day.date}>
+          <div className="flex h-28 w-full max-w-[46px] items-end rounded-full bg-card">
+            <div
+              className={`w-full rounded-full ${
+                day.inOrbit ? "bg-plum" : "bg-muted-foreground/25"
+              }`}
+              style={{ height: `${Math.max(6, Math.min(100, day.score))}%` }}
+              title={`${day.label}: ${day.score}%`}
+            />
+          </div>
+          <span
+            className={`label-caps ${
+              day.inOrbit ? "text-plum-ink" : "text-muted-foreground"
+            }`}
+          >
+            {day.label.slice(0, 2)}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/**
+ * Pip, next to the greeting: the state of the day as a face, before a single
+ * number is read. The heading stays with the page; Pip only brings the mood.
+ */
+export function PipGreeting({
+  allClosed,
+  altitude,
+  children,
+  streak,
+  todayScore,
+}: {
+  allClosed: boolean;
+  altitude: number;
+  /** The page heading, so the route keeps owning its h1. */
+  children: ReactNode;
+  streak: number;
+  todayScore: number | null;
+}) {
+  const pip = getPipState({ allClosed, altitude, streak, todayScore });
+
+  return (
+    <div className="flex items-center gap-4">
+      <Pip
+        burn={pip.burn}
+        className="shrink-0"
+        mood={pip.mood}
+        size={64}
+        title={`Pip: ${pip.line}`}
+      />
+      <div className="min-w-0">
+        {children}
+        <p className="mt-1 text-[14px] text-muted-foreground">{pip.line}</p>
+      </div>
+    </div>
   );
 }

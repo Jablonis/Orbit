@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { DayCardShare } from "@/components/DayCardShare";
+import { DayComplete } from "@/components/DayComplete";
+import { RecapShare } from "@/components/RecapShare";
+import { WeekSealed } from "@/components/WeekSealed";
 import {
   AnalyticsCard,
   FinanceCard,
   FitnessCard,
   MilestonesCard,
   MomentumCard,
+  PipGreeting,
+  RecapCard,
   ReviewCard,
   RingsCard,
   SetupCard,
@@ -48,6 +54,8 @@ import type {
   OverviewTaskFilter,
 } from "@/lib/overview-query";
 import { getPinnedFinanceMetric } from "@/lib/finance-metric";
+import { hasCrew, publishSnapshot } from "@/lib/crew";
+import { getRecapWeek, getWeekRecap } from "@/lib/recap";
 import {
   getEarnedToday,
   getMilestones,
@@ -190,6 +198,16 @@ export default async function Home({
     today,
   );
   const dayCard = getDayCard({ date: today, ghost, momentum, streak });
+  // Last week, out of the thirty days already loaded for momentum: no extra
+  // query, and no recap table to fall out of sync with the days themselves.
+  const recapWeek = getRecapWeek(today, calendar.weekStartsOn);
+  const recap = getWeekRecap({
+    fresh: recapWeek.fresh,
+    locale: calendar.locale,
+    points: momentumRange.current,
+    weekEnd: recapWeek.weekEnd,
+    weekStart: recapWeek.weekStart,
+  });
   const setup = getSetupState({
     fitnessConfigured,
     hasOrbitDay: momentumRange.current.some(
@@ -204,13 +222,31 @@ export default async function Home({
     bestStreak: streak.bestStreak,
     orbitDays: momentumRecords.orbitDays,
   });
+  const ringsClosedToday = Object.values(dailyRings).filter(
+    (area) => area.total > 0 && area.percent >= 100,
+  ).length;
+  const ringsActiveToday = Object.values(dailyRings).filter(
+    (area) => area.total > 0,
+  ).length;
   const earnedToday = getEarnedToday({
-    ringsClosed: Object.values(dailyRings).filter(
-      (area) => area.total > 0 && area.percent >= 100,
-    ).length,
-    ringsTotal: Object.values(dailyRings).filter((area) => area.total > 0).length,
+    ringsClosed: ringsClosedToday,
+    ringsTotal: ringsActiveToday,
     todayScore: momentum.todayScore,
   });
+
+  // The crew sees a published day, never the data underneath it — and nothing
+  // is published at all for an account with nobody in its crew.
+  if (await hasCrew(supabase)) {
+    await publishSnapshot(supabase, {
+      altitude: momentum.projected,
+      day: today,
+      ringsClosed: ringsClosedToday,
+      ringsTotal: ringsActiveToday,
+      score: momentum.todayScore ?? 0,
+      streak: streak.streak,
+      tierId: momentum.tier.id,
+    });
+  }
   const briefMode = params.brief === "weekly" ? "weekly" : "daily";
   const filter = getTaskFilter(params.tasks);
   const overviewQuery: OverviewQueryState = {
@@ -298,6 +334,7 @@ export default async function Home({
       <ReviewCard key="review" reflection={reflection} review={review} />
     ),
     milestones: <MilestonesCard key="milestones" milestones={milestones} />,
+    recap: recap ? <RecapCard key="recap" recap={recap} /> : null,
     rings: (
       <RingsCard
         dailyRings={dailyRings}
@@ -326,7 +363,12 @@ export default async function Home({
   const visibleCards = preferences.cardOrder.filter(
     (card) => !preferences.hiddenCards.includes(card),
   );
-  const trendCardIds: DashboardCardId[] = ["analytics", "milestones", "review"];
+  const trendCardIds: DashboardCardId[] = [
+    "analytics",
+    "milestones",
+    "recap",
+    "review",
+  ];
   const todayCards = visibleCards.filter(
     (card) => !trendCardIds.includes(card),
   );
@@ -354,17 +396,64 @@ export default async function Home({
 
       <div className="page-container flex flex-col gap-8 py-7 md:py-10">
         <header className="settle-in flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <p className="label-caps text-muted-foreground">{dateLabel}</p>
-            <h1 className="mt-2 text-[30px] font-bold leading-9 tracking-[-0.03em] sm:text-[34px]">
-              {greeting(preferences.regional.locale, calendar.timeZone)}
-            </h1>
-            <p className="mt-1.5 text-[14px] text-muted-foreground">
+            <div className="mt-2">
+              <PipGreeting
+                allClosed={earnedToday.allClosed}
+                altitude={momentum.projected}
+                streak={streak.streak}
+                todayScore={momentum.todayScore}
+              >
+                <h1 className="text-[30px] font-bold leading-9 tracking-[-0.03em] sm:text-[34px]">
+                  {greeting(preferences.regional.locale, calendar.timeZone)}
+                </h1>
+              </PipGreeting>
+            </div>
+            <p className="mt-2 text-[13px] text-muted-foreground">
               {todaySectionDetail}
             </p>
           </div>
           <OpenDashboardSettingsButton />
         </header>
+
+        {earnedToday.allClosed ? (
+          <DayComplete
+            altitude={momentum.projected}
+            date={today}
+            streak={streak.streak}
+            tier={momentum.tier.name}
+          >
+            <DayCardShare
+              altitude={dayCard.altitude}
+              date={dayCard.date}
+              ghost={dayCard.ghost}
+              metrics={dayCard.metrics}
+              mood="sealed"
+              tierColor={dayCard.tier.color}
+              tierName={dayCard.tier.name}
+              trace={momentum.series.slice(-14).map((point) => point.altitude)}
+            />
+          </DayComplete>
+        ) : null}
+
+        {recap && recap.fresh ? (
+          <WeekSealed recap={recap}>
+            <RecapShare
+              altitudeChange={recap.altitudeChange}
+              days={recap.days}
+              headline={recap.headline}
+              isBestWeek={recap.isBestWeek}
+              label={recap.label}
+              mood={recap.mood}
+              stats={recap.stats}
+              tierColor={recap.tier.color}
+              tierName={recap.tier.name}
+              verdict={recap.verdict}
+              weekStart={recap.weekStart}
+            />
+          </WeekSealed>
+        ) : null}
 
         <SetupCard setup={setup} />
 

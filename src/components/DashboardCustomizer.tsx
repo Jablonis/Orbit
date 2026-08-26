@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { saveDashboardPreferencesAction } from "@/app/actions";
 import { ActionToast } from "@/components/ActionToast";
+import { ReminderSettings } from "@/components/ReminderSettings";
 import { useSettingsDirtyState } from "@/components/SettingsDirtyState";
 import {
   type DashboardCardId,
@@ -159,6 +160,8 @@ export function DashboardCustomizer({
 
   return (
     <>
+      <ReminderSettings reminders={preferences.reminders} />
+
       <form
         action={action}
         aria-busy={pending}
