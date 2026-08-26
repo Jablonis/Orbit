@@ -77,8 +77,22 @@ Rules:
 
 - Pip is derived, never chosen. `getPipState` reads the day, the orbit and the
   run, in that order — a finished day beats everything.
-- Pip animates when something happened and is still otherwise: the flame
-  flickers three times and rests, the hop plays once. Nothing loops forever.
+- **Pip is the one exception to "nothing loops forever."** That rule is right
+  for interface motion — a progress bar that pulses forever is noise — and
+  wrong for a character: something that never moves is an icon, not a
+  creature. Pip therefore idles, on a budget:
+  - he **blinks** every 6.4 seconds, and only for a fifth of a second;
+  - **airborne he drifts** five pixels; **on the ground he breathes**, 1.8 %.
+    Hovering while standing is what made the first version read as a sticker;
+  - the **flame flickers** continuously, because a flame that holds still is a
+    drawing of a flame;
+  - every Pip on a screen takes a `seed`, so two of them never blink in unison
+    — nothing betrays a puppet faster than synchronised eyes.
+- The idle is `transform` and `opacity` only, small enough not to catch the eye
+  of someone reading the words beside it, and it stops entirely under reduced
+  motion.
+- The things that mark an event still play once and rest: the hop when a day is
+  sealed, the ride up the climb.
 - Minimum size 22 px; below that the helmet swallows the face.
 - Feet on the ground mean the engine is off. Pip only burns while leaving.
 - Pip never speaks in exclamation marks, never nags, and never asks to be fed.
@@ -106,6 +120,14 @@ What keeps it honest, and what must stay true of it:
 - It is never the only place a number appears, and never the thing that decides
   one.
 
+## The day is a launch, not a ring
+
+Three concentric rings belong to Apple. Orbit's day is drawn as an ascent:
+columns of thrust, a line where orbit begins, and the day riding at its own
+altitude. The rule this follows is worth keeping: **when a form is famous for
+belonging to somebody else, it cannot carry your brand** — however well it is
+executed, the first thing anyone reads is whose it is.
+
 ## Colour
 
 The product palette is the brand palette; there is no separate marketing set.
@@ -132,9 +154,12 @@ stated in words or numbers.
   person wrote it and not like a terminal printed it. Close to the type an
   iPhone sets — familiar enough to disappear — but warmer, which is the whole
   difference between Bloom and a dashboard.
-- **DM Mono for every label**: eyebrows, axis ticks, figure captions, codes.
-  Uppercase, 12 px, 0.08em tracking, weight 500 — `.label-caps`. Softer than
-  the technical monos; it marks a label without shouting *system*.
+- **Labels are spoken, not stamped.** Eyebrows, figure captions and axis ticks
+  are Figtree at 12.5 px, 600, sentence case — `.label-caps`. Tracked mono
+  capitals read as a machine printing at you; the same words in the product's
+  own face read as a person having written them.
+- **DM Mono is for codes**, and only codes: a crew code, an identifier,
+  something read out character by character — `.code-caps`.
 - Numbers are always tabular (`.metric-value`), so a figure that changes does
   not move the layout under it.
 - The landing sets the name at `.display-mega`; the wordmark is the artwork.

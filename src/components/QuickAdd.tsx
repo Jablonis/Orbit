@@ -16,6 +16,7 @@ import { saveTaskAction } from "@/app/tasks/actions";
 import { ActionToast } from "@/components/ActionToast";
 import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { openOrbitSettingsEvent } from "@/components/OpenDashboardSettingsButton";
+import { openQuickAddEvent } from "@/components/OpenQuickAddButton";
 
 type SearchResult = {
   detail: string;
@@ -104,6 +105,17 @@ export function QuickAdd() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, preparePalette]);
+
+  // The dashboard opens the same panel from where the eye already is, so adding
+  // does not depend on finding a floating button or knowing a shortcut.
+  useEffect(() => {
+    const openFromDashboard = () => {
+      preparePalette();
+      setOpen(true);
+    };
+    window.addEventListener(openQuickAddEvent, openFromDashboard);
+    return () => window.removeEventListener(openQuickAddEvent, openFromDashboard);
+  }, [preparePalette]);
 
   useEffect(() => {
     const node = dialog.current;

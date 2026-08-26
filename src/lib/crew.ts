@@ -158,7 +158,7 @@ function getFeedHeadline(snapshot: CrewSnapshot, displayName: string) {
   const name = displayName.split(" ")[0] || displayName;
 
   if (snapshot.ringsTotal > 0 && snapshot.ringsClosed >= snapshot.ringsTotal) {
-    return `${name} closed every ring.`;
+    return `${name} cleared every stage.`;
   }
   if (snapshot.streak >= 7) {
     return `${name} is ${snapshot.streak} days deep.`;

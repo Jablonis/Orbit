@@ -23,10 +23,14 @@ export type PipRotation = { deg: number; x: number; y: number };
 type Common = {
   fill?: PipColor;
   opacity?: number;
+  /** A part the renderers animate on its own: "eye", "body". */
+  part?: PipPart;
   rotate?: PipRotation;
   stroke?: PipColor;
   width?: number;
 };
+
+export type PipPart = "eye";
 
 export type PipShape =
   | (Common & { cap?: "round"; d: string; kind: "path" })
@@ -223,10 +227,10 @@ function getFace(mood: PipMood, happy: boolean): PipShape[] {
 
   const r = mood === "lifting" ? 3.4 : 3;
   return [
-    { cx: 29, cy: 34, fill: "ink", kind: "circle", r },
-    { cx: 43, cy: 34, fill: "ink", kind: "circle", r },
-    { cx: 30.1, cy: 32.9, fill: "paper", kind: "circle", r: 1 },
-    { cx: 44.1, cy: 32.9, fill: "paper", kind: "circle", r: 1 },
+    { cx: 29, cy: 34, fill: "ink", kind: "circle", part: "eye", r },
+    { cx: 43, cy: 34, fill: "ink", kind: "circle", part: "eye", r },
+    { cx: 30.1, cy: 32.9, fill: "paper", kind: "circle", part: "eye", r: 1 },
+    { cx: 44.1, cy: 32.9, fill: "paper", kind: "circle", part: "eye", r: 1 },
     { d: "M30 41h12l-6 6Z", fill: "beak", kind: "path" },
   ];
 }

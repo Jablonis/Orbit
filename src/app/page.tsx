@@ -4,6 +4,7 @@ import { DayCardShare } from "@/components/DayCardShare";
 import { DayComplete } from "@/components/DayComplete";
 import { RecapShare } from "@/components/RecapShare";
 import { WeekSealed } from "@/components/WeekSealed";
+import { NowCard } from "@/components/overview/NowCard";
 import {
   AnalyticsCard,
   FinanceCard,
@@ -54,6 +55,7 @@ import type {
   OverviewTaskFilter,
 } from "@/lib/overview-query";
 import { getPinnedFinanceMetric } from "@/lib/finance-metric";
+import { getAscent } from "@/lib/ascent";
 import { hasCrew, publishSnapshot } from "@/lib/crew";
 import { getRecapWeek, getWeekRecap } from "@/lib/recap";
 import {
@@ -228,6 +230,14 @@ export default async function Home({
   const ringsActiveToday = Object.values(dailyRings).filter(
     (area) => area.total > 0,
   ).length;
+  const dayAscent = getAscent({
+    areas: [
+      { ...dailyRings.tasks, label: "Tasks", system: "tasks" as const },
+      { ...dailyRings.fitness, label: "Fitness", system: "fitness" as const },
+      { ...dailyRings.finance, label: "Finance", system: "finance" as const },
+    ],
+    todayScore: momentum.todayScore,
+  });
   const earnedToday = getEarnedToday({
     ringsClosed: ringsClosedToday,
     ringsTotal: ringsActiveToday,
@@ -282,15 +292,6 @@ export default async function Home({
     preferences.pinnedFinanceMetric,
     finance,
   );
-  const activeTodayAreas = Object.values(dailyRings).filter(
-    (area) => area.total > 0,
-  );
-  const completedTodayAreas = activeTodayAreas.filter(
-    (area) => area.percent >= 100,
-  ).length;
-  const todaySectionDetail = activeTodayAreas.length > 0
-    ? `${completedTodayAreas} of ${activeTodayAreas.length} active areas are complete today.`
-    : "No task, training, or cleared-finance activity is planned for today.";
   const trendsSectionTitle = enabledDomains.length > 0
     ? `Weekly score: ${review.score}%`
     : "Productivity scoring is paused";
@@ -301,12 +302,16 @@ export default async function Home({
     analytics: (
       <AnalyticsCard
         enabledDomains={enabledDomains}
+        ghost={ghost}
         key="analytics"
         overviewQuery={overviewQuery}
         productivity={productivity}
         rangeDays={preferences.rangeDays}
+        records={momentumRecords}
         review={review}
+        streak={streak}
         today={today}
+        weekChange={momentum.weekChange}
       />
     ),
     finance: (
@@ -323,10 +328,8 @@ export default async function Home({
     momentum: (
       <MomentumCard
         dayCard={dayCard}
-        ghost={ghost}
         key="momentum"
         momentum={momentum}
-        records={momentumRecords}
         streak={streak}
       />
     ),
@@ -340,10 +343,7 @@ export default async function Home({
         dailyRings={dailyRings}
         earned={earnedToday}
         key="rings"
-        nextTask={nextTask}
-        today={today}
-        timeZone={calendar.timeZone}
-        training={fitnessStats.todayTraining}
+        todayScore={momentum.todayScore}
       />
     ),
     tasks: (
@@ -410,9 +410,6 @@ export default async function Home({
                 </h1>
               </PipGreeting>
             </div>
-            <p className="mt-2 text-[13px] text-muted-foreground">
-              {todaySectionDetail}
-            </p>
           </div>
           <OpenDashboardSettingsButton />
         </header>
@@ -420,6 +417,7 @@ export default async function Home({
         {earnedToday.allClosed ? (
           <DayComplete
             altitude={momentum.projected}
+            ascent={dayAscent}
             date={today}
             streak={streak.streak}
             tier={momentum.tier.name}
@@ -456,6 +454,15 @@ export default async function Home({
         ) : null}
 
         <SetupCard setup={setup} />
+
+        <NowCard
+          dailyRings={dailyRings}
+          nextTask={nextTask}
+          timeZone={calendar.timeZone}
+          today={today}
+          todayScore={momentum.todayScore}
+          training={fitnessStats.todayTraining}
+        />
 
         <WeekStrip points={weeklyProductivity.current} today={today} />
 

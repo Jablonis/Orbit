@@ -85,11 +85,26 @@ Corners are machined, not soft: `--radius-control` 2 px, `--radius-row` 4 px,
 - Elevation: `--shadow-panel`, `--shadow-overlay` — wide, soft, and heavily
   negative-spread. Depth comes from hairlines first, shadow second.
 
+## The day: the ascent
+
+The day is drawn as a launch, not as rings. Three columns of thrust — tasks,
+fitness, finance — rise from a pad; a dashed line crosses the frame at
+`ORBIT_DAY_SCORE`, the score above which a day counted; the day's own score
+rides in a lane at the right and crosses that line when it does.
+
+Concentric rings are Apple's idea and read as borrowed however well they are
+drawn. Orbit's mechanic is altitude, not laps, and it has a real threshold — so
+the picture is a height with a line in it. It is also wide rather than square,
+which is the shape a phone has to spare.
+
+`src/lib/ascent.ts` holds the geometry and the words; `DayAscent` draws it, in
+a full form with labels and Pip, and a compact one at badge size.
+
 ## Typography
 
-Figtree for everything the product says, DM Mono for labels. Both are loaded
-through `next/font`, so they are self-hosted and there is no third-party
-request on a page view.
+Figtree for everything the product says, including labels. DM Mono is kept for
+the few things that genuinely are codes. Both are loaded through `next/font`,
+so they are self-hosted and there is no third-party request on a page view.
 
 | Role | Current class | Standard |
 | --- | --- | --- |
@@ -97,7 +112,8 @@ request on a page view.
 | Card title | `.card-title` | 18–20 px, 600 |
 | Body | `.body-copy` | 14 px / 24 px |
 | Metadata | `.metadata-copy` | 12 px / 18 px minimum |
-| Uppercase label | `.label-caps` | DM Mono, 12 px, 0.08em tracking, 500 — the only shouting in the product |
+| Section label | `.label-caps` | Figtree, 12.5 px, 600, sentence case — a label is spoken, not stamped |
+| Code | `.code-caps` | DM Mono, 12 px, 0.08em, uppercase — crew codes and identifiers only |
 | Numeric datum | `.metric-value` | tabular figures |
 | Editorial statement | `.editorial-display` | Brief and reflection only |
 | Landing wordmark | `.display-mega` | Uppercase, 115% stretch, one per page |

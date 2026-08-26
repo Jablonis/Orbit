@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { ActivityRings } from "@/components/ActivityRings";
+import { DayAscent } from "@/components/DayAscent";
+import { getAscent } from "@/lib/ascent";
 import { OrbitMark } from "@/components/BrandMark";
 import { OrbitInstrument } from "@/components/landing/OrbitInstrument";
 import { Button } from "@/components/ui/button";
@@ -277,7 +278,16 @@ function SystemsSection() {
 
       <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)] lg:items-start">
         <div className="pin-figure mx-auto w-full max-w-[300px]">
-          <ActivityRings finance={100} fitness={100} tasks={72} />
+          <DayAscent
+            ascent={getAscent({
+              areas: [
+                { completed: 3, label: "Tasks", percent: 72, system: "tasks", total: 4 },
+                { completed: 1, label: "Fitness", percent: 100, system: "fitness", total: 1 },
+                { completed: 2, label: "Finance", percent: 100, system: "finance", total: 2 },
+              ],
+              todayScore: 78,
+            })}
+          />
         </div>
         <div className="border-t border-border">
           {channels.map((channel) => (

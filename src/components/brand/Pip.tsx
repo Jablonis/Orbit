@@ -5,6 +5,7 @@ import {
   type PipColor,
   type PipShape,
   getPipArt,
+  isPipStanding,
 } from "@/lib/pip-art";
 
 /**
@@ -33,6 +34,7 @@ export function Pip({
   burn = 0.5,
   className = "",
   mood = "cruising",
+  seed = 0,
   size = 64,
   title,
 }: {
@@ -40,11 +42,16 @@ export function Pip({
   burn?: number;
   className?: string;
   mood?: PipMood;
+  /** Offsets the idle so two Pips on one screen do not blink in unison. */
+  seed?: number;
   size?: number;
   /** Given only where Pip carries meaning no neighbouring text already says. */
   title?: string;
 }) {
   const art = getPipArt(mood, burn);
+  // A penguin on the ground breathes; one in flight drifts. Standing still and
+  // hovering at the same time is what made him read as a sticker.
+  const airborne = !isPipStanding(mood);
 
   return (
     <svg
@@ -56,15 +63,22 @@ export function Pip({
       width={(size * PIP_WIDTH) / PIP_HEIGHT}
     >
       {title ? <title>{title}</title> : null}
+      {/* Two groups on purpose: the idle owns one transform and the lean owns
+          the other, so neither has to fight the other for the property. */}
       <g
-        style={{
-          transform: `rotate(${art.tilt}deg)`,
-          transformOrigin: "36px 50px",
-        }}
+        className={`pip-idle ${airborne ? "pip-idle--fly" : "pip-idle--rest"}`}
+        style={{ "--pip-seed": seed } as React.CSSProperties}
       >
-        {art.shapes.map((shape, index) => (
-          <Shape key={index} shape={shape} />
-        ))}
+        <g
+          style={{
+            transform: `rotate(${art.tilt}deg)`,
+            transformOrigin: "36px 50px",
+          }}
+        >
+          {art.shapes.map((shape, index) => (
+            <Shape key={index} shape={shape} />
+          ))}
+        </g>
       </g>
     </svg>
   );
@@ -72,6 +86,7 @@ export function Pip({
 
 function Shape({ shape }: { shape: PipShape }) {
   const common = {
+    className: shape.part === "eye" ? "pip-eye" : undefined,
     fill: shape.fill ? token[shape.fill] : "none",
     opacity: shape.opacity,
     stroke: shape.stroke ? token[shape.stroke] : undefined,

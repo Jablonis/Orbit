@@ -114,7 +114,7 @@ test("today is only celebrated when it is actually earned", () => {
     todayScore: 100,
   });
   assert.equal(closed.allClosed, true);
-  assert.equal(closed.headline, "Every ring closed.");
+  assert.equal(closed.headline, "Every stage done.");
 });
 
 test("the closing lines name the last mile, nearest ring first", () => {
@@ -128,8 +128,8 @@ test("the closing lines name the last mile, nearest ring first", () => {
     lines.map((line) => line.system),
     ["fitness", "tasks", "finance"],
   );
-  assert.equal(lines[0].text, "One session from closing fitness.");
-  assert.equal(lines[1].text, "2 tasks from closing tasks.");
+  assert.equal(lines[0].text, "One session from clearing fitness.");
+  assert.equal(lines[1].text, "2 tasks from clearing tasks.");
 });
 
 test("a closed or empty ring has nothing left to say", () => {
