@@ -132,6 +132,14 @@ actionable labels should normally be 13–14 px.
   impossible.
 - Optimistic actions expose busy, saved, failure, retry, and undo states.
 - Important information is never hover-only or color-only.
+- **If it looks like a control, it is one.** A tile with a big number, a row
+  with a chevron's worth of affordance, a dot with a tooltip: anything drawn
+  like something you can press must do something when pressed, and reach that
+  something by keyboard too. Where the thing genuinely cannot act — an imported
+  record Orbit is not allowed to change — it is drawn as a record and says so,
+  rather than being drawn as a button that ignores you.
+- A tooltip is not an interaction. `title` never carries anything a phone needs;
+  if a mark has something to say, tapping it says it.
 
 ## Responsive contract
 

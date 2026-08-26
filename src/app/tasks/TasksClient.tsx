@@ -108,6 +108,11 @@ export function TasksClient({
     ["all", ...typeOptions] as const,
     "all",
   );
+  const complexity = valueFromOptions(
+    searchParams.get("complexity"),
+    ["all", ...complexityOptions] as const,
+    "all",
+  );
   const sort = valueFromOptions(
     searchParams.get("sort"),
     taskSortOptions,
@@ -119,6 +124,7 @@ export function TasksClient({
     dateFilter !== "all" ||
     priority !== "all" ||
     type !== "all" ||
+    complexity !== "all" ||
     sort !== "today";
   const filteredTasks = sortTaskList(
     displayTasks.filter((task) => {
@@ -130,6 +136,7 @@ export function TasksClient({
       if (dateFilter !== "all" && dayStatus !== dateFilter) return false;
       if (priority !== "all" && task.priority !== priority) return false;
       if (type !== "all" && task.type !== type) return false;
+      if (complexity !== "all" && task.complexity !== complexity) return false;
       return true;
     }),
     sort,
@@ -195,9 +202,24 @@ export function TasksClient({
     defaultValue = "all",
     replace = false,
   ) {
+    updateFilters({ [key]: value }, defaultValue, replace);
+  }
+
+  /**
+   * Several filters at once. Two `updateFilter` calls in a row would both build
+   * from the same rendered searchParams, so the second would quietly undo the
+   * first.
+   */
+  function updateFilters(
+    values: Record<string, string>,
+    defaultValue = "all",
+    replace = false,
+  ) {
     const next = new URLSearchParams(searchParams.toString());
-    if (!value || value === defaultValue) next.delete(key);
-    else next.set(key, value);
+    for (const [key, value] of Object.entries(values)) {
+      if (!value || value === defaultValue) next.delete(key);
+      else next.set(key, value);
+    }
     const href = next.size ? `${pathname}?${next.toString()}` : pathname;
     if (replace) window.history.replaceState(null, "", href);
     else window.history.pushState(null, "", href);
@@ -510,12 +532,53 @@ export function TasksClient({
 
         <section className="space-y-6 xl:col-start-2 xl:row-start-1">
           <RoutineSetup hasRoutines={hasRoutines} />
-          <dl className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] grid overflow-hidden rounded-2xl sm:grid-cols-4">
-            <Metric label="Active" value={stats.activeTasksCount} tone="text-foreground" />
-            <Metric label="Done" value={stats.completedTasksCount} tone="text-primary" />
-            <Metric label="Hard" value={stats.hardTasksCount} tone="text-warning" />
-            <Metric label="Focus min" value={stats.totalEstimateMinutes} tone="text-finance" />
-          </dl>
+          {/* Three of these four count something you can then look at, so
+              they filter the list rather than only reporting it. */}
+          <div className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] grid overflow-hidden rounded-2xl sm:grid-cols-4">
+            <Metric
+              active={status === "open" && complexity === "all"}
+              label="Active"
+              onClick={() =>
+                updateFilters({
+                  complexity: "all",
+                  status:
+                    status === "open" && complexity === "all" ? "all" : "open",
+                })
+              }
+              tone="text-foreground"
+              value={stats.activeTasksCount}
+            />
+            <Metric
+              active={status === "done"}
+              label="Done"
+              onClick={() =>
+                updateFilters({
+                  complexity: "all",
+                  status: status === "done" ? "all" : "done",
+                })
+              }
+              tone="text-primary"
+              value={stats.completedTasksCount}
+            />
+            <Metric
+              active={complexity === "hard"}
+              label="Hard"
+              onClick={() =>
+                updateFilters(
+                  complexity === "hard"
+                    ? { complexity: "all", status: "all" }
+                    : { complexity: "hard", status: "open" },
+                )
+              }
+              tone="text-warning"
+              value={stats.hardTasksCount}
+            />
+            <Metric
+              label="Focus min"
+              tone="text-finance"
+              value={stats.totalEstimateMinutes}
+            />
+          </div>
           <section
             aria-labelledby="task-view-controls"
             className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-4 sm:p-5"
@@ -1031,11 +1094,48 @@ function Field({ children, label }: { children: ReactNode; label: string }) {
   );
 }
 
-function Metric({ label, tone, value }: { label: string; tone: string; value: number }) {
+/**
+ * A number from the queue. The three that name a subset of it filter the list;
+ * the one that does not stays a figure, and does not pretend otherwise.
+ */
+function Metric({
+  active = false,
+  label,
+  onClick,
+  tone,
+  value,
+}: {
+  active?: boolean;
+  label: string;
+  onClick?: () => void;
+  tone: string;
+  value: number;
+}) {
+  const inside = (
+    <>
+      <span className="label-caps block text-muted-foreground">{label}</span>
+      <span className={`metric-value mt-3 block text-[28px] font-semibold ${tone}`}>
+        {value}
+      </span>
+    </>
+  );
+  const frame =
+    "border-b border-border p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0";
+
+  if (!onClick) {
+    return <div className={frame}>{inside}</div>;
+  }
+
   return (
-    <div className="border-b border-border p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
-      <dt className="label-caps text-muted-foreground">{label}</dt>
-      <dd className={`metric-value mt-3 text-[28px] font-semibold ${tone}`}>{value}</dd>
-    </div>
+    <button
+      aria-pressed={active}
+      className={`${frame} text-left transition-colors ${
+        active ? "bg-primary/10" : "hover:bg-muted"
+      }`}
+      onClick={onClick}
+      type="button"
+    >
+      {inside}
+    </button>
   );
 }

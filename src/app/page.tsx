@@ -7,6 +7,7 @@ import { WeekSealed } from "@/components/WeekSealed";
 import { Arrival } from "@/components/Arrival";
 import { NowCard } from "@/components/overview/NowCard";
 import { VoyageCard } from "@/components/overview/VoyageCard";
+import { WeekStrip } from "@/components/overview/WeekStrip";
 import {
   AnalyticsCard,
   FinanceCard,
@@ -19,7 +20,6 @@ import {
   RingsCard,
   SetupCard,
   TasksCard,
-  WeekStrip,
   greeting,
 } from "@/components/overview/cards";
 import { AppNavigation } from "@/components/AppNavigation";
@@ -537,7 +537,11 @@ export default async function Home({
           training={fitnessStats.todayTraining}
         />
 
-        <WeekStrip points={weeklyProductivity.current} today={today} />
+        <WeekStrip
+          locale={calendar.locale}
+          points={weeklyProductivity.current}
+          today={today}
+        />
 
         {todayCards.length > 0 ? (
           <div className="grid gap-5 lg:grid-cols-2">

@@ -742,28 +742,32 @@ export function ReviewCard({
         title={`${review.completedTasks} of ${review.plannedTasks} planned tasks done.`}
       />
 
-      <dl className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-4">
         <ReviewFigure
+          detail={`${review.sessionMinutes} min`}
+          href="/fitness"
           label="Sessions"
           value={`${review.sessions}`}
-          detail={`${review.sessionMinutes} min`}
         />
         <ReviewFigure
+          detail="overdue tasks"
+          href="/tasks?date=overdue"
           label="Carried"
           value={`${review.overdueCarried}`}
-          detail="overdue tasks"
         />
         <ReviewFigure
+          detail="of income"
+          href="/finance"
           label="Savings"
           value={`${review.savingsRate}%`}
-          detail="of income"
         />
         <ReviewFigure
+          detail="weekly average"
+          href="#trends-title"
           label="Score"
           value={`${review.score}%`}
-          detail="weekly average"
         />
-      </dl>
+      </div>
 
       <Progress
         aria-label={`Weekly score ${review.score} percent`}
@@ -775,105 +779,38 @@ export function ReviewCard({
   );
 }
 
+/**
+ * A figure from the week. Each one is somewhere you can go: a tile this size
+ * with a number this big is read as a control, so it leads to the page the
+ * number came from.
+ */
 export function ReviewFigure({
   detail,
+  href,
   label,
   value,
 }: {
   detail: string;
+  href: string;
   label: string;
   value: string;
 }) {
   return (
-    <div className="rounded-xl bg-muted p-4">
-      <dt className="label-caps text-muted-foreground">{label}</dt>
-      <dd className="metric-value mt-2 text-[22px] font-bold">{value}</dd>
-      <p className="mt-0.5 text-[12px] text-muted-foreground">{detail}</p>
-    </div>
+    <Link
+      className="rounded-xl bg-muted p-4 transition duration-150 hover:bg-secondary active:scale-[0.98]"
+      href={href}
+    >
+      <span className="label-caps block text-muted-foreground">{label}</span>
+      <span className="metric-value mt-2 block text-[22px] font-bold">
+        {value}
+      </span>
+      <span className="mt-0.5 block text-[12px] text-muted-foreground">
+        {detail}
+      </span>
+    </Link>
   );
 }
 
-
-/**
- * A week at a glance, borrowed from the day strips that calendar and journal
- * apps put above the fold: seven days, each one a ring filled by that day's
- * score, with today marked. It reuses the productivity points the dashboard
- * already computes.
- */
-export function WeekStrip({
-  points,
-  today,
-}: {
-  points: ProductivityPoint[];
-  today: string;
-}) {
-  return (
-    <section aria-label="This week" className="settle-in">
-      <ol className="flex items-stretch gap-1.5 sm:gap-2">
-        {points.map((point, index) => {
-          const isToday = point.date === today;
-          const score = point.score ?? 0;
-          const future = point.future || point.date > today;
-          const circumference = 2 * Math.PI * 14;
-          return (
-            <li className="min-w-0 flex-1" key={point.date}>
-              <div
-                className={`flex flex-col items-center gap-2 rounded-2xl px-1 py-3 transition ${
-                  isToday ? "bg-plum-tint" : "bg-card"
-                }`}
-              >
-                <span
-                  className={`label-caps ${
-                    isToday ? "text-plum-ink" : "text-muted-foreground"
-                  }`}
-                >
-                  {point.label.slice(0, 2)}
-                </span>
-                <span className="relative grid size-9 place-items-center">
-                  <svg className="size-9 -rotate-90" viewBox="0 0 36 36">
-                    <circle
-                      cx="18"
-                      cy="18"
-                      fill="none"
-                      r="14"
-                      stroke={future ? "var(--muted)" : "var(--secondary)"}
-                      strokeWidth="4"
-                    />
-                    {future ? null : (
-                      <circle
-                        className="ring-draw"
-                        cx="18"
-                        cy="18"
-                        fill="none"
-                        r="14"
-                        stroke={isToday ? "var(--plum)" : "var(--fitness)"}
-                        strokeDasharray={circumference}
-                        strokeDashoffset={
-                          circumference * (1 - Math.min(100, score) / 100)
-                        }
-                        strokeLinecap="round"
-                        strokeWidth="4"
-                        style={
-                          {
-                            "--ring-length": circumference,
-                            "--rise-index": index,
-                          } as React.CSSProperties
-                        }
-                      />
-                    )}
-                  </svg>
-                  <span className="metric-value absolute text-[11px] font-semibold">
-                    {future ? "" : score}
-                  </span>
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-    </section>
-  );
-}
 
 /**
  * The cold start. Shown only while an account still has something to set up,

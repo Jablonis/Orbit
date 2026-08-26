@@ -1,9 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import { Pip } from "@/components/brand/Pip";
 import { TintPanel } from "@/components/ui/tint-panel";
 import { Badge } from "@/components/ui/badge";
 import {
   VOYAGE_LEGS,
   type Voyage,
+  type VoyageLeg,
   format,
   getVoyageLine,
 } from "@/lib/voyage";
@@ -30,6 +34,23 @@ export function VoyageCard({
       : reached + voyage.progress;
   const left = (position / (VOYAGE_LEGS.length - 1)) * 100;
   const recent = [...voyage.arrivals].reverse().slice(0, 3);
+  // The rail was a row of dots with tooltips nobody on a phone can reach. Each
+  // one is a place with a name, a distance and, if it has been passed, a date —
+  // so each one is a button, and asking is a tap.
+  const [openId, setOpenId] = useState<string | null>(null);
+  const open: VoyageLeg | null =
+    VOYAGE_LEGS.find((leg) => leg.id === openId) ?? null;
+  const openArrival = voyage.arrivals.find(
+    (arrival) => arrival.leg.id === openId,
+  );
+  const openIndex = VOYAGE_LEGS.findIndex((leg) => leg.id === openId);
+  const dateOf = (date: string) =>
+    new Intl.DateTimeFormat(locale, {
+      day: "numeric",
+      month: "short",
+      timeZone: "UTC",
+      year: "numeric",
+    }).format(new Date(`${date}T12:00:00Z`));
 
   return (
     <TintPanel className="settle-in settle-3 flex flex-col gap-5" system="quiet">
@@ -37,10 +58,18 @@ export function VoyageCard({
         <div className="min-w-0">
           <p className="label-caps text-muted-foreground">Voyage</p>
           <p className="mt-1.5 text-[20px] font-bold leading-7 tracking-[-0.02em]">
-            {getVoyageLine(voyage)}
+            {open ? open.name : getVoyageLine(voyage)}
           </p>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            {(voyage.next ?? voyage.current).blurb}
+            {open
+              ? `${open.blurb} ${
+                  openArrival
+                    ? `Reached ${dateOf(openArrival.date)}.`
+                    : openIndex <= reached
+                      ? "Where this voyage started."
+                      : `${format(Math.max(0, open.distance - voyage.distance))} still to go.`
+                }`
+              : (voyage.next ?? voyage.current).blurb}
           </p>
         </div>
         <Badge className="shrink-0" variant="plum">
@@ -63,17 +92,28 @@ export function VoyageCard({
             const isCurrent = index === reached;
             return (
               <li className="flex min-w-0 flex-1 items-center last:flex-none" key={leg.id}>
-                <span
+                <button
                   aria-current={isCurrent ? "step" : undefined}
-                  className={`block shrink-0 rounded-full transition-colors ${
-                    isCurrent
-                      ? "size-3.5 bg-plum ring-4 ring-plum/20"
-                      : passed
-                        ? "size-2.5 bg-plum"
-                        : "size-2.5 bg-muted-foreground/25"
-                  }`}
-                  title={leg.name}
-                />
+                  aria-label={leg.name}
+                  aria-pressed={openId === leg.id}
+                  className="grid size-11 shrink-0 place-items-center rounded-full transition-transform duration-150 active:scale-90 -mx-3.5 first:-ml-3.5"
+                  onClick={() =>
+                    setOpenId((current) => (current === leg.id ? null : leg.id))
+                  }
+                  type="button"
+                >
+                  <span
+                    className={`block rounded-full transition-all ${
+                      openId === leg.id ? "ring-2 ring-plum ring-offset-2 ring-offset-[var(--card)] " : ""
+                    }${
+                      isCurrent
+                        ? "size-3.5 bg-plum ring-4 ring-plum/20"
+                        : passed
+                          ? "size-2.5 bg-plum"
+                          : "size-2.5 bg-muted-foreground/25"
+                    }`}
+                  />
+                </button>
                 {index < VOYAGE_LEGS.length - 1 ? (
                   <span
                     className={`h-0.5 min-w-0 flex-1 ${
@@ -97,22 +137,32 @@ export function VoyageCard({
       </div>
 
       {recent.length > 0 ? (
-        <dl className="flex flex-col gap-1.5 border-t border-border pt-4">
+        <ul className="flex flex-col gap-0.5 border-t border-border pt-3">
           {recent.map((arrival) => (
-            <div className="flex items-baseline justify-between gap-3" key={arrival.leg.id}>
-              <dt className="truncate text-[13px] font-semibold">
-                {arrival.leg.name}
-              </dt>
-              <dd className="shrink-0 text-[12px] text-muted-foreground">
-                {new Intl.DateTimeFormat(locale, {
-                  day: "numeric",
-                  month: "short",
-                  timeZone: "UTC",
-                }).format(new Date(`${arrival.date}T12:00:00Z`))}
-              </dd>
-            </div>
+            <li key={arrival.leg.id}>
+              <button
+                className="flex min-h-11 w-full items-baseline justify-between gap-3 rounded-xl px-2 text-left transition-colors hover:bg-muted"
+                onClick={() =>
+                  setOpenId((current) =>
+                    current === arrival.leg.id ? null : arrival.leg.id,
+                  )
+                }
+                type="button"
+              >
+                <span className="truncate text-[13px] font-semibold">
+                  {arrival.leg.name}
+                </span>
+                <span className="shrink-0 text-[12px] text-muted-foreground">
+                  {new Intl.DateTimeFormat(locale, {
+                    day: "numeric",
+                    month: "short",
+                    timeZone: "UTC",
+                  }).format(new Date(`${arrival.date}T12:00:00Z`))}
+                </span>
+              </button>
+            </li>
           ))}
-        </dl>
+        </ul>
       ) : null}
     </TintPanel>
   );
