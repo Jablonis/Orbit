@@ -15,6 +15,7 @@ import {
   type PipShape,
   getPipArt,
 } from "@/lib/pip-art";
+import { PIXEL } from "@/lib/pip-pixels";
 
 export type PipPalette = Record<PipColor, string>;
 
@@ -49,21 +50,17 @@ export function drawPip(
     y: number;
   },
 ) {
-  // Pip's shells are path data, which needs Path2D. Where that is missing the
-  // card still renders — a character is worth less than the numbers on it.
-  if (typeof Path2D === "undefined") return;
-
   const art = getPipArt(mood, burn);
-  const scale = height / PIP_HEIGHT;
+  // Snap the scale so one cell of the grid is a whole number of canvas pixels.
+  // At a fractional scale the runs meet on a half pixel and antialiasing draws
+  // a pale seam between every one of them, which on a shared image reads as a
+  // torn drawing rather than as pixel art.
+  const cell = Math.max(1, Math.round((height / PIP_HEIGHT) * PIXEL));
+  const scale = cell / PIXEL;
 
   context.save();
   context.translate(x, y);
   context.scale(scale, scale);
-
-  // The whole character leans, around the middle of its body.
-  context.translate(36, 50);
-  context.rotate((art.tilt * Math.PI) / 180);
-  context.translate(-36, -50);
 
   art.shapes.forEach((shape) => paint(context, shape, palette));
 
@@ -91,7 +88,13 @@ function paint(
 
   context.beginPath();
   if (shape.kind === "path") {
-    // Path2D takes the same data the SVG renderer hands to a <path>.
+    // Path2D takes the same data the SVG renderer hands to a <path>. Pip is
+    // drawn from a grid now, so nothing reaches this branch; it stays for the
+    // marks and badges the cards draw through the same painter.
+    if (typeof Path2D === "undefined") {
+      context.restore();
+      return;
+    }
     context.lineCap = shape.cap === "round" ? "round" : "butt";
     const path = new Path2D(shape.d);
     if (shape.fill) {

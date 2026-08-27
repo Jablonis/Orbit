@@ -7,6 +7,7 @@ import {
   getPipArt,
   isPipStanding,
 } from "@/lib/pip-art";
+import { getPipFace } from "@/lib/pip-pixels";
 
 /**
  * Pip: a penguin in orbit.
@@ -16,10 +17,14 @@ import {
  * needs something under it. The helmet is the Orbit mark, so the brand and the
  * character are the same geometry.
  *
- * The shapes come from `pip-art`, which the share images draw from as well, so
- * the Pip on a posted card is the same character as the Pip on the dashboard.
- * Nothing loops forever; Pip moves when something happened, and is still
- * otherwise.
+ * He is drawn on a grid (see `pip-pixels`), and animated the way a sprite is:
+ * whole frames swapped on a step, never tweened. A pixel that slides is a
+ * smudge, and the snap is most of what makes the idiom read as a character
+ * rather than as a picture with an effect on it.
+ *
+ * Two frames are in the markup at once — eyes open and eyes shut — and the
+ * blink is which of them is showing. That costs a few dozen rectangles and buys
+ * an animation with no JavaScript, no hydration, and nothing to schedule.
  */
 
 const token: Record<PipColor, string> = {
@@ -48,10 +53,11 @@ export function Pip({
   /** Given only where Pip carries meaning no neighbouring text already says. */
   title?: string;
 }) {
-  const art = getPipArt(mood, burn);
   // A penguin on the ground breathes; one in flight drifts. Standing still and
   // hovering at the same time is what made him read as a sticker.
   const airborne = !isPipStanding(mood);
+  // A face that is already shut or already delighted has nothing to blink.
+  const blinks = getPipFace(mood) === "open";
 
   return (
     <svg
@@ -59,34 +65,61 @@ export function Pip({
       className={`pip pip--${mood} ${className}`}
       height={size}
       role={title ? "img" : undefined}
+      // Whole pixels: at a fractional scale the runs otherwise show hairline
+      // seams between them, which reads as a broken drawing rather than art.
+      shapeRendering="crispEdges"
       viewBox={`0 0 ${PIP_WIDTH} ${PIP_HEIGHT}`}
       width={(size * PIP_WIDTH) / PIP_HEIGHT}
     >
       {title ? <title>{title}</title> : null}
-      {/* Two groups on purpose: the idle owns one transform and the lean owns
-          the other, so neither has to fight the other for the property. */}
       <g
         className={`pip-idle ${airborne ? "pip-idle--fly" : "pip-idle--rest"}`}
         style={{ "--pip-seed": seed } as React.CSSProperties}
       >
-        <g
-          style={{
-            transform: `rotate(${art.tilt}deg)`,
-            transformOrigin: "36px 50px",
-          }}
-        >
-          {art.shapes.map((shape, index) => (
-            <Shape key={index} shape={shape} />
-          ))}
-        </g>
+        <Frame
+          className={blinks ? "pip-frame pip-frame--open" : undefined}
+          shapes={getPipArt(mood, burn).shapes}
+        />
+        {blinks ? (
+          <Frame
+            className="pip-frame pip-frame--shut"
+            shapes={getPipArt(mood, burn, true).shapes}
+          />
+        ) : null}
       </g>
     </svg>
   );
 }
 
+/** One frame, with its thrust in a group of its own so it can flicker. */
+function Frame({
+  className,
+  shapes,
+}: {
+  className?: string;
+  shapes: PipShape[];
+}) {
+  const flame = shapes.filter((shape) => shape.part === "flame");
+  const body = shapes.filter((shape) => shape.part !== "flame");
+
+  return (
+    <g className={className}>
+      {body.map((shape, index) => (
+        <Shape key={index} shape={shape} />
+      ))}
+      {flame.length > 0 ? (
+        <g className="pip-flame">
+          {flame.map((shape, index) => (
+            <Shape key={index} shape={shape} />
+          ))}
+        </g>
+      ) : null}
+    </g>
+  );
+}
+
 function Shape({ shape }: { shape: PipShape }) {
   const common = {
-    className: shape.part === "eye" ? "pip-eye" : undefined,
     fill: shape.fill ? token[shape.fill] : "none",
     opacity: shape.opacity,
     stroke: shape.stroke ? token[shape.stroke] : undefined,
