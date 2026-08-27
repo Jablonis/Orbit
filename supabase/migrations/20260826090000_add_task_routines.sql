@@ -111,3 +111,9 @@ revoke all on function public.set_routine_completion(uuid, date, boolean)
   from public, anon;
 grant execute on function public.set_routine_completion(uuid, date, boolean)
   to authenticated;
+
+-- PostgREST matches writes against a cached schema, so until it reloads, an
+-- insert naming the new column is refused with PGRST204 even though the column
+-- exists. Reads go straight to Postgres and would already work, which is a
+-- confusing half-broken state to leave behind.
+notify pgrst, 'reload schema';

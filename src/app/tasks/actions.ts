@@ -395,12 +395,20 @@ export async function addRoutineKitAction(
     ),
   );
   if (error) {
-    return {
-      ok: false,
-      error: isMissingRoutineColumn(error)
-        ? "Routines need the latest database migration. Run supabase db push."
-        : "The routines could not be added.",
-    };
+    if (isMissingRoutineColumn(error)) {
+      return {
+        ok: false,
+        error: "Routines need the latest database migration. Run supabase db push.",
+      };
+    }
+    // A generic message with nothing behind it is how the last one of these
+    // cost an afternoon of guessing: the reason goes to the server log.
+    console.error("routines.insert failed", {
+      code: error.code,
+      details: error.details,
+      message: error.message,
+    });
+    return { ok: false, error: "The routines could not be added." };
   }
 
   revalidatePath("/");
