@@ -86,7 +86,7 @@ export function NowCard({
 
         <Link
           aria-label={`${ascent.closed} of ${ascent.total} stages done today`}
-          className="shrink-0 rounded-xl transition-transform duration-150 active:scale-[0.96]"
+          className="press-row shrink-0 rounded-xl hover:bg-card/60 active:scale-[0.96]"
           href="#today-rings"
         >
           <DayAscent ascent={ascent} compact />
@@ -125,7 +125,7 @@ export function NowCard({
 
         {move ? (
           <Link
-            className="ui-button h-11 min-h-11 px-4 text-muted-foreground hover:text-foreground"
+            className="ui-button ui-button--secondary h-11 min-h-11 px-4 text-muted-foreground hover:text-foreground"
             href={nextTask ? "/tasks" : "/fitness#training-calendar"}
           >
             Something else

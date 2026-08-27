@@ -96,7 +96,7 @@ export function VoyageCard({
                   aria-current={isCurrent ? "step" : undefined}
                   aria-label={leg.name}
                   aria-pressed={openId === leg.id}
-                  className="grid size-11 shrink-0 place-items-center rounded-full transition-transform duration-150 active:scale-90 -mx-3.5 first:-ml-3.5"
+                  className="group -mx-3.5 grid size-11 shrink-0 place-items-center rounded-full transition-transform duration-150 first:-ml-3.5 hover:scale-125 active:scale-90"
                   onClick={() =>
                     setOpenId((current) => (current === leg.id ? null : leg.id))
                   }
@@ -141,7 +141,7 @@ export function VoyageCard({
           {recent.map((arrival) => (
             <li key={arrival.leg.id}>
               <button
-                className="flex min-h-11 w-full items-baseline justify-between gap-3 rounded-xl px-2 text-left transition-colors hover:bg-muted"
+                className="press-row flex min-h-11 w-full items-baseline justify-between gap-3 rounded-xl px-2 text-left hover:bg-muted"
                 onClick={() =>
                   setOpenId((current) =>
                     current === arrival.leg.id ? null : arrival.leg.id,

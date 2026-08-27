@@ -48,7 +48,15 @@ export function DayAscent({
   const lane = compact ? 0 : 62;
 
   return (
-    <div className={compact ? "" : "flex w-full flex-col gap-3"}>
+    <div
+      className={
+        compact
+          ? // A badge needs a badge's ground: three bare columns and a dashed
+            // line on a tinted panel read as marks left behind, not as a dial.
+            "rounded-xl bg-card/70 p-1.5"
+          : "flex w-full flex-col gap-3"
+      }
+    >
       <div
         className="relative"
         style={{ height, width: compact ? 46 : "100%" }}
