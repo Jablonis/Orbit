@@ -5,7 +5,33 @@ import {
   parseReminderPreferences,
 } from "@/lib/reminders";
 
+/**
+ * Every card, in the order a day is actually read: what is on the list, what
+ * the body is doing, then how the day is going, and only then the money and
+ * the history. The dashboard used to open on momentum and rings — the two most
+ * abstract things it knows — with the tasks last, which is a lovely instrument
+ * and a poor answer to "what am I doing now".
+ */
 export const dashboardCardIds = [
+  "tasks",
+  "fitness",
+  "rings",
+  "momentum",
+  "finance",
+  "voyage",
+  "recap",
+  "review",
+  "milestones",
+  "analytics",
+] as const;
+
+/**
+ * The order the dashboard shipped with before that. A stored order identical to
+ * it was never chosen by anybody — it is what the first save happened to write
+ * down — so it is replaced rather than preserved. Anything else is a real
+ * preference and is left alone.
+ */
+const LEGACY_CARD_ORDER = [
   "momentum",
   "rings",
   "fitness",
@@ -132,6 +158,14 @@ function normalizeCardOrder(value: unknown) {
   const requested = [
     ...new Set(Array.isArray(value) ? value.filter(isCardId) : []),
   ] as DashboardCardId[];
+
+  if (
+    requested.length === LEGACY_CARD_ORDER.length &&
+    requested.every((card, index) => card === LEGACY_CARD_ORDER[index])
+  ) {
+    return [...dashboardCardIds];
+  }
+
   const order = [...requested];
   // Cards added after a preference was stored take their default position
   // instead of always landing at the bottom of the dashboard.

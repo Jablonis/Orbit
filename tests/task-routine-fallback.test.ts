@@ -96,3 +96,24 @@ test("only the routines column is forgiven, and only where it is named", () => {
     title: "x",
   });
 });
+
+test("a write refused by the schema cache is the same missing column", () => {
+  // Reads are compiled to SQL and refused by Postgres; writes are matched
+  // against PostgREST's cached schema and refused before they get there.
+  const read = { code: "42703", message: "column tasks.repeat_days does not exist" };
+  const write = {
+    code: "PGRST204",
+    message: "Could not find the 'repeat_days' column of 'tasks' in the schema cache",
+  };
+
+  assert.equal(isMissingRoutineColumn(read), true);
+  assert.equal(isMissingRoutineColumn(write), true);
+  assert.equal(
+    isMissingRoutineColumn({
+      code: "PGRST204",
+      message: "Could not find the 'note' column of 'tasks' in the schema cache",
+    }),
+    false,
+    "another missing column is not this one",
+  );
+});

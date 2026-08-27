@@ -313,12 +313,14 @@ export default async function Home({
           preferences.pinnedTaskCategory.toLocaleLowerCase(),
       )
     : orderedTasks;
+  // Six rather than four: the card's job is to answer "what is on today",
+  // and four with three filters above them answered "some of it".
   const quickTasks = filterTasks(
     pinnedTasks,
     filter,
     today,
     calendar.timeZone,
-  ).slice(0, 4);
+  ).slice(0, 6);
   const pinnedTaskStats = getTaskStats(pinnedTasks);
   // A routine is done for a date, so today's completions decide whether it is
   // still asking for something.
@@ -559,11 +561,14 @@ export default async function Home({
           </div>
         ) : null}
 
+        {/* The history is worth having and is not worth reading first: the
+            day is the point, and five charts under it is why the page felt
+            like homework. It states its headline and opens when asked. */}
         {trendCards.length > 0 ? (
-          <section aria-labelledby="trends-title" className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <details className="settle-in rounded-2xl border border-border bg-card">
+            <summary className="flex min-h-14 cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted">
               <h2
-                className="text-[20px] font-bold tracking-[-0.02em]"
+                className="text-[16px] font-bold tracking-[-0.02em]"
                 id="trends-title"
               >
                 {trendsSectionTitle}
@@ -571,11 +576,11 @@ export default async function Home({
               <p className="text-[13px] text-muted-foreground">
                 {trendsSectionDetail}
               </p>
-            </div>
-            <div className="grid gap-5">
+            </summary>
+            <div className="grid gap-5 border-t border-border p-4">
               {trendCards.map((card) => dashboardCards[card])}
             </div>
-          </section>
+          </details>
         ) : null}
       </div>
     </main>

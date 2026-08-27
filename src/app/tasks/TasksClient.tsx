@@ -912,7 +912,7 @@ function TaskRow({
 
   return (
     <article
-      className={`task-state-enter group scroll-mt-24 grid gap-4 rounded-xl border p-4 lg:grid-cols-[1fr_auto] ${tone.card}`}
+      className={`task-state-enter group scroll-mt-24 grid gap-4 rounded-xl border p-4 transition-colors hover:border-primary/35 lg:grid-cols-[1fr_auto] ${tone.card}`}
       id={`task-${task.id}`}
     >
       <div className="min-w-0">
@@ -1162,7 +1162,7 @@ function Metric({
   return (
     <button
       aria-pressed={active}
-      className={`${frame} text-left transition-colors ${
+      className={`${frame} press-row text-left ${
         active ? "bg-primary/10" : "hover:bg-muted"
       }`}
       onClick={onClick}

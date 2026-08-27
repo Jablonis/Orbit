@@ -52,7 +52,7 @@ export function WeekStrip({
                 aria-label={`${dayName(point.date)}${
                   future ? ", not yet" : `, scored ${score}`
                 }`}
-                className={`flex w-full flex-col items-center gap-2 rounded-2xl px-1 py-3 transition duration-150 active:scale-[0.97] ${
+                className={`press-row flex w-full flex-col items-center gap-2 rounded-2xl px-1 py-3 ${
                   isToday ? "bg-plum-tint" : "bg-card"
                 } ${
                   selected

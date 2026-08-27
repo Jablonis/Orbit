@@ -108,15 +108,22 @@ const TASK_COLUMNS_WITHOUT_ROUTINES = TASK_COLUMNS.replace(",repeat_days", "");
 type PostgrestErrorish = { code?: string; message?: string } | null;
 
 /**
- * Postgres 42703 is "column does not exist". Reading it here means the routines
- * migration has not been applied to this database yet, and the honest response
- * is an app without routines rather than an app that does not load: the tasks
- * query is on the dashboard's critical path, so failing it takes Orbit down.
+ * Whether this database is simply one without the routines migration.
+ *
+ * It answers in two different ways depending on the direction. A **read** is
+ * compiled to SQL, so Postgres itself refuses it: `42703`, "column does not
+ * exist". A **write** is matched against PostgREST's cached schema first, so it
+ * never reaches Postgres: `PGRST204`, "Could not find the 'repeat_days' column
+ * of 'tasks' in the schema cache". Knowing only the first is why reads
+ * degraded gracefully while every task that tried to save died with a generic
+ * failure.
+ *
+ * Both name the column, and the name is what this is allowed to forgive.
  */
 export function isMissingRoutineColumn(error: PostgrestErrorish) {
-  return (
-    error?.code === "42703" && (error.message ?? "").includes("repeat_days")
-  );
+  const code = error?.code ?? "";
+  const missing = code === "42703" || code === "PGRST204";
+  return missing && (error?.message ?? "").includes("repeat_days");
 }
 
 /** The same row, minus the column this database does not have yet. */

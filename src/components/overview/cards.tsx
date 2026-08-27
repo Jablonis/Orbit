@@ -28,6 +28,7 @@ import type {
 } from "@/lib/dashboard";
 import { formatCurrency, getFinanceSummary } from "@/lib/finance";
 import { getPinnedFinanceMetric } from "@/lib/finance-metric";
+import { getTrainingGuidance } from "@/lib/training-guidance";
 import type {
   GhostRace,
   Momentum,
@@ -372,7 +373,7 @@ export function TasksCard({
             className={`inline-flex min-h-9 items-center rounded-full px-3.5 text-[12px] font-semibold transition ${
               filter === item.id
                 ? "bg-tasks text-white"
-                : "bg-card/70 text-tasks-ink hover:bg-card"
+                : "bg-card/70 text-tasks-ink hover:bg-card hover:shadow-[inset_0_0_0_1.5px_color-mix(in_srgb,var(--tasks)_45%,transparent)]"
             }`}
             href={getOverviewHref(overviewQuery, { tasks: item.id })}
             key={item.id}
@@ -405,7 +406,7 @@ export function TasksCard({
                   <input name="date" type="hidden" value={today} />
                   <input name="redirectTo" type="hidden" value="/" />
                   <button
-                    className="flex w-full items-center gap-3 rounded-xl bg-card/70 p-3 text-left transition hover:bg-card"
+                    className="press-row flex w-full items-center gap-3 rounded-xl bg-card/70 p-3 text-left hover:bg-card"
                     type="submit"
                   >
                     <span
@@ -445,12 +446,22 @@ export function TasksCard({
         </ul>
       )}
 
-      <Button asChild className="w-full" variant="outline">
-        <Link href="/tasks">
-          Open tasks
-          <LinkPendingIndicator label="Opening tasks" />
-        </Link>
-      </Button>
+      {/* Adding was a floating button and a line in another card. It is the
+          most common thing anyone does here, so it says so. */}
+      <div className="flex flex-wrap gap-2">
+        <Button asChild className="flex-1">
+          <Link href="/tasks#new-task">
+            New task
+            <LinkPendingIndicator label="Opening the task form" />
+          </Link>
+        </Button>
+        <Button asChild className="flex-1" variant="outline">
+          <Link href="/tasks">
+            All tasks
+            <LinkPendingIndicator label="Opening tasks" />
+          </Link>
+        </Button>
+      </div>
     </TintPanel>
   );
 }
@@ -476,6 +487,7 @@ export function FitnessCard({
 }) {
   const resting = training.day.sport === "rest";
   const done = training.day.log.completed;
+  const guidance = getTrainingGuidance(training.day.sport, training.title);
 
   return (
     <TintPanel className="settle-in settle-3 flex flex-col gap-5" system="fitness">
@@ -496,20 +508,36 @@ export function FitnessCard({
           No session is planned. Recovery is part of the plan, not a gap in it.
         </p>
       ) : (
-        <dl className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-card/70 p-3">
-            <dt className="label-caps opacity-60">Planned</dt>
-            <dd className="metric-value mt-1.5 text-[20px] font-bold">
-              {training.day.plannedDurationMinutes} min
-            </dd>
-          </div>
-          <div className="rounded-xl bg-card/70 p-3">
-            <dt className="label-caps opacity-60">Focus</dt>
-            <dd className="mt-1.5 truncate text-[15px] font-semibold">
-              {training.focus}
-            </dd>
-          </div>
-        </dl>
+        <>
+          <dl className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-card/70 p-3">
+              <dt className="label-caps opacity-60">Planned</dt>
+              <dd className="metric-value mt-1.5 text-[20px] font-bold">
+                {training.day.plannedDurationMinutes} min
+              </dd>
+            </div>
+            <div className="rounded-xl bg-card/70 p-3">
+              <dt className="label-caps opacity-60">Focus</dt>
+              <dd className="mt-1.5 truncate text-[15px] font-semibold">
+                {training.focus}
+              </dd>
+            </div>
+          </dl>
+
+          {/* What the session is, not only that there is one. */}
+          <dl className="flex flex-col gap-2 rounded-xl bg-card/70 p-3">
+            <div>
+              <dt className="label-caps opacity-60">The session</dt>
+              <dd className="mt-1 text-[13px] leading-5">{guidance.main}</dd>
+            </div>
+            <div>
+              <dt className="label-caps opacity-60">Warm up</dt>
+              <dd className="mt-1 text-[13px] leading-5 text-muted-foreground">
+                {guidance.warmup}
+              </dd>
+            </div>
+          </dl>
+        </>
       )}
 
       {resting ? null : (
@@ -826,7 +854,7 @@ export function ReviewFigure({
 }) {
   return (
     <Link
-      className="rounded-xl bg-muted p-4 transition duration-150 hover:bg-secondary active:scale-[0.98]"
+      className="press-row rounded-xl bg-muted p-4 hover:bg-secondary"
       href={href}
     >
       <span className="label-caps block text-muted-foreground">{label}</span>
