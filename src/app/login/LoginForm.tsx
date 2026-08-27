@@ -28,7 +28,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
           Forgot password?
         </Link>
         <button
-          className="rounded-xl bg-white px-4 py-3 text-[13px] font-semibold text-foreground transition hover:bg-[rgba(244,235,221,0.9)] disabled:opacity-60"
+          className="rounded-xl bg-primary px-4 py-3 text-[13px] font-bold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
           disabled={loginPending}
           type="submit"
         >

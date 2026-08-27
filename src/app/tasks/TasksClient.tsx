@@ -77,6 +77,7 @@ export function TasksClient({
   const [estimateMode, setEstimateMode] = useState<TaskEstimateMode>("1hr");
   const [repeatDays, setRepeatDays] = useState<number[]>([]);
   const [formVersion, setFormVersion] = useState(0);
+  const [controlsOpen, setControlsOpen] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [bulkDate, setBulkDate] = useState(today);
   const [bulkPending, setBulkPending] = useState(false);
@@ -248,37 +249,24 @@ export function TasksClient({
     };
   }, []);
 
+  // The editor is a modal at every width now. It used to be a column pinned
+  // open on a wide screen, which made the page look like a form with a list
+  // beside it rather than a list you can add to.
   useEffect(() => {
     const node = formDialog.current;
     if (!node) return;
-    const desktop = window.matchMedia("(min-width: 1280px)");
     let focusFrame = 0;
 
-    const syncDialog = () => {
-      if (desktop.matches) {
-        if (node.matches(":modal")) node.close();
-        if (!node.open) node.show();
-        return;
-      }
+    if (formOpen) {
+      if (!node.open) node.showModal();
+      focusFrame = window.requestAnimationFrame(() =>
+        formTitleInput.current?.focus(),
+      );
+    } else if (node.open) {
+      node.close();
+    }
 
-      if (formOpen) {
-        if (node.open) node.close();
-        node.showModal();
-        window.cancelAnimationFrame(focusFrame);
-        focusFrame = window.requestAnimationFrame(() =>
-          formTitleInput.current?.focus(),
-        );
-      } else if (node.open) {
-        node.close();
-      }
-    };
-
-    syncDialog();
-    desktop.addEventListener("change", syncDialog);
-    return () => {
-      window.cancelAnimationFrame(focusFrame);
-      desktop.removeEventListener("change", syncDialog);
-    };
+    return () => window.cancelAnimationFrame(focusFrame);
   }, [formOpen]);
 
   async function saveTask(formData: FormData) {
@@ -333,7 +321,7 @@ export function TasksClient({
 
   return (
     <section className="page-container py-8">
-      <header className="mb-8 flex items-end justify-between gap-5 pr-14 md:pr-0">
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4 pr-14 md:pr-0">
         <div className="flex items-start gap-4">
           <Pip
             burn={queuePip.burn}
@@ -355,7 +343,7 @@ export function TasksClient({
           </div>
         </div>
         <button
-          className="hidden min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[13px] font-bold text-primary-foreground max-xl:block"
+          className="min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[13px] font-bold text-primary-foreground transition-transform duration-150 active:scale-[0.98]"
           onClick={() => {
             setEditing(null);
             setEstimateMode("1hr");
@@ -369,18 +357,12 @@ export function TasksClient({
         </button>
       </header>
 
-      <section className="grid gap-6 xl:grid-cols-[390px_1fr]">
+      <section className="grid gap-6">
         <dialog
           aria-labelledby="task-editor-title"
-          className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[90] m-0 max-h-[calc(100dvh-7rem)] w-auto max-w-none overflow-y-auto rounded-2xl p-5 text-foreground backdrop:bg-black/65 backdrop:backdrop-blur-[2px] sm:p-6 xl:sticky xl:inset-x-auto xl:bottom-auto xl:top-6 xl:col-start-1 xl:row-start-1 xl:w-full xl:max-h-none xl:self-start xl:overflow-visible"
+          className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[90] m-0 max-h-[calc(100dvh-7rem)] w-auto max-w-none overflow-y-auto rounded-2xl p-5 text-foreground backdrop:bg-black/65 backdrop:backdrop-blur-[2px] sm:p-6 sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-h-[calc(100dvh-4rem)]"
           id="new-task"
-          onCancel={(event) => {
-            if (window.matchMedia("(min-width: 1280px)").matches) {
-              event.preventDefault();
-              return;
-            }
-            setFormOpen(false);
-          }}
+          onCancel={() => setFormOpen(false)}
           onClick={(event) => {
             if (!event.currentTarget.matches(":modal")) return;
             const bounds = event.currentTarget.getBoundingClientRect();
@@ -402,7 +384,7 @@ export function TasksClient({
             </p>
             <button
               aria-label="Close task form"
-              className="grid h-11 w-11 place-items-center rounded-full border border-border text-[20px] text-muted-foreground xl:hidden"
+              className="grid h-11 w-11 place-items-center rounded-full border border-border text-[20px] text-muted-foreground transition-colors hover:bg-muted"
               onClick={() => setFormOpen(false)}
               type="button"
             >
@@ -516,14 +498,14 @@ export function TasksClient({
             </Field>
             <div className="flex gap-3">
               <PendingSubmitButton
-                className="flex-1 rounded-xl bg-white px-4 py-3 text-[13px] font-semibold text-foreground"
+                className="flex-1 rounded-xl bg-primary px-4 py-3 text-[13px] font-bold text-primary-foreground transition-transform duration-150 active:scale-[0.98]"
                 pendingLabel={editing ? "Saving…" : "Creating…"}
               >
                 {editing ? "Save changes" : "Create task"}
               </PendingSubmitButton>
               {editing ? (
                 <button
-                  className="rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted px-4 py-3 text-[13px] font-semibold text-muted-foreground"
+                  className="rounded-xl border border-input bg-secondary px-4 py-3 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
                   onClick={() => {
                     setEditing(null);
                     setEstimateMode("1hr");
@@ -549,11 +531,11 @@ export function TasksClient({
           </form>
         </dialog>
 
-        <section className="space-y-6 xl:col-start-2 xl:row-start-1">
+        <section className="space-y-6">
           <RoutineSetup hasRoutines={hasRoutines} />
           {/* Three of these four count something you can then look at, so
               they filter the list rather than only reporting it. */}
-          <div className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] grid overflow-hidden rounded-2xl sm:grid-cols-4">
+          <div className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] grid grid-cols-2 overflow-hidden rounded-2xl sm:grid-cols-4">
             <Metric
               active={status === "open" && complexity === "all"}
               label="Active"
@@ -598,13 +580,48 @@ export function TasksClient({
               value={stats.totalEstimateMinutes}
             />
           </div>
+          {/* Search and the six filters used to sit open above the queue at all
+              times, which is a lot of chrome for something reached rarely. The
+              bar states what is being shown; the controls come when asked for,
+              and open by themselves when a filter is already on. */}
           <section
             aria-labelledby="task-view-controls"
-            className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-4 sm:p-5"
+            className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-3 sm:p-4"
           >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+            <div className="flex min-h-11 flex-wrap items-center justify-between gap-3">
+              <p aria-live="polite" className="text-[12px] text-muted-foreground" id="task-view-controls">
+                Showing {filteredTasks.length} of {displayTasks.length} tasks
+                {filtersActive ? " · filtered" : ""}
+              </p>
+              <div className="flex items-center gap-2">
+                {filtersActive ? (
+                  <button
+                    className="min-h-11 rounded-xl px-3 text-[12px] font-semibold text-primary transition-colors hover:bg-muted"
+                    onClick={clearFilters}
+                    type="button"
+                  >
+                    Clear filters
+                  </button>
+                ) : null}
+                <button
+                  aria-expanded={controlsOpen || filtersActive}
+                  className={`min-h-11 rounded-xl border px-3 text-[12px] font-semibold transition-colors ${
+                    controlsOpen || filtersActive
+                      ? "border-primary/40 bg-primary/10 text-foreground"
+                      : "border-input text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => setControlsOpen((open) => !open)}
+                  type="button"
+                >
+                  Search and filters
+                </button>
+              </div>
+            </div>
+
+            {controlsOpen || filtersActive ? (
+              <div className="settle-in mt-3 flex flex-col gap-3 border-t border-border pt-3 lg:flex-row lg:items-end">
               <label className="grid min-w-0 flex-1 gap-2">
-                <span className="label-caps text-muted-foreground" id="task-view-controls">
+                <span className="label-caps text-muted-foreground">
                   Search tasks
                 </span>
                 <input
@@ -666,21 +683,8 @@ export function TasksClient({
                 <option value="priority">Priority</option>
                 <option value="title">Title</option>
               </TaskFilterSelect>
-            </div>
-            <div className="mt-3 flex min-h-11 flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
-              <p aria-live="polite" className="text-[12px] text-muted-foreground">
-                Showing {filteredTasks.length} of {displayTasks.length} tasks. View state is stored in the URL.
-              </p>
-              {filtersActive ? (
-                <button
-                  className="min-h-11 rounded-xl px-3 text-[12px] font-semibold text-primary hover:bg-[rgba(244,235,221,0.05)]"
-                  onClick={clearFilters}
-                  type="button"
-                >
-                  Clear filters
-                </button>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </section>
           <div className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-5">
             <div className="mb-5 flex items-center justify-between">
@@ -694,10 +698,13 @@ export function TasksClient({
                 {stats.completionPercent}% done
               </span>
             </div>
-            <div className="mb-5 flex flex-col gap-3 rounded-xl border border-border bg-[rgba(244,235,221,0.025)] p-3 lg:flex-row lg:items-end">
+            {/* The bulk bar used to sit there greyed out whether or not
+                anything was selected. Selecting is the request for it. */}
+            <div className="mb-5 flex flex-col gap-3 rounded-xl border border-border bg-[rgba(244,235,221,0.025)] p-3 lg:flex-row lg:items-center">
               <label className="flex min-h-11 items-center gap-3 px-1 text-[12px] font-semibold text-foreground">
                 <input
                   checked={allVisibleSelected}
+                  className="[accent-color:var(--primary)]"
                   onChange={() =>
                     setSelectedTaskIds(
                       allVisibleSelected
@@ -707,18 +714,26 @@ export function TasksClient({
                   }
                   type="checkbox"
                 />
-                Select visible ({selectedTaskIds.length} selected)
+                {selectedTaskIds.length > 0
+                  ? `${selectedTaskIds.length} selected`
+                  : "Select visible"}
               </label>
-              <div className="flex flex-1 flex-wrap gap-2 lg:justify-end">
-                <button className="min-h-11 rounded-xl border border-input px-3 text-[12px] font-semibold text-foreground disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("complete")} type="button">Complete</button>
-                <button className="min-h-11 rounded-xl border border-input px-3 text-[12px] font-semibold text-foreground disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("reopen")} type="button">Reopen</button>
-                <label className="flex items-center gap-2">
-                  <span className="sr-only">Bulk reschedule date</span>
-                  <input className="field-input min-h-11 w-[150px]" min={today} onChange={(event) => setBulkDate(event.target.value)} type="date" value={bulkDate} />
-                </label>
-                <button className="min-h-11 rounded-xl border border-input px-3 text-[12px] font-semibold text-foreground disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("reschedule")} type="button">Reschedule</button>
-                <button className="min-h-11 rounded-xl border border-[var(--destructive)]/25 bg-destructive/10 px-3 text-[12px] font-semibold text-destructive disabled:opacity-40" disabled={!selectedTaskIds.length || bulkPending} onClick={() => void runBulkAction("archive")} type="button">Archive</button>
-              </div>
+              {selectedTaskIds.length > 0 ? (
+                <div className="settle-in flex flex-1 flex-wrap gap-2 lg:justify-end">
+                  <button className="min-h-11 rounded-xl border border-input px-3 text-[12px] font-semibold text-foreground disabled:opacity-40" disabled={bulkPending} onClick={() => void runBulkAction("complete")} type="button">Complete</button>
+                  <button className="min-h-11 rounded-xl border border-input px-3 text-[12px] font-semibold text-foreground disabled:opacity-40" disabled={bulkPending} onClick={() => void runBulkAction("reopen")} type="button">Reopen</button>
+                  <label className="flex items-center gap-2">
+                    <span className="sr-only">Bulk reschedule date</span>
+                    <input className="field-input min-h-11 w-[150px]" min={today} onChange={(event) => setBulkDate(event.target.value)} type="date" value={bulkDate} />
+                  </label>
+                  <button className="min-h-11 rounded-xl border border-input px-3 text-[12px] font-semibold text-foreground disabled:opacity-40" disabled={bulkPending} onClick={() => void runBulkAction("reschedule")} type="button">Reschedule</button>
+                  <button className="min-h-11 rounded-xl border border-[var(--destructive)]/25 bg-destructive/10 px-3 text-[12px] font-semibold text-destructive disabled:opacity-40" disabled={bulkPending} onClick={() => void runBulkAction("archive")} type="button">Archive</button>
+                </div>
+              ) : (
+                <p className="px-1 text-[12px] text-muted-foreground lg:ml-auto">
+                  Tick a task to complete, reschedule or archive several at once.
+                </p>
+              )}
             </div>
             <div className="task-queue-axis grid gap-6">
               {taskGroups.map((group) => group.tasks.length > 0 ? (
@@ -906,7 +921,7 @@ function TaskRow({
             <span className="sr-only">Select {task.title}</span>
             <input checked={selected} onChange={onSelected} type="checkbox" />
           </label>
-          <h4 className={`min-w-0 text-[16px] font-semibold leading-6 ${tone.title}`}>
+          <h4 className={`min-w-0 flex-1 text-[16px] font-semibold leading-6 ${tone.title}`}>
             {task.title}
           </h4>
           <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold ${tone.badge}`}>
@@ -1132,13 +1147,13 @@ function Metric({
   const inside = (
     <>
       <span className="label-caps block text-muted-foreground">{label}</span>
-      <span className={`metric-value mt-3 block text-[28px] font-semibold ${tone}`}>
+      <span className={`metric-value mt-2 block text-[24px] font-semibold sm:mt-3 sm:text-[28px] ${tone}`}>
         {value}
       </span>
     </>
   );
   const frame =
-    "border-b border-border p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0";
+    "border-b border-r border-border p-4 last:border-r-0 even:border-r-0 sm:border-b-0 sm:border-r sm:even:border-r sm:last:border-r-0";
 
   if (!onClick) {
     return <div className={frame}>{inside}</div>;

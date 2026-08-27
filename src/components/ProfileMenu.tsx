@@ -178,7 +178,7 @@ function ProfileMenuDialog({
             <div className="grid gap-3 sm:grid-cols-2">
               <button
                 autoFocus
-                className="min-h-11 rounded-xl bg-white px-4 text-[13px] font-bold text-foreground"
+                className="min-h-11 rounded-xl bg-primary px-4 text-[13px] font-bold text-primary-foreground"
                 onClick={keepEditing}
                 type="button"
               >

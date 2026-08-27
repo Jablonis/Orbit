@@ -15,9 +15,12 @@ import {
  * named `repeatDays`, so the form posts them without any JavaScript of its own.
  */
 export function RepeatPicker({
+  compact = false,
   onChange,
   value,
 }: {
+  /** Chips only: for a list of routines, where seven rows of presets is noise. */
+  compact?: boolean;
   onChange: (days: number[]) => void;
   value: number[];
 }) {
@@ -32,12 +35,14 @@ export function RepeatPicker({
     <>
       {/* Seven across, always: a week that wraps onto two rows stops looking
           like a week. */}
-      <div className="grid grid-cols-7 gap-1.5">
+      <div className="grid max-w-[23rem] grid-cols-7 gap-1.5">
         {orderedWeekdays().map((weekday) => {
           const on = value.includes(weekday.index);
           return (
             <label
-              className={`grid min-h-11 cursor-pointer select-none place-items-center rounded-xl border text-[12px] font-semibold transition-colors ${
+              className={`grid cursor-pointer select-none place-items-center rounded-xl border text-[12px] font-semibold transition-colors ${
+                compact ? "min-h-9" : "min-h-11"
+              } ${
                 on
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-input bg-secondary text-muted-foreground"
@@ -59,6 +64,7 @@ export function RepeatPicker({
         })}
       </div>
 
+      {compact ? null : (
       <div className="flex flex-wrap gap-1.5">
         {WEEKDAY_PRESETS.map((preset) => (
           <button
@@ -80,12 +86,15 @@ export function RepeatPicker({
           </button>
         ) : null}
       </div>
+      )}
 
-      <span className="text-[12px] leading-4 text-muted-foreground">
-        {value.length > 0
-          ? `${repeatSentence(value)}, ticked off for each day on its own.`
-          : "Leave empty for a one-off task."}
-      </span>
+      {compact ? null : (
+        <span className="text-[12px] leading-4 text-muted-foreground">
+          {value.length > 0
+            ? `${repeatSentence(value)}, ticked off for each day on its own.`
+            : "Leave empty for a one-off task."}
+        </span>
+      )}
     </>
   );
 }

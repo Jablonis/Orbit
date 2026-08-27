@@ -132,7 +132,7 @@ export function BankStatementImporter({
           <span className="label-caps text-muted-foreground">Statement PDF</span>
           <input
             accept=".pdf,application/pdf"
-            className="field-input file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-[12px] file:font-semibold file:text-foreground"
+            className="field-input file:mr-4 file:rounded-full file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-[12px] file:font-semibold file:text-[var(--primary-foreground)]"
             onChange={(event) => {
               setFile(event.target.files?.[0] ?? null);
               resetPreview();
