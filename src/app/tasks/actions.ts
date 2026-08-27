@@ -15,7 +15,6 @@ import {
   withoutRoutineColumn,
 } from "@/lib/tasks";
 import { normaliseRepeatDays } from "@/lib/routines";
-import { pickRoutineKit } from "@/lib/routine-kit";
 
 const presetEstimateMinutes: Record<Exclude<TaskEstimateMode, "other">, number> = {
   "1hr": 60,
@@ -292,21 +291,62 @@ export type RoutineSetupResult =
   | { ok: true; added: number }
   | { ok: false; error: string };
 
+export type RoutineDraft = {
+  category?: string;
+  days: number[];
+  from: string;
+  note?: string;
+  title: string;
+  to: string;
+};
+
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+/** Enough for a week of routines twice over, few enough to be one insert. */
+const ROUTINE_LIMIT = 20;
+
 /**
  * Set up a week's worth of routines in one go.
  *
- * The catalogue lives on the server, so this takes a list of ids rather than a
- * list of tasks: nothing a client sends decides what gets written, only which
- * of the known items to write.
+ * The catalogue is a starting point rather than a menu: every row can have its
+ * days and its times changed, and rows that were never in the catalogue can be
+ * added — most people have one thing nobody else has. So this takes the edited
+ * rows and validates them the way the ordinary task form is validated, rather
+ * than trusting a list of catalogue ids.
  */
 export async function addRoutineKitAction(
-  ids: string[],
+  drafts: RoutineDraft[],
 ): Promise<RoutineSetupResult> {
   const { supabase, user } = await getAuthenticatedUser();
-  const items = pickRoutineKit(ids);
+
+  const items = (Array.isArray(drafts) ? drafts : [])
+    .slice(0, ROUTINE_LIMIT)
+    .map((draft) => ({
+      category: String(draft.category ?? "Routine").trim().slice(0, 80) || "Routine",
+      days: normaliseRepeatDays(
+        (Array.isArray(draft.days) ? draft.days : []).map(Number),
+      ),
+      from: String(draft.from ?? ""),
+      note: String(draft.note ?? "").trim().slice(0, 2000),
+      title: String(draft.title ?? "").trim().slice(0, 200),
+      to: String(draft.to ?? ""),
+    }))
+    .filter((item) => item.title && item.days.length > 0);
 
   if (items.length === 0) {
-    return { ok: false, error: "Choose at least one routine." };
+    return { ok: false, error: "Give every routine a name and at least one day." };
+  }
+
+  const badTime = items.find(
+    (item) =>
+      !TIME.test(item.from) ||
+      !TIME.test(item.to) ||
+      getMinutesBetweenTimes(item.from, item.to) <= 0,
+  );
+  if (badTime) {
+    return {
+      ok: false,
+      error: `Check the times on “${badTime.title}” — it has to end after it starts.`,
+    };
   }
 
   const { data: existing, error: readError } = await supabase
@@ -322,9 +362,12 @@ export async function addRoutineKitAction(
   const taken = new Set(
     (existing ?? []).map((task) => String(task.title).trim().toLocaleLowerCase()),
   );
-  const fresh = items.filter(
-    (item) => !taken.has(item.title.toLocaleLowerCase()),
-  );
+  const fresh = items.filter((item) => {
+    const key = item.title.toLocaleLowerCase();
+    if (taken.has(key)) return false;
+    taken.add(key);
+    return true;
+  });
 
   if (fresh.length === 0) {
     return { ok: true, added: 0 };
@@ -345,7 +388,7 @@ export async function addRoutineKitAction(
           timeFrom: item.from,
           timeTo: item.to,
           title: item.title,
-          type: item.type,
+          type: "personal",
         },
         user.id,
       ),

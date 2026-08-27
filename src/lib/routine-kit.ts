@@ -7,9 +7,9 @@
  * asking someone to type those in is asking them to do the boring half of the
  * work before they have seen any of the good half.
  *
- * So the setup offers the shape of an ordinary week and lets it be edited,
- * rather than starting from an empty list. Nothing here is compulsory and
- * everything is an ordinary task afterwards.
+ * So the setup offers the shape of an ordinary week and lets it be edited —
+ * days, times, names, and rows of your own that were never in this list.
+ * Nothing here is compulsory and everything is an ordinary task afterwards.
  */
 
 import type { TaskType } from "@/lib/tasks";
@@ -101,12 +101,6 @@ export const ROUTINE_KIT: RoutineKitItem[] = [
     type: "learning",
   },
 ];
-
-/** The chosen items, ignoring anything that is not in the kit. */
-export function pickRoutineKit(ids: string[]) {
-  const wanted = new Set(ids);
-  return ROUTINE_KIT.filter((item) => wanted.has(item.id));
-}
 
 /** What the kit suggests when nothing has been chosen yet. */
 export const DEFAULT_ROUTINE_KIT = ["morning", "deep-work", "evening"];

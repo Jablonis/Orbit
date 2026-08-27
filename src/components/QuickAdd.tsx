@@ -369,7 +369,7 @@ export function QuickAdd() {
               </label>
             </div>
             <button
-              className="mt-4 min-h-11 w-full rounded-xl bg-white px-4 text-[13px] font-bold text-foreground disabled:opacity-55"
+              className="mt-4 min-h-11 w-full rounded-xl bg-primary px-4 text-[13px] font-bold text-primary-foreground disabled:opacity-55"
               disabled={pending}
               type="submit"
             >

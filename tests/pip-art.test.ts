@@ -1,7 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { getWeekPipMood, pipMoods } from "../src/lib/mascot";
-import { getPipArt, isPipStanding } from "../src/lib/pip-art";
+import {
+  PIP_HEIGHT,
+  PIP_WIDTH,
+  getPipArt,
+  isPipStanding,
+} from "../src/lib/pip-art";
+import {
+  GRID_HEIGHT,
+  GRID_WIDTH,
+  PIXEL,
+  getPipFrame,
+  getPipPose,
+} from "../src/lib/pip-pixels";
 
 const colours = new Set(["beak", "flame", "ink", "paper", "plum"]);
 
@@ -34,31 +46,60 @@ test("the engine only burns while leaving the ground", () => {
   }
 });
 
-test("a bigger burn draws a bigger flame, and none of it escapes the box", () => {
-  const small = getPipArt("cruising", 0.2).shapes.find(
-    (shape) => shape.fill === "flame",
-  );
-  const large = getPipArt("cruising", 1).shapes.find(
-    (shape) => shape.fill === "flame",
-  );
+test("a bigger burn draws a longer flame", () => {
+  const rows = (burn: number) =>
+    getPipFrame("cruising", burn).filter((row) => row.includes("O")).length;
 
-  assert.ok(small?.kind === "path" && large?.kind === "path");
-  assert.ok(large.d.length > 0 && small.d.length > 0);
-  assert.notEqual(small.d, large.d);
+  assert.ok(rows(1) > rows(0.5), "full thrust is longer than half");
+  assert.ok(rows(0.5) > rows(0.2), "half is longer than idle");
 });
 
-test("only a sealed day gets the sparkles", () => {
-  const sealed = getPipArt("sealed", 1);
-  const soaring = getPipArt("soaring", 1);
+test("nothing Pip is made of escapes the box, or lands off the grid", () => {
+  for (const mood of pipMoods) {
+    for (const shape of getPipArt(mood, 1).shapes) {
+      assert.equal(shape.kind, "rect", `${mood} is drawn with something else`);
+      if (shape.kind !== "rect") continue;
 
-  assert.ok(sealed.shapes.length > soaring.shapes.length);
+      assert.ok(shape.x >= 0 && shape.x + shape.width <= PIP_WIDTH);
+      assert.ok(shape.y >= 0 && shape.y + shape.height <= PIP_HEIGHT);
+      assert.equal(shape.x % PIXEL, 0, `${mood} has a cell off the grid`);
+      assert.equal(shape.y % PIXEL, 0, `${mood} has a cell off the grid`);
+    }
+  }
 });
 
-test("the tilt grows with the mood and never leans backwards", () => {
-  const leans = pipMoods.map((mood) => getPipArt(mood, 0.5).tilt);
+test("a frame is the grid, exactly, whatever the mood", () => {
+  for (const mood of pipMoods) {
+    const frame = getPipFrame(mood, 1);
 
-  assert.ok(leans.every((deg) => deg <= 0 && deg > -25));
-  assert.ok(getPipArt("sealed", 1).tilt < getPipArt("grounded", 1).tilt);
+    assert.equal(frame.length, GRID_HEIGHT, `${mood} is the wrong height`);
+    for (const row of frame) {
+      assert.equal(row.length, GRID_WIDTH, `${mood} has a ragged row`);
+    }
+  }
+});
+
+test("runs of one colour become one rectangle, not one per cell", () => {
+  const shapes = getPipArt("grounded", 0.5).shapes;
+  const cells = getPipFrame("grounded", 0.5)
+    .join("")
+    .split("")
+    .filter((cell) => cell !== ".").length;
+
+  assert.ok(
+    shapes.length < cells / 2,
+    `${shapes.length} shapes for ${cells} cells is not merging`,
+  );
+});
+
+test("only a finished day gets its flippers up", () => {
+  const cheering = pipMoods.filter((mood) => getPipPose(mood) === "cheer");
+
+  assert.deepEqual(cheering, ["sealed"]);
+});
+
+test("nothing leans, because a rotated pixel is a smeared pixel", () => {
+  assert.ok(pipMoods.every((mood) => getPipArt(mood, 0.5).tilt === 0));
 });
 
 test("a week is judged on days held, the same as the recap", () => {

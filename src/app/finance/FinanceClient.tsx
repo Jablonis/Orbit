@@ -180,7 +180,7 @@ export function FinanceClient({
             {privacyMode ? "Show amounts" : "Hide amounts"}
           </button>
           <button
-            className="min-h-11 rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-foreground"
+            className="min-h-11 rounded-full border border-input bg-card px-4 py-2 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted"
             onClick={() => download("orbit-finance-export.csv", transactionsToCsv(transactions))}
             type="button"
           >
@@ -399,7 +399,7 @@ function ManualTransactionsCard({
           </select>
         </label>
         <div className="flex items-end gap-2">
-          <button className="min-h-11 rounded-xl bg-white px-4 text-[12px] font-bold text-foreground disabled:opacity-50" disabled={pending} type="submit">
+          <button className="min-h-11 rounded-xl bg-primary px-4 text-[12px] font-bold text-primary-foreground disabled:opacity-50" disabled={pending} type="submit">
             {pending ? "Saving…" : editing ? "Save" : "Add"}
           </button>
           {editing ? (

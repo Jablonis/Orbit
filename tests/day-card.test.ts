@@ -17,15 +17,25 @@ function fakeContext(): Recorder {
   const arcs: number[] = [];
   const context = {
     arc: (_x: number, _y: number, radius: number) => arcs.push(radius),
+    arcTo: () => {},
+    closePath: () => {},
     createLinearGradient: () => ({ addColorStop: () => {} }),
     beginPath: () => {},
     createRadialGradient: () => ({ addColorStop: () => {} }),
+    ellipse: () => {},
     fill: () => {},
     fillRect: () => {},
     fillText: (value: string) => texts.push(value),
     lineTo: () => {},
     moveTo: () => {},
+    // Pip is drawn from a grid, so the card now saves, scales and paints
+    // rectangles through this context as well.
+    restore: () => {},
+    rotate: () => {},
+    save: () => {},
+    scale: () => {},
     stroke: () => {},
+    translate: () => {},
   } as unknown as CanvasRenderingContext2D;
 
   return { arcs, context, texts };

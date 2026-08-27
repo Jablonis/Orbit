@@ -77,13 +77,25 @@ Rules:
 
 - Pip is derived, never chosen. `getPipState` reads the day, the orbit and the
   run, in that order — a finished day beats everything.
+- **Pip is drawn on a grid.** 18 × 26 cells at four units each — exactly the
+  72 × 104 box the vector Pip used, so nothing that places him had to move. A
+  pixel character is read rather than inspected, which is why two pixels of
+  eyebrow are a whole change of mood, and why the idiom carries more character
+  per line of code than curves did.
+- **He is animated the way a sprite is: whole frames, swapped on a step.** Both
+  frames — eyes open and eyes shut — are in the markup, and the blink is which
+  one is showing; the bob moves by one whole cell; the flame alternates between
+  two lengths. Nothing tweens, because a pixel that slides is a smudge, and
+  nothing rotates, because a rotated pixel is a smeared one. It costs no
+  JavaScript: it is CSS on `steps(1)`.
 - **Pip is the one exception to "nothing loops forever."** That rule is right
   for interface motion — a progress bar that pulses forever is noise — and
   wrong for a character: something that never moves is an icon, not a
   creature. Pip therefore idles, on a budget:
   - he **blinks** every 6.4 seconds, and only for a fifth of a second;
-  - **airborne he drifts** five pixels; **on the ground he breathes**, 1.8 %.
-    Hovering while standing is what made the first version read as a sticker;
+  - **airborne he bobs** a cell every 1.4 s; **on the ground** he bobs the same
+    cell more slowly. Hovering while standing is what made the first version
+    read as a sticker;
   - the **flame flickers** continuously, because a flame that holds still is a
     drawing of a flame;
   - every Pip on a screen takes a `seed`, so two of them never blink in unison
@@ -105,9 +117,11 @@ Rules:
   asked of a panel gets a penguin standing still rather than a cheerful one.
   Empty states are Pip grounded with the engine off, which is what an empty list
   actually is. Every Pip on a screen takes its own `seed`.
-- Pip is drawn once. `src/lib/pip-art.ts` holds the geometry; the interface
-  renders it as SVG and the shared images draw it on canvas, so the character on
-  a posted card is the same character as the one on the dashboard.
+- Pip is drawn once. `src/lib/pip-pixels.ts` holds the art and `pip-art.ts` the
+  contract; the interface renders it as SVG and the shared images draw it on
+  canvas, so the character on a posted card is the same character as the one on
+  the dashboard. The canvas snaps its scale to whole cells, or every run meets
+  the next on a half pixel and the card looks torn.
 - On the dark share images the shell lifts to `#2B2634`: a black penguin on a
   near-black card is a hole in the image, not a mascot.
 

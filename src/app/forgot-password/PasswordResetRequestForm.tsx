@@ -30,7 +30,7 @@ export function PasswordResetRequestForm({ nextPath }: { nextPath: string }) {
         />
       </label>
       <button
-        className="min-h-11 rounded-xl bg-white px-4 text-[13px] font-bold text-foreground disabled:opacity-60"
+        className="min-h-11 rounded-xl bg-primary px-4 text-[13px] font-bold text-primary-foreground disabled:opacity-60"
         disabled={pending}
         type="submit"
       >
