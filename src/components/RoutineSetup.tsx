@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Pip } from "@/components/brand/Pip";
 import { RepeatPicker } from "@/components/RepeatPicker";
 import { DEFAULT_ROUTINE_KIT, ROUTINE_KIT } from "@/lib/routine-kit";
@@ -42,7 +42,10 @@ function seed(): Row[] {
  * reads; seven lines of "Every day · 06:30–07:00" is a decision anyone can make
  * in five seconds.
  */
+const SEEN_KEY = "orbit-routine-setup-seen";
+
 export function RoutineSetup({ hasRoutines }: { hasRoutines: boolean }) {
+  const panel = useRef<HTMLDetailsElement>(null);
   const [rows, setRows] = useState<Row[]>(seed);
   const [notice, setNotice] = useState<{ error: boolean; text: string } | null>(
     null,
@@ -93,10 +96,39 @@ export function RoutineSetup({ hasRoutines }: { hasRoutines: boolean }) {
     });
   };
 
+  // "Set up your week once" meant once, and it was reopening on every visit
+  // for as long as the week stayed empty — which is exactly the stretch when
+  // it is most in the way.
+  useEffect(() => {
+    if (hasRoutines) return;
+    try {
+      if (window.localStorage.getItem(SEEN_KEY) && panel.current) {
+        panel.current.open = false;
+      }
+    } catch {
+      // No storage, no memory: it opens again, which is the old behaviour.
+    }
+  }, [hasRoutines]);
+
   return (
     <details
       className="settle-in overflow-hidden rounded-2xl border border-border bg-card"
+      // Server-rendered open while there are no routines, then closed on mount
+      // if this device has already dismissed it. Done to the DOM rather than to
+      // state on purpose: reading the flag during render would either mismatch
+      // hydration or need an effect that sets state, and both are worse than
+      // one property assignment.
       open={!hasRoutines}
+      onToggle={(event) => {
+        if (event.currentTarget.open) return;
+        try {
+          window.localStorage.setItem(SEEN_KEY, "1");
+        } catch {
+          // A browser that refuses storage just gets the panel again. That is
+          // a smaller problem than a crash on a private tab.
+        }
+      }}
+      ref={panel}
     >
       <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 py-3 transition-colors hover:bg-muted">
         <Pip burn={0.3} className="h-9 w-auto shrink-0" mood="grounded" seed={12} size={36} />
