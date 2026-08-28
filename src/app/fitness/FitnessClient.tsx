@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { Pip } from "@/components/brand/Pip";
@@ -20,6 +20,7 @@ import {
   qualityLabels,
   sportDescriptions,
   sportLabels,
+  weekdayOrder,
 } from "@/lib/fitness";
 import {
   resetFitnessPlanAction,
@@ -49,6 +50,7 @@ export function FitnessClient({
   weeklyPlan: WeeklyPlanDay[];
 }) {
   const [localPlan, setLocalPlan] = useState(weeklyPlan);
+  const router = useRouter();
   const searchParams = useSearchParams();
   // Which screen this is. Read from the URL rather than held in state, so each
   // one has its own address and the phone's Back button does what it looks
@@ -56,7 +58,12 @@ export function FitnessClient({
   // screen meant none of them.
   const view = fitnessView(searchParams.get("view"));
   const [mode, setMode] = useState<"plan" | "review">("review");
-  const [openDayId, setOpenDayId] = useState<WeekdayId | null>(null);
+  // Seeded from the URL so a tap on the week strip arrives with that day
+  // already open, rather than on a list you then have to find it in.
+  const [openDayId, setOpenDayId] = useState<WeekdayId | null>(() => {
+    const asked = searchParams.get("day");
+    return isWeekdayId(asked) ? asked : null;
+  });
   const [pendingDayId, setPendingDayId] = useState<WeekdayId | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [resetNotice, setResetNotice] = useState("");
@@ -85,9 +92,6 @@ export function FitnessClient({
   const completedSessionsCount = localPlan.filter(
     (day) => day.log.completed,
   ).length;
-  const completionPercent = trainingDaysCount
-    ? Math.round((completedSessionsCount / trainingDaysCount) * 100)
-    : 0;
   const completedDuration = localPlan
     .filter((day) => day.log.completed)
     .reduce((total, day) => total + day.log.durationMinutes, 0);
@@ -238,9 +242,8 @@ export function FitnessClient({
                 ? "How to train it"
                 : "Today’s training"}
           </h1>
-          <p className="mt-3 text-[14px] text-muted-foreground">
-            {completedSessionsCount} of {trainingDaysCount} planned sessions complete
-          </p>
+          {/* The week card says "2/5 done" three centimetres below this, and
+              saying it twice made the top of the page feel like padding. */}
         </div>
         </div>
         <div className={`flex flex-wrap items-center gap-3 ${view === "week" ? "" : "hidden"}`}>
@@ -298,77 +301,113 @@ export function FitnessClient({
       </header>
 
       {view === "today" ? (
-      <section className="grid gap-5 xl:grid-cols-12">
-        <article className={`rounded-2xl bg-card shadow-[var(--shadow-card)] relative overflow-hidden rounded-2xl p-6 sm:p-8 xl:col-span-8 ${todayDay.log.completed ? "completion-celebrate" : ""}`}>
-          <div className="absolute inset-y-0 left-0 w-1 bg-primary" />
-          <div className="grid gap-7 md:grid-cols-[1.35fr_1fr] md:items-end">
-            <div>
-              <div className="flex items-center gap-3">
-                <p className="label-caps text-fitness-ink">Today · {todayDay.label}</p>
-                <StatusBadge day={todayDay} compact />
-              </div>
-              <h2 className="mt-5 text-[36px] font-semibold leading-[42px] text-foreground sm:text-[46px] sm:leading-[52px]">
-                {todayTraining.title}
-              </h2>
-              <p className="mt-3 max-w-2xl text-[14px] leading-6 text-muted-foreground">
-                {todayTraining.focus}
-              </p>
-              <p className="mt-2 text-[13px] font-semibold text-primary">
-                {todayDay.sport === "rest"
-                  ? "Recovery day — protect the space."
-                  : todayDay.log.completed
-                    ? "Workout logged — today’s training is complete."
-                    : `${todayDay.plannedDurationMinutes} minutes planned today.`}
-              </p>
-              {todayDay.sport !== "rest" ? (
-                <button
-                  className="mt-5 min-h-11 rounded-xl bg-primary px-5 text-[13px] font-bold text-primary-foreground"
-                  onClick={() => setOpenDayId(todayDay.id)}
-                  type="button"
-                >
-                  {todayDay.log.completed ? "Review session" : "Log today’s session"}
-                </button>
-              ) : (
-                <button
-                  className="mt-5 min-h-11 rounded-xl border border-input bg-[var(--wash)] px-5 text-[13px] font-semibold text-foreground"
-                  onClick={() => document.getElementById("weekly-plan")?.scrollIntoView({ behavior: "smooth" })}
-                  type="button"
-                >
-                  Plan the week
-                </button>
-              )}
-            </div>
-            <div className="border-t border-[var(--hairline)] pt-5 md:border-l md:border-t-0 md:pl-7 md:pt-0">
-              <p className="label-caps text-tasks">Main focus</p>
-              <p className="mt-3 text-[18px] font-semibold leading-6 text-foreground">
-                {todayGuidance.headline}
-              </p>
-              <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
-                {todayGuidance.intent}
-              </p>
-            </div>
+      <section className="flex flex-col gap-4">
+        {/* The week, on one line.
+            This used to open with a 46px headline and a paragraph, and the one
+            thing you actually come here to check — which days are done — was
+            three scrolls away in a sidebar. Seven marks answer it before a word
+            is read: filled is done, hollow is still owed, a dash is a rest day,
+            and the ring is today. */}
+        <div className="rounded-2xl bg-card p-4 shadow-[var(--shadow-card)]">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="label-caps text-muted-foreground">This week</p>
+            <p className="metric-value text-[13px] font-bold">
+              {completedSessionsCount}<span className="text-muted-foreground">/{trainingDaysCount} done</span>
+            </p>
           </div>
-        </article>
 
-        <aside className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-2xl p-6 sm:p-8 xl:col-span-4">
-          <div className="flex items-center justify-between gap-6">
-            <div>
-              <p className="label-caps text-finance">Week progress</p>
-              <p className="metric-value mt-3 text-[26px] font-semibold text-foreground">
-                {completedSessionsCount} sessions · {completedDuration} min
-              </p>
-              <p className="mt-2 text-[13px] text-muted-foreground">
-                {Math.max(0, trainingDaysCount - completedSessionsCount)} remaining · {localPlan.filter((day) => day.sport === "rest").length} rest days
-              </p>
+          <ol className="mt-3 grid grid-cols-7 gap-1.5">
+            {localPlan.map((day) => {
+              const isToday = day.id === todayDay.id;
+              const resting = day.sport === "rest";
+              const done = day.log.completed;
+              return (
+                <li key={day.id}>
+                  <button
+                    aria-label={`${day.label}: ${
+                      resting ? "rest day" : done ? "done" : "not done yet"
+                    }`}
+                    className={`flex w-full flex-col items-center gap-1.5 rounded-xl py-1.5 transition-colors hover:bg-muted ${
+                      isToday ? "bg-muted" : ""
+                    }`}
+                    onClick={() => {
+                      setNotice(null);
+                      router.push(`/fitness?view=week&day=${day.id}`);
+                    }}
+                    type="button"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`grid size-7 place-items-center rounded-full text-[12px] font-bold ${
+                        done
+                          ? "bg-fitness text-white"
+                          : resting
+                            ? "border border-dashed border-border text-muted-foreground"
+                            : "border-2 border-fitness/45 text-fitness-ink"
+                      } ${isToday ? "ring-2 ring-fitness ring-offset-2 ring-offset-[var(--card)]" : ""}`}
+                    >
+                      {done ? "✓" : resting ? "–" : ""}
+                    </span>
+                    <span
+                      className={`text-[10px] font-semibold uppercase tracking-[0.06em] ${
+                        isToday ? "text-foreground" : "text-muted-foreground"
+                      }`}
+                    >
+                      {day.shortLabel}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+
+          <p className="mt-3 border-t border-[var(--hairline)] pt-3 text-[12px] text-muted-foreground">
+            {completedDuration} min logged ·{" "}
+            {Math.max(0, trainingDaysCount - completedSessionsCount)} left ·{" "}
+            {localPlan.filter((day) => day.sport === "rest").length} rest days
+          </p>
+        </div>
+
+        {/* Today, as one row rather than an essay: what it is, how long, and
+            the single control that changes it. */}
+        <article
+          className={`rounded-2xl p-4 shadow-[var(--shadow-card)] ${
+            todayDay.log.completed
+              ? "bg-fitness-tint"
+              : todayDay.sport === "rest"
+                ? "bg-muted"
+                : "bg-card"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="label-caps text-fitness-ink">Today · {todayDay.label}</p>
+            <StatusBadge day={todayDay} compact />
+          </div>
+
+          <h2 className="mt-2 text-[22px] font-bold leading-7 tracking-[-0.02em] text-foreground">
+            {todayTraining.title}
+          </h2>
+          <p className="mt-1 text-[13px] leading-5 text-muted-foreground">
+            {todayDay.sport === "rest"
+              ? "Recovery day — protect the space."
+              : `${todayDay.plannedDurationMinutes} min · ${todayGuidance.headline}`}
+          </p>
+
+          {todayDay.sport !== "rest" ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                className="min-h-11 flex-1 rounded-xl bg-fitness px-5 text-[13px] font-bold text-white transition-colors hover:bg-fitness/90"
+                onClick={() => {
+                  setNotice(null);
+                  router.push(`/fitness?view=week&day=${todayDay.id}`);
+                }}
+                type="button"
+              >
+                {todayDay.log.completed ? "Review session" : "Log today\u2019s session"}
+              </button>
             </div>
-            <ProgressRing value={completionPercent} />
-          </div>
-          <div className="mt-7 grid grid-cols-3 border-t border-[var(--hairline)] pt-5">
-            <Metric label="Gym" value={localPlan.filter((day) => day.sport === "gym").length} tone="text-primary" />
-            <Metric label="Rest" value={localPlan.filter((day) => day.sport === "rest").length} tone="text-muted-foreground" />
-            <Metric label="Done" value={completedSessionsCount} tone="text-finance" />
-          </div>
-        </aside>
+          ) : null}
+        </article>
       </section>
       ) : null}
 
@@ -689,32 +728,6 @@ function StatusBadge({
   );
 }
 
-function ProgressRing({ value }: { value: number }) {
-  const circumference = 251.2;
-  const offset = circumference - (circumference * value) / 100;
-
-  return (
-    <div className="relative h-24 w-24 shrink-0">
-      <svg aria-label={`${value}% complete`} className="h-full w-full -rotate-90" role="img" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" fill="none" r="40" stroke="var(--secondary)" strokeWidth="9" />
-        <circle
-          cx="50"
-          cy="50"
-          fill="none"
-          r="40"
-          stroke="var(--primary)"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          strokeWidth="9"
-        />
-      </svg>
-      <span className="absolute inset-0 grid place-items-center text-[20px] font-semibold text-foreground">
-        {value}%
-      </span>
-    </div>
-  );
-}
 
 function Field({ children, label }: { children: ReactNode; label: string }) {
   return (
@@ -725,14 +738,6 @@ function Field({ children, label }: { children: ReactNode; label: string }) {
   );
 }
 
-function Metric({ label, tone, value }: { label: string; tone: string; value: number }) {
-  return (
-    <div className="border-r border-[var(--hairline)] px-3 last:border-r-0 first:pl-0 last:pr-0">
-      <p className="label-caps text-muted-foreground">{label}</p>
-      <p className={`mt-2 text-[26px] font-semibold ${tone}`}>{value}</p>
-    </div>
-  );
-}
 
 function TrainingInfoCard({
   label,
@@ -809,4 +814,8 @@ function FitnessHub() {
       ))}
     </nav>
   );
+}
+
+function isWeekdayId(value: string | null): value is WeekdayId {
+  return value !== null && weekdayOrder.includes(value as WeekdayId);
 }
