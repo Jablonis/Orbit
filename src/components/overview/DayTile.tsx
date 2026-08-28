@@ -61,6 +61,7 @@ export function DayTile({
             <Pip
               burn={pip.burn}
               className="h-7 w-auto shrink-0"
+              kit={pip.kit}
               mood={pip.mood}
               seed={seed}
               size={28}

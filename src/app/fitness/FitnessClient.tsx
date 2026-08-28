@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { Pip } from "@/components/brand/Pip";
 import { getTrainingGuidance } from "@/lib/training-guidance";
-import { getPanelPip } from "@/lib/mascot";
+import { PIP_KITS, getPanelPip } from "@/lib/mascot";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   SportType,
@@ -197,6 +197,7 @@ export function FitnessClient({
     completedSessionsCount,
     trainingDaysCount,
     "this training week",
+    PIP_KITS.fitness,
   );
 
   return (
@@ -206,6 +207,7 @@ export function FitnessClient({
           <Pip
             burn={weekPip.burn}
             className="h-12 w-auto shrink-0 sm:h-16"
+            kit={weekPip.kit}
             mood={weekPip.mood}
             seed={16}
             size={64}

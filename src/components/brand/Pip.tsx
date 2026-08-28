@@ -7,7 +7,8 @@ import {
   getPipArt,
   isPipStanding,
 } from "@/lib/pip-art";
-import { getPipFace } from "@/lib/pip-pixels";
+import type { PipKit } from "@/lib/pip-pixels";
+import { BARE_KIT, pipBlinks } from "@/lib/pip-pixels";
 
 /**
  * Pip: a penguin in orbit.
@@ -43,6 +44,7 @@ const token: Record<PipColor, string> = {
 export function Pip({
   burn = 0.5,
   className = "",
+  kit = BARE_KIT,
   mood = "cruising",
   seed = 0,
   size = 64,
@@ -51,6 +53,8 @@ export function Pip({
   /** 0–1. How much engine is showing. */
   burn?: number;
   className?: string;
+  /** What he is carrying, so a panel gets a character and not a repeated logo. */
+  kit?: PipKit;
   mood?: PipMood;
   /** Offsets the idle so two Pips on one screen do not blink in unison. */
   seed?: number;
@@ -62,7 +66,7 @@ export function Pip({
   // hovering at the same time is what made him read as a sticker.
   const airborne = !isPipStanding(mood);
   // A face that is already shut or already delighted has nothing to blink.
-  const blinks = getPipFace(mood) === "open";
+  const blinks = pipBlinks(mood);
 
   return (
     <svg
@@ -83,12 +87,12 @@ export function Pip({
       >
         <Frame
           className={blinks ? "pip-frame pip-frame--open" : undefined}
-          shapes={getPipArt(mood, burn).shapes}
+          shapes={getPipArt(mood, burn, false, kit).shapes}
         />
         {blinks ? (
           <Frame
             className="pip-frame pip-frame--shut"
-            shapes={getPipArt(mood, burn, true).shapes}
+            shapes={getPipArt(mood, burn, true, kit).shapes}
           />
         ) : null}
       </g>

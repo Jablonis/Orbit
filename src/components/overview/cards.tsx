@@ -15,7 +15,7 @@ import { CountUp } from "@/components/CountUp";
 import { Pip } from "@/components/brand/Pip";
 import { ClimbCurve } from "@/components/ClimbCurve";
 import type { PanelPip } from "@/lib/mascot";
-import { getClimb, getPanelPip, getPipState } from "@/lib/mascot";
+import { PIP_KITS, getClimb, getPanelPip, getPipState } from "@/lib/mascot";
 import { getRingsSummary } from "@/lib/activity-rings";
 import { getAscent } from "@/lib/ascent";
 import { getClosingLines } from "@/lib/progression";
@@ -82,6 +82,7 @@ export function CardHeading({
       {pip ? (
         <Pip
           burn={pip.burn}
+          kit={pip.kit}
           className="-mt-1 shrink-0"
           mood={pip.mood}
           seed={seed}
@@ -338,6 +339,7 @@ export function TasksCard({
           taskStats.completedTasksCount,
           taskStats.completedTasksCount + taskStats.activeTasksCount,
           "tasks",
+          PIP_KITS.tasks,
         )}
         seed={6}
         title={
@@ -465,7 +467,12 @@ export function FitnessCard({
             ? "Fitness today"
             : `Fitness today · ${training.day.plannedDurationMinutes} min`
         }
-        pip={getPanelPip(done ? 1 : 0, resting ? 0 : 1, "training")}
+        pip={getPanelPip(
+          done ? 1 : 0,
+          resting ? 0 : 1,
+          "training",
+          training.day.sport === "tennis" ? PIP_KITS.tennis : PIP_KITS.fitness,
+        )}
         seed={7}
         title={resting ? "Recovery day." : training.title}
       />

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   CLIMB_FLOOR,
+  PIP_KITS,
   formatMultiplier,
   getClimb,
   getPanelPip,
@@ -96,13 +97,29 @@ test("the multiplier prints to two decimals, always", () => {
 });
 
 test("a panel's Pip climbs the same ladder the day does", () => {
-  assert.equal(getPanelPip(0, 0).mood, "grounded", "nothing asked, nothing claimed");
+  // Nothing asked is dozing on the pad; asked for four and given none is a
+  // penguin who minds. They used to wear the same face.
+  assert.equal(getPanelPip(0, 0).mood, "asleep", "nothing asked, nothing claimed");
   assert.equal(getPanelPip(0, 4).mood, "grounded");
   assert.equal(getPanelPip(1, 4).mood, "lifting");
   assert.equal(getPanelPip(2, 4).mood, "cruising");
   assert.equal(getPanelPip(4, 5).mood, "soaring");
   assert.equal(getPanelPip(4, 4).mood, "sealed");
   assert.equal(getPanelPip(9, 4).mood, "sealed", "past the ask is still done");
+});
+
+test("a panel's Pip carries the tools of the thing it stands next to", () => {
+  assert.deepEqual(getPanelPip(1, 3, "tasks", PIP_KITS.tasks).kit, {
+    glasses: true,
+    prop: "notes",
+  });
+  assert.deepEqual(getPanelPip(1, 3, "training", PIP_KITS.fitness).kit, {
+    glasses: false,
+    prop: "dumbbell",
+  });
+  // A panel that names no kit gets the penguin, not a penguin holding a
+  // dumbbell on a page about money.
+  assert.deepEqual(getPanelPip(1, 3).kit, { glasses: false, prop: "none" });
 });
 
 test("a panel's Pip says what he is reacting to", () => {

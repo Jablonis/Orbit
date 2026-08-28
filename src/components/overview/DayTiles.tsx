@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { DayTile } from "@/components/overview/DayTile";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
-import { getPanelPip } from "@/lib/mascot";
+import { PIP_KITS, getPanelPip } from "@/lib/mascot";
 import type { DailyRingMetric } from "@/lib/dashboard";
 import type { TodayTraining } from "@/lib/fitness";
 import { getTaskStats } from "@/lib/tasks";
@@ -47,7 +47,12 @@ export function DayTiles({
         }
         eyebrow="Tasks"
         meta={totalTasks > 0 ? `${taskStats.completedTasksCount}/${totalTasks}` : undefined}
-        pip={getPanelPip(taskStats.completedTasksCount, totalTasks, "tasks")}
+        pip={getPanelPip(
+          taskStats.completedTasksCount,
+          totalTasks,
+          "tasks",
+          PIP_KITS.tasks,
+        )}
         progress={totalTasks > 0 ? taskStats.completedTasksCount / totalTasks : 0}
         seed={6}
         title={
@@ -88,7 +93,12 @@ export function DayTiles({
         eyebrow={
           resting ? "Fitness" : `Fitness · ${training.day.plannedDurationMinutes} min`
         }
-        pip={getPanelPip(trained ? 1 : 0, resting ? 0 : 1, "training")}
+        pip={getPanelPip(
+          trained ? 1 : 0,
+          resting ? 0 : 1,
+          "training",
+          training.day.sport === "tennis" ? PIP_KITS.tennis : PIP_KITS.fitness,
+        )}
         progress={resting ? null : trained ? 1 : 0}
         seed={7}
         title={resting ? "Recovery day." : training.title}
@@ -105,7 +115,11 @@ export function DayTiles({
         }
         eyebrow="Habits"
         meta={habits.total > 0 ? `${habits.completed}/${habits.total}` : undefined}
-        pip={habits.total > 0 ? getPanelPip(habits.completed, habits.total, "habits") : undefined}
+        pip={
+          habits.total > 0
+            ? getPanelPip(habits.completed, habits.total, "habits", PIP_KITS.habits)
+            : undefined
+        }
         progress={habits.total > 0 ? habits.completed / habits.total : null}
         seed={8}
         title={

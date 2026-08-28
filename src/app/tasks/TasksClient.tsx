@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Pip } from "@/components/brand/Pip";
-import { getPanelPip } from "@/lib/mascot";
+import { PIP_KITS, getPanelPip } from "@/lib/mascot";
 import { RepeatPicker } from "@/components/RepeatPicker";
 import { RoutineSetup } from "@/components/RoutineSetup";
 import { EmptyState } from "@/components/EmptyState";
@@ -317,6 +317,7 @@ export function TasksClient({
     stats.completedTasksCount,
     stats.completedTasksCount + stats.activeTasksCount,
     "today's queue",
+    PIP_KITS.tasks,
   );
 
   return (
@@ -326,6 +327,7 @@ export function TasksClient({
           <Pip
             burn={queuePip.burn}
             className="h-12 w-auto shrink-0 sm:h-16"
+            kit={queuePip.kit}
             mood={queuePip.mood}
             seed={17}
             size={64}

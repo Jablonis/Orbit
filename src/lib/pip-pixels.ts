@@ -35,9 +35,12 @@ const INK: Record<string, { fill: PipColor; opacity?: number }> = {
   G: { fill: "plum", opacity: 0.16 },
   H: { fill: "paper", opacity: 0.75 },
   K: { fill: "ink" },
+  M: { fill: "ink" },
   O: { fill: "beak", opacity: 0.85 },
   P: { fill: "plum" },
+  S: { fill: "plum" },
   W: { fill: "paper" },
+  Y: { fill: "paper" },
 };
 
 /** Eyes open, the everyday face. */
@@ -70,6 +73,30 @@ const HEAD_SHUT = [
   ".PGKKWWWWWWWWKKGP.",
   ".PGKWWWWWWWWWWKGP.",
   ".PGKWEEEWWEEEWKGP.",
+  ".PGKWWWWBBWWWWKGP.",
+  "..PGKWWWBBWWWKGP..",
+  "..PPGKKWWWWKKGPP..",
+  "...PPPPPPPPPPPP...",
+];
+
+/**
+ * Downcast: the brows fall outward and the eyes drop.
+ *
+ * Two pixels, and it is a different creature. This is the whole argument for
+ * the grid — the vector Pip could only ever lean, so nothing asked of you and
+ * nothing done about it wore the same face as a day going fine.
+ */
+const HEAD_SAD = [
+  "..................",
+  "......PPPPPP......",
+  "....PPGGGGGGPP....",
+  "...PGGHHGGGGGGP...",
+  "..PGGHKKKKKKGGGP..",
+  "..PGGKKKKKKKKGGP..",
+  ".PGGKKWWWWWWKKGGP.",
+  ".PGKKWWWWWWWWKKGP.",
+  ".PGKWEWWWWWWEWKGP.",
+  ".PGKWWEEWWEEWWKGP.",
   ".PGKWWWWBBWWWWKGP.",
   "..PGKWWWBBWWWKGP..",
   "..PPGKKWWWWKKGPP..",
@@ -155,7 +182,100 @@ const FLAMES = [
 ];
 
 export type PipPose = "cheer" | "fly" | "stand";
-export type PipFace = "happy" | "open" | "shut";
+export type PipFace = "happy" | "open" | "sad" | "shut";
+
+/**
+ * What Pip is carrying.
+ *
+ * A penguin who looks identical on every panel is a sticker. Give him the tool
+ * of the thing he is standing next to and each panel gets a character rather
+ * than a repeated logo — and the tool says which panel it is faster than the
+ * label above it does.
+ */
+export type PipProp = "book" | "dumbbell" | "none" | "notes" | "racket";
+
+export type PipKit = {
+  /** Reading glasses, inside the helmet. */
+  glasses: boolean;
+  prop: PipProp;
+};
+
+export const BARE_KIT: PipKit = { glasses: false, prop: "none" };
+
+/**
+ * Reading glasses: two posts, a bridge, and a rim under each eye.
+ *
+ * Drawn in plum rather than ink, and as two rings with the eye as the pupil
+ * inside. The face is only ten white cells across and the eyes take four of
+ * them: an ink frame fills what is left and the whole head reads as one black
+ * band — a bandit's mask, not spectacles. Colour is what separates the frame
+ * from the eye at this size, not space, because there is no space.
+ */
+const GLASSES: Overlay = {
+  rows: [
+    ".....SSSSSSSS.....",
+    ".....S..SS..S.....",
+    ".....S..SS..S.....",
+    ".....SSS..SSS.....",
+  ],
+  top: 7,
+};
+
+type Overlay = { rows: string[]; top: number };
+
+/**
+ * Held things, drawn into the margin beside the body.
+ *
+ * They live in columns the poses leave empty on purpose: a prop that overwrote
+ * a flipper would read as an amputation at 28 pixels tall. Left hand carries
+ * paper, right hand carries metal.
+ */
+const PROPS: Record<Exclude<PipProp, "none">, Overlay> = {
+  // Plum covers, white pages. Paper needs an edge of its own or it disappears
+  // into the card behind it, which is how the first notebook came out invisible.
+  book: {
+    rows: [
+      "PPPP..............",
+      "PYYP..............",
+      "PPYP..............",
+      "PYYP..............",
+      "PPPP..............",
+    ],
+    top: 19,
+  },
+  dumbbell: {
+    rows: [
+      "..............MMM.",
+      "..............MMM.",
+      "...............M..",
+      "...............M..",
+      "..............MMM.",
+      "..............MMM.",
+    ],
+    top: 19,
+  },
+  notes: {
+    rows: [
+      "MMMM..............",
+      "MYYM..............",
+      "MMYM..............",
+      "MYYM..............",
+      "MMMM..............",
+    ],
+    top: 19,
+  },
+  racket: {
+    rows: [
+      "..............MMMM",
+      "..............M..M",
+      "..............M..M",
+      "..............MMMM",
+      "...............M..",
+      "...............M..",
+    ],
+    top: 19,
+  },
+};
 
 const pose: Record<PipMood, PipPose> = {
   asleep: "stand",
@@ -169,7 +289,8 @@ const pose: Record<PipMood, PipPose> = {
 const face: Record<PipMood, PipFace> = {
   asleep: "shut",
   cruising: "open",
-  grounded: "open",
+  // Something was asked and none of it is done. That is not neutral.
+  grounded: "sad",
   lifting: "open",
   sealed: "happy",
   soaring: "happy",
@@ -178,6 +299,7 @@ const face: Record<PipMood, PipFace> = {
 const heads: Record<PipFace, string[]> = {
   happy: HEAD_HAPPY,
   open: HEAD_OPEN,
+  sad: HEAD_SAD,
   shut: HEAD_SHUT,
 };
 
@@ -195,6 +317,23 @@ export function getPipFace(mood: PipMood) {
   return face[mood];
 }
 
+/** Whether this mood has eyes to shut. A shut or delighted face has none. */
+export function pipBlinks(mood: PipMood) {
+  return face[mood] === "open" || face[mood] === "sad";
+}
+
+/** Paints an overlay over whatever the frame already had in those cells. */
+function paint(rows: string[], overlay: Overlay) {
+  return rows.map((row, index) => {
+    const line = overlay.rows[index - overlay.top];
+    if (!line) return row;
+    return row
+      .split("")
+      .map((cell, column) => (line[column] === "." ? cell : line[column]))
+      .join("");
+  });
+}
+
 /**
  * One frame as a grid of characters, ready to be painted.
  *
@@ -205,9 +344,13 @@ export function getPipFrame(
   mood: PipMood,
   burn = 0.5,
   blink = false,
+  kit: PipKit = BARE_KIT,
 ): string[] {
-  const shownFace = blink && face[mood] === "open" ? "shut" : face[mood];
-  const rows = [...heads[shownFace], ...bodies[pose[mood]]];
+  const shownFace = blink && pipBlinks(mood) ? "shut" : face[mood];
+  let rows = [...heads[shownFace], ...bodies[pose[mood]]];
+
+  if (kit.glasses) rows = paint(rows, GLASSES);
+  if (kit.prop !== "none") rows = paint(rows, PROPS[kit.prop]);
 
   if (pose[mood] === "stand") return rows;
 

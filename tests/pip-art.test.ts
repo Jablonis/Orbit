@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getWeekPipMood, pipMoods } from "../src/lib/mascot";
+import { PIP_KITS, getWeekPipMood, pipMoods } from "../src/lib/mascot";
 import {
   PIP_HEIGHT,
   PIP_WIDTH,
@@ -11,8 +11,10 @@ import {
   GRID_HEIGHT,
   GRID_WIDTH,
   PIXEL,
+  getPipFace,
   getPipFrame,
   getPipPose,
+  pipBlinks,
 } from "../src/lib/pip-pixels";
 
 const colours = new Set(["beak", "flame", "ink", "paper", "plum"]);
@@ -120,4 +122,41 @@ test("a week is judged on days held, the same as the recap", () => {
 
 test("a best week is sealed however few days it took", () => {
   assert.equal(getWeekPipMood({ daysInOrbit: 2, isBestWeek: true }), "sealed");
+});
+
+test("a kit stays on the grid and never eats the penguin", () => {
+  const bare = getPipFrame("grounded", 0.5);
+
+  for (const kit of [PIP_KITS.tasks, PIP_KITS.fitness, PIP_KITS.tennis, PIP_KITS.habits]) {
+    const dressed = getPipFrame("grounded", 0.5, false, kit);
+
+    assert.equal(dressed.length, GRID_HEIGHT);
+    for (const row of dressed) assert.equal(row.length, GRID_WIDTH);
+    assert.notDeepEqual(dressed, bare, "a kit that changes nothing is not a kit");
+
+    // A prop lives in the margin. Every cell the bare penguin painted is still
+    // painted — the glasses are the one thing allowed to sit on top of him.
+    const bodyOnly = kit.glasses ? dressed.slice(14) : dressed;
+    const bareBody = kit.glasses ? bare.slice(14) : bare;
+    bodyOnly.forEach((row, y) => {
+      row.split("").forEach((cell, x) => {
+        const under = bareBody[y][x];
+        if (under !== ".") {
+          assert.equal(cell, under, `a prop overwrote the body at ${x},${y}`);
+        }
+      });
+    });
+  }
+});
+
+test("a mood with eyes has something to blink, and a shut one does not", () => {
+  assert.equal(pipBlinks("grounded"), true, "the sad face still blinks");
+  assert.equal(pipBlinks("cruising"), true);
+  assert.equal(pipBlinks("asleep"), false);
+  assert.equal(pipBlinks("sealed"), false);
+});
+
+test("nothing asked and nothing done do not wear the same face", () => {
+  assert.notEqual(getPipFace("asleep"), getPipFace("grounded"));
+  assert.equal(getPipFace("grounded"), "sad");
 });

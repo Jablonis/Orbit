@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Pip } from "@/components/brand/Pip";
-import { getPanelPip } from "@/lib/mascot";
+import { PIP_KITS, getPanelPip } from "@/lib/mascot";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { RepeatPicker } from "@/components/RepeatPicker";
 import { TintPanel } from "@/components/ui/tint-panel";
@@ -53,7 +53,12 @@ export function HabitsClient({
   const done = new Set(doneToday);
   const dueToday = habits.filter((habit) => isHabitDueOn(habit, today, timeZone));
   const keptToday = dueToday.filter((habit) => done.has(habit.id)).length;
-  const todayPip = getPanelPip(keptToday, dueToday.length, "habits");
+  const todayPip = getPanelPip(
+    keptToday,
+    dueToday.length,
+    "habits",
+    PIP_KITS.habits,
+  );
   const message = state.message || archiveState.message;
   const failed = !state.ok || !archiveState.ok;
 
@@ -85,6 +90,7 @@ export function HabitsClient({
             <Pip
               burn={todayPip.burn}
               className="h-9 w-auto"
+              kit={todayPip.kit}
               mood={todayPip.mood}
               seed={11}
               size={36}

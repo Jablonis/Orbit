@@ -17,7 +17,13 @@
  */
 
 import type { PipMood } from "@/lib/mascot";
-import { frameToShapes, getPipFrame, getPipPose } from "@/lib/pip-pixels";
+import type { PipKit } from "@/lib/pip-pixels";
+import {
+  BARE_KIT,
+  frameToShapes,
+  getPipFrame,
+  getPipPose,
+} from "@/lib/pip-pixels";
 
 export const PIP_WIDTH = 72;
 export const PIP_HEIGHT = 104;
@@ -71,10 +77,15 @@ export function isPipStanding(mood: PipMood) {
  * is what leaving looks like, not what standing looks like. `blink` shuts the
  * eyes of a face that has them, which is how the interface animates one.
  */
-export function getPipArt(mood: PipMood, burn = 0.5, blink = false): PipArt {
+export function getPipArt(
+  mood: PipMood,
+  burn = 0.5,
+  blink = false,
+  kit: PipKit = BARE_KIT,
+): PipArt {
   return {
     shapes: frameToShapes(
-      getPipFrame(mood, Math.max(0, Math.min(1, burn)), blink),
+      getPipFrame(mood, Math.max(0, Math.min(1, burn)), blink, kit),
     ),
     tilt: 0,
   };
