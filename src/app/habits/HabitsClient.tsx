@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { ActionToast } from "@/components/ActionToast";
 import { Pip } from "@/components/brand/Pip";
 import { PIP_KITS, getPanelPip } from "@/lib/mascot";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
@@ -62,8 +63,8 @@ export function HabitsClient({
     "habits",
     PIP_KITS.habits,
   );
-  const message = trouble || state.message || archiveState.message;
-  const failed = Boolean(trouble) || !state.ok || !archiveState.ok;
+  const message = state.message || archiveState.message;
+  const failed = !state.ok || !archiveState.ok;
 
   const startEdit = (habit: Habit) => {
     setEditing(habit);
@@ -106,15 +107,15 @@ export function HabitsClient({
         ) : null}
       </header>
 
-      {message ? (
-        <p
-          className={`text-[13px] font-semibold ${
-            failed ? "text-destructive" : "text-muted-foreground"
-          }`}
-          role="status"
-        >
-          {message}
+      {/* Trouble reading the list is a fact about the page and stays on it;
+          the outcome of something you just did is a moment and gets a toast. */}
+      {trouble ? (
+        <p className="text-[13px] font-semibold text-destructive" role="status">
+          {trouble}
         </p>
+      ) : null}
+      {message && !trouble ? (
+        <ActionToast message={message} tone={failed ? "error" : "success"} />
       ) : null}
 
       {/* Today, ticked. A habit that is not asked for today is not shown here

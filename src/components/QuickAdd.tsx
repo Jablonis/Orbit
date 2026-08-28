@@ -18,6 +18,21 @@ import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { openOrbitSettingsEvent } from "@/components/OpenDashboardSettingsButton";
 import { openQuickAddEvent } from "@/components/OpenQuickAddButton";
 
+/**
+ * Whether opening this should also open a keyboard.
+ *
+ * On a mouse it should: the palette is a keyboard tool and typing is why it is
+ * open. On a phone it should not — the keyboard covers half the screen before
+ * anything has been read, and it arrived uninvited on every single tap of the
+ * plus button. A touch user asks for the keyboard by tapping the field.
+ */
+function wantsKeyboard() {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(pointer: fine)").matches
+  );
+}
+
 type SearchResult = {
   detail: string;
   href: string;
@@ -122,6 +137,7 @@ export function QuickAdd() {
     if (!node) return;
     if (open && !node.open) {
       node.showModal();
+      if (!wantsKeyboard()) return;
       const frame = window.requestAnimationFrame(() => searchInput.current?.focus());
       return () => window.cancelAnimationFrame(frame);
     }
@@ -129,7 +145,7 @@ export function QuickAdd() {
   }, [open]);
 
   useEffect(() => {
-    if (!open || view !== "task") return;
+    if (!open || view !== "task" || !wantsKeyboard()) return;
     const frame = window.requestAnimationFrame(() => taskTitleInput.current?.focus());
     return () => window.cancelAnimationFrame(frame);
   }, [open, view]);

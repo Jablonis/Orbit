@@ -1142,3 +1142,19 @@
     animation: none;
   }
 }
+
+/* No zoom on focus.
+   Safari zooms the page whenever a focused control's text is under 16px, and
+   the design sets 13–14px everywhere for density. On a phone that meant every
+   tap on a field threw the layout sideways and left it there. Pinch zoom stays
+   available — disabling it is not a fix, it is a different bug — so the type
+   grows instead, on touch pointers only, where the density was never doing any
+   work anyway. */
+@media (pointer: coarse) {
+  .field-input,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
