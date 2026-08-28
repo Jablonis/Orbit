@@ -30,11 +30,39 @@ test("every interactive route stays dynamic, because the CSP nonce demands it", 
     "src/app/finance/page.tsx",
     "src/app/login/page.tsx",
     "src/app/crew/page.tsx",
+    "src/app/habits/page.tsx",
   ]) {
     assert.match(
       read(route),
       /export const dynamic = "force-dynamic"/,
       `${route} must opt out of static prerendering`,
+    );
+  }
+});
+
+test("every page behind the login is turned away at the edge, not mid-render", () => {
+  // A page that reaches its own `getAuthenticatedUser` has already flushed a
+  // shell, so the redirect arrives as a client-side one: a flash of empty
+  // chrome, and the destination lost. Adding a route to the app and forgetting
+  // this list is the whole failure mode, so the list is asserted rather than
+  // remembered.
+  const proxy = read("src/lib/supabase/proxy.ts");
+  const listed = proxy
+    .slice(proxy.indexOf("const protectedRoutes = ["))
+    .split("]")[0];
+
+  for (const route of [
+    "/",
+    "/tasks",
+    "/fitness",
+    "/habits",
+    "/finance",
+    "/crew",
+  ]) {
+    assert.match(
+      listed,
+      new RegExp(`"${route}"`),
+      `${route} must be guarded before it renders`,
     );
   }
 });

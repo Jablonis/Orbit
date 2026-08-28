@@ -3,11 +3,24 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSafeReturnPath } from "@/lib/auth-return";
 import { getSupabaseEnv } from "./env";
 
+/**
+ * Routes a signed-out visitor is turned away from here, at the edge.
+ *
+ * Every one of these pages also calls `getAuthenticatedUser`, so the data is
+ * never reachable either way. The difference is what a signed-out visit looks
+ * like: turned away here it is one clean redirect to the login form carrying
+ * where you were going, while a page left off this list renders far enough to
+ * flush its shell before the redirect throws, and the visitor gets a flash of
+ * empty chrome and loses the destination. A route added to the app and not to
+ * this list is the bug — which is what happened to /habits and /crew.
+ */
 const protectedRoutes = [
   "/",
   "/tasks",
   "/fitness",
+  "/habits",
   "/finance",
+  "/crew",
   "/reset-password",
   "/ui-lab",
 ];
