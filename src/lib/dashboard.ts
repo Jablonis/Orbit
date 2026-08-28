@@ -23,8 +23,12 @@ export type DailyRingMetric = {
   total: number;
 };
 
+/**
+ * The day is what you asked of yourself, and money is not that: a month is
+ * either balanced or it is not, and there is nothing to do about it on a
+ * Tuesday. Finance keeps its page; it stopped being a ring.
+ */
 export type DailyRings = {
-  finance: DailyRingMetric;
   fitness: DailyRingMetric;
   tasks: DailyRingMetric;
 };
@@ -59,7 +63,6 @@ export function getDailyRings(
   tasks: Task[],
   completions: TaskCompletion[],
   training: TodayTraining,
-  transactions: FinanceTransaction[],
   today: string,
   timeZone: CalendarPreferences["timeZone"],
 ): DailyRings {
@@ -68,17 +71,9 @@ export function getDailyRings(
   const dailyTasks = getDayTasks(tasks, completions, today, timeZone).filter(
     (entry) => getTaskDayStatus(entry.task, today, timeZone) !== "scheduled",
   );
-  const todayTransactions = transactions.filter(
-    (transaction) => transaction.date === today,
-  );
   const fitnessTotal = training.day.sport === "rest" ? 0 : 1;
 
   return {
-    finance: toRingMetric(
-      todayTransactions.filter((transaction) => transaction.status === "paid")
-        .length,
-      todayTransactions.length,
-    ),
     fitness: toRingMetric(
       fitnessTotal && training.day.log.completed ? 1 : 0,
       fitnessTotal,

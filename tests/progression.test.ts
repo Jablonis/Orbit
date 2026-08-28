@@ -12,7 +12,6 @@ test("setup starts empty and names the first thing to do", () => {
     fitnessConfigured: false,
     hasOrbitDay: false,
     taskCount: 0,
-    transactionCount: 0,
   });
 
   assert.equal(state.done, 0);
@@ -26,10 +25,11 @@ test("setup completes only when every step is done", () => {
     fitnessConfigured: true,
     hasOrbitDay: false,
     taskCount: 3,
-    transactionCount: 12,
   });
-  assert.equal(partial.done, 3);
-  assert.equal(partial.percent, 75);
+  // Three steps now that money is not one of them: money is a ledger, not a
+  // thing you have to do today.
+  assert.equal(partial.done, 2);
+  assert.equal(partial.percent, 67);
   assert.equal(partial.complete, false);
   assert.equal(partial.next?.id, "orbit-day");
 
@@ -37,7 +37,6 @@ test("setup completes only when every step is done", () => {
     fitnessConfigured: true,
     hasOrbitDay: true,
     taskCount: 3,
-    transactionCount: 12,
   });
   assert.equal(full.complete, true);
   assert.equal(full.next, null);
@@ -119,14 +118,13 @@ test("today is only celebrated when it is actually earned", () => {
 
 test("the closing lines name the last mile, nearest ring first", () => {
   const lines = getClosingLines({
-    finance: { completed: 0, percent: 0, total: 3 },
     fitness: { completed: 0, percent: 0, total: 1 },
     tasks: { completed: 5, percent: 71, total: 7 },
   });
 
   assert.deepEqual(
     lines.map((line) => line.system),
-    ["fitness", "tasks", "finance"],
+    ["fitness", "tasks"],
   );
   assert.equal(lines[0].text, "One session from clearing fitness.");
   assert.equal(lines[1].text, "2 tasks from clearing tasks.");
@@ -134,7 +132,6 @@ test("the closing lines name the last mile, nearest ring first", () => {
 
 test("a closed or empty ring has nothing left to say", () => {
   const lines = getClosingLines({
-    finance: { completed: 0, percent: 0, total: 0 },
     fitness: { completed: 1, percent: 100, total: 1 },
     tasks: { completed: 7, percent: 100, total: 7 },
   });

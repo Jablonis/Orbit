@@ -5,7 +5,6 @@ import type { Ascent, AscentSystem } from "@/lib/ascent";
 // Written out rather than composed, so Tailwind can see every class it has to
 // generate.
 const fill: Record<AscentSystem, string> = {
-  finance: "bg-finance",
   fitness: "bg-fitness",
   tasks: "bg-tasks",
 };
@@ -13,13 +12,11 @@ const fill: Record<AscentSystem, string> = {
 // Where each column is actually worked on. A bar this size reads as a control,
 // so it is one: it goes to the page that moves it.
 const href: Record<AscentSystem, string> = {
-  finance: "/finance",
   fitness: "/fitness",
   tasks: "/tasks",
 };
 
 const ink: Record<AscentSystem, string> = {
-  finance: "text-finance-ink",
   fitness: "text-fitness-ink",
   tasks: "text-tasks-ink",
 };

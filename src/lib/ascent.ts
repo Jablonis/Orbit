@@ -16,7 +16,7 @@
 
 import { ORBIT_DAY_SCORE } from "@/lib/momentum";
 
-export type AscentSystem = "finance" | "fitness" | "tasks";
+export type AscentSystem = "fitness" | "tasks";
 
 export type AscentColumn = {
   /** True once this area is done for the day. */

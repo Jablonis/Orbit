@@ -10,7 +10,7 @@ export type SetupStep = {
   detail: string;
   done: boolean;
   href: string;
-  id: "tasks" | "fitness" | "finance" | "orbit-day";
+  id: "tasks" | "fitness" | "orbit-day";
   label: string;
 };
 
@@ -26,12 +26,10 @@ export function getSetupState({
   fitnessConfigured,
   hasOrbitDay,
   taskCount,
-  transactionCount,
 }: {
   fitnessConfigured: boolean;
   hasOrbitDay: boolean;
   taskCount: number;
-  transactionCount: number;
 }): SetupState {
   const steps: SetupStep[] = [
     {
@@ -47,13 +45,6 @@ export function getSetupState({
       href: "/fitness",
       id: "fitness",
       label: "Set your training week",
-    },
-    {
-      detail: "Import a statement, or add one payment by hand.",
-      done: transactionCount > 0,
-      href: "/finance",
-      id: "finance",
-      label: "Bring in your money",
     },
     {
       detail: `Finish a day at ${ORBIT_DAY_SCORE}% or better and the climb starts.`,
@@ -186,12 +177,11 @@ export type RingProgress = {
 
 export type ClosingLine = {
   remaining: number;
-  system: "tasks" | "fitness" | "finance";
+  system: "tasks" | "fitness";
   text: string;
 };
 
 const systemNoun: Record<ClosingLine["system"], [string, string]> = {
-  finance: ["payment", "payments"],
   fitness: ["session", "sessions"],
   tasks: ["task", "tasks"],
 };
@@ -201,7 +191,6 @@ const systemNoun: Record<ClosingLine["system"], [string, string]> = {
  * what makes it worth walking — "one task" moves people, "72%" does not.
  */
 export function getClosingLines(rings: {
-  finance: RingProgress;
   fitness: RingProgress;
   tasks: RingProgress;
 }): ClosingLine[] {

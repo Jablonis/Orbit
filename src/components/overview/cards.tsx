@@ -26,8 +26,6 @@ import type {
   WeeklyReview,
   getDailyRings,
 } from "@/lib/dashboard";
-import { formatCurrency, getFinanceSummary } from "@/lib/finance";
-import { getPinnedFinanceMetric } from "@/lib/finance-metric";
 import { getTrainingGuidance } from "@/lib/training-guidance";
 import type {
   GhostRace,
@@ -120,7 +118,6 @@ export function RingsCard({
     areas: [
       { ...dailyRings.tasks, label: "Tasks", system: "tasks" as const },
       { ...dailyRings.fitness, label: "Fitness", system: "fitness" as const },
-      { ...dailyRings.finance, label: "Finance", system: "finance" as const },
     ],
     todayScore: todayScore ?? null,
   });
@@ -215,7 +212,9 @@ export function MomentumCard({
         title={holdLine}
       />
 
-      <div className="grid gap-6 sm:grid-cols-[minmax(0,160px)_minmax(0,1fr)] sm:items-center">
+      {/* The climb is capped rather than stretched: across a full desktop card
+          the curve flattens into a straight line and stops being a climb. */}
+      <div className="grid gap-6 sm:grid-cols-[minmax(0,160px)_minmax(0,560px)] sm:items-center">
         <div className="relative mx-auto w-full max-w-[160px]">
           <MomentumOrbit
             altitude={momentum.altitude}
@@ -511,65 +510,6 @@ export function FitnessCard({
         Open fitness
         <LinkPendingIndicator label="Opening fitness" />
       </Link>
-    </TintPanel>
-  );
-}
-
-export function FinanceCard({
-  finance,
-  pendingFinance,
-  pinnedFinance,
-  settled,
-}: {
-  /** Transactions settled out of this month's total, for Pip. */
-  settled: { done: number; total: number };
-  finance: ReturnType<typeof getFinanceSummary>;
-  pendingFinance?: import("@/lib/finance").FinanceTransaction;
-  pinnedFinance: ReturnType<typeof getPinnedFinanceMetric>;
-}) {
-  return (
-    <TintPanel className="settle-in settle-4 flex flex-col gap-5" system="finance">
-      <CardHeading
-        action={<Badge variant="finance">This month</Badge>}
-        eyebrow={pinnedFinance.label}
-        pip={getPanelPip(settled.done, settled.total, "money")}
-        seed={8}
-        title={formatCurrency(pinnedFinance.value)}
-      />
-
-      <dl className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-card/70 p-3">
-          <dt className="label-caps opacity-60">Income</dt>
-          <dd className="metric-value mt-1.5 text-[17px] font-bold">
-            {formatCurrency(finance.income)}
-          </dd>
-        </div>
-        <div className="rounded-xl bg-card/70 p-3">
-          <dt className="label-caps opacity-60">Expenses</dt>
-          <dd className="metric-value mt-1.5 text-[17px] font-bold">
-            {formatCurrency(finance.expenses)}
-          </dd>
-        </div>
-      </dl>
-
-      <div className="rounded-xl bg-card/70 p-4">
-        <p className="label-caps text-[var(--ink,var(--muted-foreground))]">Next to review</p>
-        <p className="mt-1.5 truncate text-[15px] font-semibold">
-          {pendingFinance?.title ?? "Nothing is waiting"}
-        </p>
-        <p className="mt-0.5 text-[12px] text-muted-foreground">
-          {pendingFinance
-            ? `${pendingFinance.date} · ${formatCurrency(pendingFinance.amount)}`
-            : "Cashflow is up to date."}
-        </p>
-      </div>
-
-      <Button asChild className="w-full" variant="outline">
-        <Link href="/finance">
-          Open finance
-          <LinkPendingIndicator label="Opening finance" />
-        </Link>
-      </Button>
     </TintPanel>
   );
 }

@@ -283,7 +283,6 @@ function SystemsSection() {
               areas: [
                 { completed: 3, label: "Tasks", percent: 72, system: "tasks", total: 4 },
                 { completed: 1, label: "Fitness", percent: 100, system: "fitness", total: 1 },
-                { completed: 2, label: "Finance", percent: 100, system: "finance", total: 2 },
               ],
               todayScore: 78,
             })}

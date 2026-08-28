@@ -12,7 +12,6 @@ import { VoyageCard } from "@/components/overview/VoyageCard";
 import { WeekStrip } from "@/components/overview/WeekStrip";
 import {
   AnalyticsCard,
-  FinanceCard,
   FitnessCard,
   MilestonesCard,
   MomentumCard,
@@ -48,7 +47,6 @@ import {
   shiftDate,
 } from "@/lib/fitness";
 import {
-  getFinanceSummary,
   getFinanceTransactions,
 } from "@/lib/finance";
 import {
@@ -59,7 +57,6 @@ import type {
   OverviewQueryState,
   OverviewTaskFilter,
 } from "@/lib/overview-query";
-import { getPinnedFinanceMetric } from "@/lib/finance-metric";
 import { getAscent } from "@/lib/ascent";
 import { hasCrew, publishSnapshot } from "@/lib/crew";
 import { getRecapWeek, getWeekRecap } from "@/lib/recap";
@@ -149,12 +146,10 @@ export default async function Home({
     today,
     fitnessConfigured,
   );
-  const finance = getFinanceSummary(transactions, today.slice(0, 7));
   const dailyRings = getDailyRings(
     visibleTasks,
     completions,
     fitnessStats.todayTraining,
-    transactions,
     today,
     calendar.timeZone,
   );
@@ -254,7 +249,6 @@ export default async function Home({
       (point) => (point.score ?? 0) >= ORBIT_DAY_SCORE,
     ),
     taskCount: taskHistory.length,
-    transactionCount: transactions.length,
   });
   const milestones = getMilestones({
     bestAltitude: momentumRecords.bestAltitude,
@@ -272,7 +266,6 @@ export default async function Home({
     areas: [
       { ...dailyRings.tasks, label: "Tasks", system: "tasks" as const },
       { ...dailyRings.fitness, label: "Fitness", system: "fitness" as const },
-      { ...dailyRings.finance, label: "Finance", system: "finance" as const },
     ],
     todayScore: momentum.todayScore,
   });
@@ -333,9 +326,6 @@ export default async function Home({
       )
       .map((task) => task.id),
   );
-  const nextTask = orderedTasks.find((task) =>
-    isRepeating(task) ? !doneToday.has(task.id) : !task.completed,
-  );
   // What each open task is worth right now, in the same kilometres the voyage
   // counts, so the reward on the button is the reward on the map.
   const todayPoint = weeklyProductivity.current.find(
@@ -348,22 +338,6 @@ export default async function Home({
           getTaskReward(todayPoint, task, enabledDomains, preferences.scoring),
         ])
       : [],
-  );
-  const monthTransactions = transactions.filter((transaction) =>
-    transaction.date.startsWith(today.slice(0, 7)),
-  );
-  const pendingFinance = [...transactions]
-    .filter((transaction) => transaction.status !== "paid")
-    .sort((a, b) => a.date.localeCompare(b.date))[0];
-  // What Pip reads on the finance card: how much of this month is settled.
-  const settledFinance = {
-    done: monthTransactions.filter((transaction) => transaction.status === "paid")
-      .length,
-    total: monthTransactions.length,
-  };
-  const pinnedFinance = getPinnedFinanceMetric(
-    preferences.pinnedFinanceMetric,
-    finance,
   );
   const trendsSectionTitle = enabledDomains.length > 0
     ? `Weekly score: ${review.score}%`
@@ -385,15 +359,6 @@ export default async function Home({
         streak={streak}
         today={today}
         weekChange={momentum.weekChange}
-      />
-    ),
-    finance: (
-      <FinanceCard
-        finance={finance}
-        key="finance"
-        pendingFinance={pendingFinance}
-        pinnedFinance={pinnedFinance}
-        settled={settledFinance}
       />
     ),
     fitness: (
@@ -448,8 +413,11 @@ export default async function Home({
   // The tiles answer the glance; the list answers "which ones". Everything
   // else is detail, and detail goes under the fold.
   const listCards = visibleCards.filter((card) => card === "tasks");
+  // Momentum is the hero above, and the tasks list sits under the tiles; what
+  // is left is detail, and detail goes under the fold.
   const foldedCards = visibleCards.filter(
-    (card) => card !== "tasks" && !trendCardIds.includes(card),
+    (card) =>
+      card !== "tasks" && card !== "momentum" && !trendCardIds.includes(card),
   );
   const trendCards = visibleCards.filter((card) => trendCardIds.includes(card));
   const dateLabel = new Intl.DateTimeFormat(preferences.regional.locale, {
@@ -553,12 +521,12 @@ export default async function Home({
           today={today}
         />
 
+        {/* How the day is going, first and large: the altitude, and the climb
+            today has actually drawn. */}
+        {dashboardCards.momentum}
+
         <DayTiles
-          momentum={momentum}
-          nextTask={nextTask}
-          reward={nextTask ? taskRewards[nextTask.id] ?? 0 : 0}
           taskStats={pinnedTaskStats}
-          today={today}
           training={fitnessStats.todayTraining}
         />
 

@@ -44,7 +44,10 @@ export function DashboardCustomizer({
   const [pinnedTaskCategory, setPinnedTaskCategory] = useState(
     preferences.pinnedTaskCategory,
   );
-  const [pinnedFinanceMetric, setPinnedFinanceMetric] = useState(
+  // Finance left the dashboard, so this has no control any more — it is still
+  // read and posted so saving preferences does not quietly wipe a value the
+  // finance page may want back.
+  const [pinnedFinanceMetric] = useState(
     preferences.pinnedFinanceMetric,
   );
   const [focusTarget, setFocusTarget] = useState(
@@ -106,7 +109,6 @@ export function DashboardCustomizer({
       setDensity(preferences.density);
       setRangeDays(preferences.rangeDays);
       setPinnedTaskCategory(preferences.pinnedTaskCategory);
-      setPinnedFinanceMetric(preferences.pinnedFinanceMetric);
       setFocusTarget(String(preferences.scoring.focusTargetMinutes));
       setTasksWeight(String(preferences.scoring.weights.tasks));
       setFitnessWeight(String(preferences.scoring.weights.fitness));
@@ -142,7 +144,6 @@ export function DashboardCustomizer({
     setDensity(defaultDashboardPreferences.density);
     setRangeDays(defaultDashboardPreferences.rangeDays);
     setPinnedTaskCategory(defaultDashboardPreferences.pinnedTaskCategory);
-    setPinnedFinanceMetric(defaultDashboardPreferences.pinnedFinanceMetric);
     setFocusTarget(
       String(defaultDashboardPreferences.scoring.focusTargetMinutes),
     );
@@ -271,23 +272,6 @@ export function DashboardCustomizer({
                 {categories.map((category) => (
                   <option key={category} value={category}>{category}</option>
                 ))}
-              </select>
-            </PreferenceField>
-            <PreferenceField label="Pinned finance metric">
-              <select
-                className="field-input"
-                name="pinnedFinanceMetric"
-                onChange={(event) =>
-                  setPinnedFinanceMetric(
-                    event.target.value as DashboardPreferences["pinnedFinanceMetric"],
-                  )
-                }
-                value={pinnedFinanceMetric}
-              >
-                <option value="balance">Imported net cashflow</option>
-                <option value="income">Income</option>
-                <option value="expenses">Expenses</option>
-                <option value="net">Net cashflow</option>
               </select>
             </PreferenceField>
           </div>

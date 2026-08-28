@@ -154,7 +154,7 @@ test("today's rings read a routine's day, not a flag on the task", async () => {
   } as unknown as Parameters<typeof getDailyRings>[2];
 
   assert.equal(
-    getDailyRings([routine], [], training, [], "2026-08-24", "Europe/Bratislava")
+    getDailyRings([routine], [], training, "2026-08-24", "Europe/Bratislava")
       .tasks.completed,
     0,
   );
@@ -163,7 +163,6 @@ test("today's rings read a routine's day, not a flag on the task", async () => {
       [routine],
       [completion({ plannedFor: "2026-08-24", taskId: "routine" })],
       training,
-      [],
       "2026-08-24",
       "Europe/Bratislava",
     ).tasks.completed,
