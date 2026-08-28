@@ -68,7 +68,10 @@ export async function updateFitnessDayAction(
     p_sport: sport,
     p_weekday: weekday,
   });
-  if (error) return { ok: false, error: "The training plan could not be saved." };
+  if (error) {
+    console.error("fitness: plan day write failed", error.code, error.message);
+    return { ok: false, error: error.message };
+  }
 
   revalidateFitness();
   return { ok: true };

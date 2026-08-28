@@ -119,12 +119,28 @@ export function FitnessClient({
     startTransition(async () => {
       try {
         const result = await updateFitnessDayAction(formData);
-        if (!result.ok && previousDay) {
-          setLocalPlan((current) =>
-            current.map((day) => (day.id === dayId ? previousDay : day)),
-          );
+        if (!result.ok) {
+          if (previousDay) {
+            setLocalPlan((current) =>
+              current.map((day) => (day.id === dayId ? previousDay : day)),
+            );
+          }
           setNotice({ dayId, tone: "error", text: result.error });
+          return;
         }
+        // The chip changes the instant it is pressed, because the change is
+        // applied locally first — so without this, a save and a failure that
+        // rolls back both looked like the same successful press. Logging a
+        // session has said so since the day it shipped; editing the plan, the
+        // one thing on this screen that changes every week from now on, said
+        // nothing at all.
+        setNotice({
+          dayId,
+          tone: "success",
+          text: `${previousDay?.label ?? "That day"} is now ${sportLabels[
+            sport
+          ].toLocaleLowerCase()} — saved to your plan.`,
+        });
       } catch {
         if (previousDay) {
           setLocalPlan((current) =>

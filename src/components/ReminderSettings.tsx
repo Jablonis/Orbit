@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionToast } from "@/components/ActionToast";
 import { useActionState, useEffect, useState } from "react";
 import { saveReminderPreferencesAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
@@ -196,8 +197,11 @@ export function ReminderSettings({
         </div>
       )}
 
-      {error || state.message ? (
-        <p aria-live="polite" className="mt-3 text-[13px] text-muted-foreground">
+      {!error && state.message && state.ok ? (
+        <ActionToast message={state.message} tone="success" />
+      ) : null}
+      {error || (state.message && !state.ok) ? (
+        <p aria-live="polite" className="mt-3 text-[13px] text-destructive">
           {error || state.message}
         </p>
       ) : null}
