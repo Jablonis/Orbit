@@ -7,7 +7,7 @@ import { DayComplete } from "@/components/DayComplete";
 import { RecapShare } from "@/components/RecapShare";
 import { WeekSealed } from "@/components/WeekSealed";
 import { Arrival } from "@/components/Arrival";
-import { NowCard } from "@/components/overview/NowCard";
+import { DayTiles } from "@/components/overview/DayTiles";
 import { VoyageCard } from "@/components/overview/VoyageCard";
 import { WeekStrip } from "@/components/overview/WeekStrip";
 import {
@@ -445,8 +445,11 @@ export default async function Home({
     "recap",
     "review",
   ];
-  const todayCards = visibleCards.filter(
-    (card) => !trendCardIds.includes(card),
+  // The tiles answer the glance; the list answers "which ones". Everything
+  // else is detail, and detail goes under the fold.
+  const listCards = visibleCards.filter((card) => card === "tasks");
+  const foldedCards = visibleCards.filter(
+    (card) => card !== "tasks" && !trendCardIds.includes(card),
   );
   const trendCards = visibleCards.filter((card) => trendCardIds.includes(card));
   const dateLabel = new Intl.DateTimeFormat(preferences.regional.locale, {
@@ -542,32 +545,29 @@ export default async function Home({
 
         <SetupCard setup={setup} />
 
-        <NowCard
-          dailyRings={dailyRings}
-          nextTask={nextTask}
-          reward={nextTask ? taskRewards[nextTask.id] ?? 0 : 0}
-          timeZone={calendar.timeZone}
-          today={today}
-          todayScore={momentum.todayScore}
-          training={fitnessStats.todayTraining}
-        />
-
+        {/* The week first, because "which day am I in" is answered before
+            anything else is read, and then the day itself as four tiles. */}
         <WeekStrip
           locale={calendar.locale}
           points={weeklyProductivity.current}
           today={today}
         />
 
-        {todayCards.length > 0 ? (
-          <div className="grid gap-5 lg:grid-cols-2">
-            {todayCards.map((card) => dashboardCards[card])}
-          </div>
-        ) : null}
+        <DayTiles
+          momentum={momentum}
+          nextTask={nextTask}
+          reward={nextTask ? taskRewards[nextTask.id] ?? 0 : 0}
+          taskStats={pinnedTaskStats}
+          today={today}
+          training={fitnessStats.todayTraining}
+        />
+
+        {listCards.map((card) => dashboardCards[card])}
 
         {/* The history is worth having and is not worth reading first: the
             day is the point, and five charts under it is why the page felt
             like homework. It states its headline and opens when asked. */}
-        {trendCards.length > 0 ? (
+        {trendCards.length + foldedCards.length > 0 ? (
           <details className="settle-in rounded-2xl border border-border bg-card">
             <summary className="flex min-h-14 cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted">
               <h2
@@ -581,6 +581,7 @@ export default async function Home({
               </p>
             </summary>
             <div className="grid gap-5 border-t border-border p-4">
+              {foldedCards.map((card) => dashboardCards[card])}
               {trendCards.map((card) => dashboardCards[card])}
             </div>
           </details>

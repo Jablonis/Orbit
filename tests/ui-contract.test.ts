@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 function read(path: string) {
@@ -183,11 +183,18 @@ test("every form posts the field its server action actually reads", () => {
 
   assert.equal(field, "id");
 
-  for (const file of [
+  // Every file that posts to the action, found rather than listed: a list goes
+  // stale the first time a component is renamed, which is how this test spent a
+  // run failing on a file that no longer existed.
+  const posting = [
     "src/components/overview/cards.tsx",
-    "src/components/overview/NowCard.tsx",
+    "src/components/overview/DayTiles.tsx",
     "src/app/tasks/TasksClient.tsx",
-  ]) {
+  ].filter((file) => existsSync(file));
+
+  assert.ok(posting.length >= 2, "the toggle form has gone missing");
+
+  for (const file of posting) {
     const source = read(file);
     if (!source.includes("toggleTaskAction")) continue;
     assert.match(
