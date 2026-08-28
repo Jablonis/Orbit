@@ -21,7 +21,7 @@ export function RouteError({
       id="main-content"
       tabIndex={-1}
     >
-      <section className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] w-full max-w-lg rounded-2xl p-7 text-center sm:p-9">
+      <section className="rounded-2xl bg-card shadow-[var(--shadow-card)] w-full max-w-lg rounded-2xl p-7 text-center sm:p-9">
         {/* Engine off, feet down: the honest picture of a page that did not
             load, and better company than an exclamation mark. */}
         <Pip burn={0} className="mx-auto" mood="grounded" seed={13} size={68} />
@@ -42,7 +42,7 @@ export function RouteError({
             Try again
           </button>
           <Link
-            className="inline-flex min-h-11 items-center rounded-full border border-[rgba(244,235,221,0.1)] bg-[rgba(244,235,221,0.04)] px-5 py-2.5 text-[13px] font-semibold text-foreground"
+            className="inline-flex min-h-11 items-center rounded-full border border-[var(--hairline)] bg-[var(--wash)] px-5 py-2.5 text-[13px] font-semibold text-foreground"
             href="/"
           >
             Go to Overview

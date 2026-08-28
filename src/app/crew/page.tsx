@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { THEME_COOKIE, parseTheme } from "@/lib/theme";
 import { CrewBoard } from "@/components/crew/CrewBoard";
 import { getAuthenticatedUser } from "@/lib/auth";
 import {
@@ -41,6 +43,7 @@ export default async function CrewPage() {
   return (
     <CrewBoard
       calendar={calendar}
+      theme={parseTheme((await cookies()).get(THEME_COOKIE)?.value)}
       crew={crew}
       feed={getCrewFeed({
         members: crew.members,

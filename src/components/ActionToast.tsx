@@ -20,7 +20,7 @@ export function ActionToast({
     >
       <div
         aria-live={tone === "error" ? "assertive" : "polite"}
-        className={`action-toast rounded-2xl bg-popover shadow-[0_24px_60px_-30px_rgba(27,26,31,0.35)] pointer-events-auto flex w-full items-center justify-between gap-4 rounded-xl px-4 py-3 text-[13px] shadow-2xl ${
+        className={`action-toast rounded-2xl bg-popover shadow-[var(--shadow-pop)] pointer-events-auto flex w-full items-center justify-between gap-4 rounded-xl px-4 py-3 text-[13px] shadow-2xl ${
           tone === "error"
             ? "border-[color-mix(in_srgb,var(--destructive)_34%,transparent)] text-destructive"
             : "text-foreground"

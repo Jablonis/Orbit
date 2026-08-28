@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
+import { THEME_COOKIE, parseTheme, themeAttribute } from "@/lib/theme";
 import { DM_Mono, Figtree } from "next/font/google";
 import "./globals.css";
 
@@ -39,17 +41,30 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#fbf9f7",
+  // The bar above the app on a phone is painted by the browser, so it has to
+  // be told which canvas it is sitting on.
+  themeColor: [
+    { color: "#fbf9f7", media: "(prefers-color-scheme: light)" },
+    { color: "#131118", media: "(prefers-color-scheme: dark)" },
+  ],
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Stamped here, before the document is sent, so the first paint is already
+  // the right colour. No stamp means "follow the system".
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+
   return (
-    <html lang="en" className={`${figtree.variable} ${dmMono.variable} h-full bg-background`}>
+    <html
+      className={`${figtree.variable} ${dmMono.variable} h-full bg-background`}
+      data-theme={themeAttribute(theme)}
+      lang="en"
+    >
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <a className="skip-link" href="#main-content">
           Skip to main content

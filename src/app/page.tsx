@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { THEME_COOKIE, parseTheme } from "@/lib/theme";
 import type { ReactNode } from "react";
 import { DayCardShare } from "@/components/DayCardShare";
 import { DayComplete } from "@/components/DayComplete";
@@ -422,9 +424,7 @@ export default async function Home({
     tasks: (
       <TasksCard
         doneToday={[...doneToday]}
-        filter={filter}
         key="tasks"
-        overviewQuery={overviewQuery}
         pinnedCategory={preferences.pinnedTaskCategory}
         quickTasks={quickTasks}
         rewards={taskRewards}
@@ -456,10 +456,13 @@ export default async function Home({
     weekday: "long",
   }).format(new Date(`${today}T12:00:00Z`));
 
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+
   return (
     <main className="app-shell" id="main-content" tabIndex={-1}>
       <AppNavigation
         active="dashboard"
+        theme={theme}
         profile={preferences.regional}
         settings={(
           <DashboardCustomizer

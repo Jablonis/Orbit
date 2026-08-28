@@ -37,10 +37,7 @@ import type {
   getDayCard,
 } from "@/lib/momentum";
 import type { WeekRecap } from "@/lib/recap";
-import type {
-  OverviewQueryState,
-  OverviewTaskFilter,
-} from "@/lib/overview-query";
+import type { OverviewQueryState } from "@/lib/overview-query";
 import { getOverviewHref } from "@/lib/overview-query";
 import type {
   ProductivityDomain,
@@ -314,8 +311,6 @@ export function GhostBar({
 
 export function TasksCard({
   doneToday,
-  filter,
-  overviewQuery,
   pinnedCategory,
   quickTasks,
   rewards,
@@ -326,8 +321,6 @@ export function TasksCard({
 }: {
   /** Routines already ticked for today; a routine is never done for good. */
   doneToday: string[];
-  filter: OverviewTaskFilter;
-  overviewQuery: OverviewQueryState;
   pinnedCategory: string;
   quickTasks: Task[];
   /** What each task is worth today, in the voyage's own kilometres. */
@@ -337,21 +330,9 @@ export function TasksCard({
   timeZone: string;
   total: number;
 }) {
-  const filters: Array<{ id: OverviewTaskFilter; label: string }> = [
-    { id: "today", label: "Today" },
-    { id: "overdue", label: "Overdue" },
-    { id: "upcoming", label: "Upcoming" },
-  ];
-
   return (
     <TintPanel className="settle-in settle-3 flex flex-col gap-5" system="tasks">
       <CardHeading
-        action={
-          <Badge variant="tasks">
-            {taskStats.completedTasksCount}/
-            {taskStats.completedTasksCount + taskStats.activeTasksCount}
-          </Badge>
-        }
         eyebrow={pinnedCategory ? `Tasks · ${pinnedCategory}` : "Tasks"}
         pip={getPanelPip(
           taskStats.completedTasksCount,
@@ -365,24 +346,6 @@ export function TasksCard({
             : `${taskStats.activeTasksCount} open of ${total}.`
         }
       />
-
-      <nav aria-label="Task filter" className="flex flex-wrap gap-2">
-        {filters.map((item) => (
-          <Link
-            aria-current={filter === item.id ? "page" : undefined}
-            className={`inline-flex min-h-9 items-center rounded-full px-3.5 text-[12px] font-semibold transition ${
-              filter === item.id
-                ? "bg-tasks text-white"
-                : "bg-card/70 text-tasks-ink hover:bg-card hover:shadow-[inset_0_0_0_1.5px_color-mix(in_srgb,var(--tasks)_45%,transparent)]"
-            }`}
-            href={getOverviewHref(overviewQuery, { tasks: item.id })}
-            key={item.id}
-            scroll={false}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
 
       {quickTasks.length === 0 ? (
         <p className="rounded-xl bg-card/70 p-4 text-[13px]">
@@ -497,7 +460,11 @@ export function FitnessCard({
             {resting ? "Rest" : done ? "Complete" : "Planned"}
           </Badge>
         }
-        eyebrow="Fitness today"
+        eyebrow={
+          resting
+            ? "Fitness today"
+            : `Fitness today · ${training.day.plannedDurationMinutes} min`
+        }
         pip={getPanelPip(done ? 1 : 0, resting ? 0 : 1, "training")}
         seed={7}
         title={resting ? "Recovery day." : training.title}
@@ -508,36 +475,15 @@ export function FitnessCard({
           No session is planned. Recovery is part of the plan, not a gap in it.
         </p>
       ) : (
-        <>
-          <dl className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-card/70 p-3">
-              <dt className="label-caps opacity-60">Planned</dt>
-              <dd className="metric-value mt-1.5 text-[20px] font-bold">
-                {training.day.plannedDurationMinutes} min
-              </dd>
-            </div>
-            <div className="rounded-xl bg-card/70 p-3">
-              <dt className="label-caps opacity-60">Focus</dt>
-              <dd className="mt-1.5 truncate text-[15px] font-semibold">
-                {training.focus}
-              </dd>
-            </div>
-          </dl>
-
-          {/* What the session is, not only that there is one. */}
-          <dl className="flex flex-col gap-2 rounded-xl bg-card/70 p-3">
-            <div>
-              <dt className="label-caps opacity-60">The session</dt>
-              <dd className="mt-1 text-[13px] leading-5">{guidance.main}</dd>
-            </div>
-            <div>
-              <dt className="label-caps opacity-60">Warm up</dt>
-              <dd className="mt-1 text-[13px] leading-5 text-muted-foreground">
-                {guidance.warmup}
-              </dd>
-            </div>
-          </dl>
-        </>
+        // What the session is, not only that there is one. The minutes and the
+        // focus used to be two tiles above this; they are four words, and the
+        // heading had room for them.
+        <div className="rounded-xl bg-card/70 p-3">
+          <p className="text-[13px] leading-5">{guidance.main}</p>
+          <p className="mt-1.5 text-[12px] leading-5 text-muted-foreground">
+            Warm up: {guidance.warmup}
+          </p>
+        </div>
       )}
 
       {resting ? null : (
@@ -558,12 +504,13 @@ export function FitnessCard({
         </form>
       )}
 
-      <Button asChild className="w-full" variant="outline">
-        <Link href="/fitness">
-          Open fitness
-          <LinkPendingIndicator label="Opening fitness" />
-        </Link>
-      </Button>
+      <Link
+        className="press-row -mx-2 rounded-xl px-2 py-1 text-center text-[13px] font-semibold text-fitness-ink"
+        href="/fitness"
+      >
+        Open fitness
+        <LinkPendingIndicator label="Opening fitness" />
+      </Link>
     </TintPanel>
   );
 }

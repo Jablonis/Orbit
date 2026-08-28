@@ -27,11 +27,16 @@ import { getPipFace } from "@/lib/pip-pixels";
  * an animation with no JavaScript, no hydration, and nothing to schedule.
  */
 
+/**
+ * Pip's own colours. His body and his belly are the character, not the surface:
+ * reading them from `--foreground` and `--card` meant the moment the canvas
+ * turned dark he arrived as a photo negative.
+ */
 const token: Record<PipColor, string> = {
   beak: "var(--warning, #E8A33D)",
   flame: "var(--tasks, #F0568C)",
-  ink: "var(--foreground, #1B1A1F)",
-  paper: "var(--card, #FFFFFF)",
+  ink: "var(--pip-ink, #1B1A1F)",
+  paper: "var(--pip-paper, #FFFFFF)",
   plum: "var(--plum, #6B2FBF)",
 };
 

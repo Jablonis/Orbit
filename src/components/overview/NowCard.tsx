@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { OpenQuickAddButton } from "@/components/OpenQuickAddButton";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { DayAscent } from "@/components/DayAscent";
@@ -123,15 +122,8 @@ export function NowCard({
 
         <OpenQuickAddButton />
 
-        {move ? (
-          <Link
-            className="ui-button ui-button--secondary h-11 min-h-11 px-4 text-muted-foreground hover:text-foreground"
-            href={nextTask ? "/tasks" : "/fitness#training-calendar"}
-          >
-            Something else
-            <LinkPendingIndicator label="Opening the list" />
-          </Link>
-        ) : null}
+        {/* Two actions, not three: the task card already carries the way to
+            the rest of the list. */}
       </div>
     </TintPanel>
   );

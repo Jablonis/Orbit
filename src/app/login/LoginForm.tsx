@@ -46,18 +46,18 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
       </form>
 
       <div className="flex items-center gap-3 text-[#555]">
-        <span className="h-px flex-1 bg-[rgba(244,235,221,0.1)]" />
+        <span className="h-px flex-1 bg-[var(--hairline)]" />
         <span className="text-[12px] uppercase tracking-[0.18em] text-muted-foreground">
           or
         </span>
-        <span className="h-px flex-1 bg-[rgba(244,235,221,0.1)]" />
+        <span className="h-px flex-1 bg-[var(--hairline)]" />
       </div>
 
       <form action={signupFormAction} className="grid gap-3">
         <input name="next" type="hidden" value={nextPath} />
         <AuthFields passwordAutocomplete="new-password" />
         <button
-          className="rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted px-4 py-3 text-[13px] font-semibold text-foreground transition hover:bg-accent disabled:opacity-60"
+          className="rounded-xl border border-[var(--hairline)] bg-muted px-4 py-3 text-[13px] font-semibold text-foreground transition hover:bg-accent disabled:opacity-60"
           disabled={signupPending}
           type="submit"
         >
@@ -66,7 +66,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
         {signupState.message ? (
           <p
             aria-live="polite"
-            className="rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted/70 p-3 text-[13px] text-muted-foreground"
+            className="rounded-xl border border-[var(--hairline)] bg-muted/70 p-3 text-[13px] text-muted-foreground"
             role="status"
           >
             {signupState.message}
@@ -88,7 +88,7 @@ function AuthFields({
         <span className="label-caps text-muted-foreground">Email</span>
         <input
           autoComplete="email"
-          className="h-12 rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted px-4 text-[14px] text-foreground outline-none focus:border-[rgba(244,235,221,0.35)]"
+          className="h-12 rounded-xl border border-[var(--hairline)] bg-muted px-4 text-[14px] text-foreground outline-none focus:border-[var(--hairline)]"
           name="email"
           required
           type="email"
@@ -98,7 +98,7 @@ function AuthFields({
         <span className="label-caps text-muted-foreground">Password</span>
         <input
           autoComplete={passwordAutocomplete}
-          className="h-12 rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted px-4 text-[14px] text-foreground outline-none focus:border-[rgba(244,235,221,0.35)]"
+          className="h-12 rounded-xl border border-[var(--hairline)] bg-muted px-4 text-[14px] text-foreground outline-none focus:border-[var(--hairline)]"
           minLength={6}
           name="password"
           required

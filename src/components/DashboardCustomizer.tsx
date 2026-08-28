@@ -165,7 +165,7 @@ export function DashboardCustomizer({
       <form
         action={action}
         aria-busy={pending}
-        className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-xl p-4 sm:p-5"
+        className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-xl p-4 sm:p-5"
       >
         <p className="mb-4 text-[13px] leading-5 text-muted-foreground">
           Choose what appears in Today and Trends. Ordering stays within those two
@@ -190,7 +190,7 @@ export function DashboardCustomizer({
                 const visible = !hidden.includes(card);
                 return (
                   <div
-                    className="flex items-center gap-2 rounded-xl border border-border bg-[rgba(244,235,221,0.025)] p-2"
+                    className="flex items-center gap-2 rounded-xl border border-border bg-[var(--wash)] p-2"
                     key={card}
                   >
                     <button
@@ -198,7 +198,7 @@ export function DashboardCustomizer({
                       className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[12px] font-bold ${
                         visible
                           ? "bg-primary text-[var(--card)]"
-                          : "bg-[rgba(244,235,221,0.05)] text-muted-foreground"
+                          : "bg-[var(--wash)] text-muted-foreground"
                       }`}
                       onClick={() => toggle(card)}
                       type="button"
@@ -464,7 +464,7 @@ export function DashboardCustomizer({
                 : "All settings are saved."}
           </p>
           <button
-            className="min-h-11 rounded-xl border border-input px-4 py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-[rgba(244,235,221,0.05)] hover:text-foreground disabled:opacity-55"
+            className="min-h-11 rounded-xl border border-input px-4 py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-[var(--wash)] hover:text-foreground disabled:opacity-55"
             disabled={pending}
             name="intent"
             onClick={showDefaults}

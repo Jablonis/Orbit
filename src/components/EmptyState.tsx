@@ -31,7 +31,7 @@ export function EmptyState({
   title: string;
 }) {
   return (
-    <div className="grid min-h-44 place-items-center rounded-xl border border-dashed border-input bg-[rgba(244,235,221,0.018)] p-6 text-center">
+    <div className="grid min-h-44 place-items-center rounded-xl border border-dashed border-input bg-[var(--wash)] p-6 text-center">
       <div className="max-w-sm">
         <Pip
           burn={0.15}
@@ -44,7 +44,7 @@ export function EmptyState({
         <p className="mt-1 text-[12px] leading-[18px] text-muted-foreground">{description}</p>
         {action ? <div className="mt-4">{action}</div> : actionHref && actionLabel ? (
           <Link
-            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-input bg-[rgba(244,235,221,0.045)] px-4 text-[12px] font-semibold text-foreground transition duration-150 hover:bg-[rgba(244,235,221,0.08)]"
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-input bg-[var(--wash)] px-4 text-[12px] font-semibold text-foreground transition duration-150 hover:bg-[var(--wash)]"
             href={actionHref}
           >
             {actionLabel}

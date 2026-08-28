@@ -19,7 +19,7 @@ const tintPanelVariants = cva("rounded-2xl", {
       finance: "bg-finance-tint text-foreground [--ink:var(--finance-ink)]",
       fitness: "bg-fitness-tint text-foreground [--ink:var(--fitness-ink)]",
       neutral:
-        "bg-card text-card-foreground shadow-[0_1px_2px_rgba(27,26,31,0.05)] [--ink:var(--muted-foreground)]",
+        "bg-card text-card-foreground shadow-[var(--shadow-card)] [--ink:var(--muted-foreground)]",
       plum: "bg-plum-tint text-foreground [--ink:var(--plum-ink)]",
       quiet: "bg-muted text-foreground [--ink:var(--muted-foreground)]",
       tasks: "bg-tasks-tint text-foreground [--ink:var(--tasks-ink)]",

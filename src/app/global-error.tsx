@@ -23,7 +23,7 @@ export default function GlobalError({
           id="main-content"
           tabIndex={-1}
         >
-          <section className="w-full max-w-xl rounded-2xl border border-[rgba(244,235,221,0.1)] bg-card p-7 text-center shadow-2xl sm:p-10">
+          <section className="w-full max-w-xl rounded-2xl border border-[var(--hairline)] bg-card p-7 text-center shadow-2xl sm:p-10">
             <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-destructive">
               Orbit interrupted
             </p>
@@ -43,7 +43,7 @@ export default function GlobalError({
                 Try again
               </button>
               <Link
-                className="inline-flex min-h-11 items-center rounded-xl border border-[rgba(244,235,221,0.1)] px-5 text-[13px] font-semibold text-foreground"
+                className="inline-flex min-h-11 items-center rounded-xl border border-[var(--hairline)] px-5 text-[13px] font-semibold text-foreground"
                 href="/"
               >
                 Return to Overview

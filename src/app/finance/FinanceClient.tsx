@@ -170,7 +170,7 @@ export function FinanceClient({
           </label>
           <button
             aria-pressed={privacyMode}
-            className="min-h-11 rounded-full border border-input bg-[rgba(244,235,221,0.045)] px-4 py-2 text-[13px] font-semibold text-foreground"
+            className="min-h-11 rounded-full border border-input bg-[var(--wash)] px-4 py-2 text-[13px] font-semibold text-foreground"
             onClick={() => {
               const next = !privacyMode;
               setPrivacyMode(next);
@@ -192,7 +192,7 @@ export function FinanceClient({
       <FinanceDataStatus coverage={coverage} locale={regional.locale} />
 
       <section className="grid gap-6 xl:grid-cols-12">
-        <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] relative min-h-[300px] overflow-hidden rounded-2xl p-6 xl:col-span-12">
+        <article className="rounded-2xl bg-card shadow-[var(--shadow-card)] relative min-h-[300px] overflow-hidden rounded-2xl p-6 xl:col-span-12">
           <p className="label-caps text-muted-foreground">
             {`${formatStatementMonth(selectedMonth, regional.locale)} paid net cashflow`}
           </p>
@@ -275,7 +275,7 @@ function FinanceDataStatus({
   const hasGaps = coverage.gapMonths.length > 0;
   const hasOverlaps = coverage.overlappingMonths.length > 0;
   return (
-    <aside className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] mb-6 grid gap-4 rounded-xl p-4 sm:grid-cols-3 sm:p-5">
+    <aside className="rounded-2xl bg-card shadow-[var(--shadow-card)] mb-6 grid gap-4 rounded-xl p-4 sm:grid-cols-3 sm:p-5">
       <div>
         <p className="label-caps text-muted-foreground">Last successful import</p>
         <p className="mt-2 text-[13px] font-semibold text-foreground">
@@ -356,7 +356,7 @@ function ManualTransactionsCard({
   }
 
   return (
-    <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] scroll-mt-24 rounded-2xl p-6 xl:col-span-12" id="manual-ledger">
+    <article className="rounded-2xl bg-card shadow-[var(--shadow-card)] scroll-mt-24 rounded-2xl p-6 xl:col-span-12" id="manual-ledger">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="label-caps text-finance">Manual ledger</p>
@@ -449,7 +449,7 @@ function MaintenanceCard({
   onCleared: (archivedAt: string) => void;
 }) {
   return (
-    <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-6 xl:col-span-5">
+    <article className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-2xl p-6 xl:col-span-5">
       <p className="label-caps text-muted-foreground">Data maintenance</p>
       <h3 className="mt-2 text-[22px] font-semibold text-foreground">Manage finance history</h3>
       <p className="mt-2 text-[12px] leading-5 text-muted-foreground">
@@ -482,7 +482,7 @@ function StatementHistoryCard({
   statementImports: FinanceStatementImport[];
 }) {
   return (
-    <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-6 xl:col-span-8">
+    <article className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-2xl p-6 xl:col-span-8">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="label-caps text-muted-foreground">Monthly statements</p>
@@ -555,7 +555,7 @@ function CashflowCard({
   const difference = latestNet - previousNet;
 
   return (
-    <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-6 xl:col-span-8">
+    <article className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-2xl p-6 xl:col-span-8">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <p className="label-caps text-muted-foreground">Monthly cashflow</p>
@@ -579,7 +579,7 @@ function CashflowCard({
           {summary.monthlyCashflow.map((item, index) => (
             <button
               aria-label={`${item.month}: income ${formatCurrency(item.income, regional)}, expenses ${formatCurrency(item.expense, regional)}, net ${formatCurrency(item.income - item.expense, regional)}`}
-              className="group relative flex h-full min-w-0 flex-1 flex-col items-center gap-3 rounded-xl outline-none focus-visible:bg-[rgba(244,235,221,0.035)]"
+              className="group relative flex h-full min-w-0 flex-1 flex-col items-center gap-3 rounded-xl outline-none focus-visible:bg-[var(--wash)]"
               key={item.month}
               type="button"
             >
@@ -614,14 +614,14 @@ function CashflowCard({
         />
       )}
       {summary.monthlyCashflow.length > 0 ? (
-        <details className="mt-5 border-t border-[rgba(244,235,221,0.1)] pt-4">
+        <details className="mt-5 border-t border-[var(--hairline)] pt-4">
           <summary className="cursor-pointer text-[12px] font-semibold text-primary">
             Accessible cashflow summary
           </summary>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-left text-[12px]">
               <thead className="text-muted-foreground"><tr><th className="pb-2">Month</th><th>Income</th><th>Expense</th></tr></thead>
-              <tbody>{summary.monthlyCashflow.map((item) => <tr className="border-t border-[rgba(244,235,221,0.06)]" key={item.month}><td className="py-2 text-foreground">{item.month}</td><td className="metric-value">{formatCurrency(item.income, regional)}</td><td className="metric-value">{formatCurrency(item.expense, regional)}</td></tr>)}</tbody>
+              <tbody>{summary.monthlyCashflow.map((item) => <tr className="border-t border-[var(--wash)]" key={item.month}><td className="py-2 text-foreground">{item.month}</td><td className="metric-value">{formatCurrency(item.income, regional)}</td><td className="metric-value">{formatCurrency(item.expense, regional)}</td></tr>)}</tbody>
             </table>
           </div>
         </details>
@@ -640,7 +640,7 @@ function TransactionsCard({
   transactions: FinanceTransaction[];
 }) {
   return (
-    <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-6 xl:col-span-4">
+    <article className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-2xl p-6 xl:col-span-4">
       <p className="label-caps text-muted-foreground">Latest transactions</p>
       <h2 className="mt-2 text-[24px] font-semibold text-foreground">Recent flow</h2>
       <div className="mt-5 space-y-3">
@@ -650,7 +650,7 @@ function TransactionsCard({
           const imported = Boolean(transaction.statementImportId);
           const body = (
             <>
-              <div className="grid h-10 w-10 place-items-center rounded-full bg-[rgba(244,235,221,0.08)] text-[13px] font-bold text-foreground">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-[var(--wash)] text-[13px] font-bold text-foreground">
                 {transaction.category.slice(0, 1)}
               </div>
               <div className="min-w-0 flex-1 text-left">
@@ -667,7 +667,7 @@ function TransactionsCard({
           );
           return imported ? (
             <div
-              className="scroll-mt-24 flex items-center gap-3 rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted/55 p-3"
+              className="scroll-mt-24 flex items-center gap-3 rounded-xl border border-[var(--hairline)] bg-muted/55 p-3"
               id={`transaction-${transaction.id}`}
               key={transaction.id}
             >
@@ -675,7 +675,7 @@ function TransactionsCard({
             </div>
           ) : (
             <button
-              className="scroll-mt-24 flex w-full items-center gap-3 rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted/55 p-3 transition duration-150 hover:border-primary/35 hover:bg-muted active:scale-[0.99]"
+              className="scroll-mt-24 flex w-full items-center gap-3 rounded-xl border border-[var(--hairline)] bg-muted/55 p-3 transition duration-150 hover:border-primary/35 hover:bg-muted active:scale-[0.99]"
               id={`transaction-${transaction.id}`}
               key={transaction.id}
               onClick={() => onEdit(transaction)}
@@ -707,7 +707,7 @@ function CategoryCard({
   summary: ReturnType<typeof import("@/lib/finance").getFinanceSummary>;
 }) {
   return (
-    <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-6 xl:col-span-4">
+    <article className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-2xl p-6 xl:col-span-4">
       <p className="label-caps text-muted-foreground">Category spend</p>
       <h2 className="mt-2 text-[24px] font-semibold text-foreground">This month</h2>
       <div className="mt-6 space-y-4">

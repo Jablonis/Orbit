@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { THEME_COOKIE, parseTheme } from "@/lib/theme";
 import { AppNavigation } from "@/components/AppNavigation";
 import { EmptyState } from "@/components/EmptyState";
 import {
@@ -33,9 +35,11 @@ export default async function UiLabPage() {
   const { supabase, user } = await getAuthenticatedUser();
   const preferences = await getDashboardPreferences(supabase, user.id);
 
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+
   return (
     <main className="app-shell" id="main-content" tabIndex={-1}>
-      <AppNavigation active={null} profile={preferences.regional} userEmail={user.email ?? "Orbit user"} />
+      <AppNavigation active={null} profile={preferences.regional} theme={theme} userEmail={user.email ?? "Orbit user"} />
       <div className="page-container grid gap-8">
         <PageHeader
           action={<ButtonLink href="/">Back to Overview</ButtonLink>}
