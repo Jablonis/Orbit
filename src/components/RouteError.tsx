@@ -33,6 +33,14 @@ export function RouteError({
           Your data is safe. Retry the request, or return to the Overview if the
           connection is still unavailable.
         </p>
+        {/* The digest is the only thread between this screen and the line in
+            the server log that explains it. Production redacts the message, so
+            without this the report is "it broke" and the search is blind. */}
+        {error.digest ? (
+          <p className="metric-value mt-4 text-[11px] text-muted-foreground">
+            Reference {error.digest}
+          </p>
+        ) : null}
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <button
             className="min-h-11 rounded-full bg-primary px-5 py-2.5 text-[13px] font-bold text-primary-foreground"
