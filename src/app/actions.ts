@@ -21,6 +21,33 @@ export type WeeklyReflectionActionState = {
   ok: boolean;
 };
 
+/**
+ * Unpin the task category.
+ *
+ * The pin filters the Overview's task card to one category, and when nothing
+ * matches it the card said "Nothing in this view" — which reads as "you have
+ * no tasks" and is how an account with three open tasks and a stale pin looks
+ * from the dashboard. A filter that can empty the page has to be removable
+ * from the page it emptied.
+ */
+export async function clearPinnedTaskCategoryAction() {
+  const { supabase, user } = await getAuthenticatedUser();
+  const current = await getDashboardPreferences(supabase, user.id);
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      dashboard_preferences: { ...current, pinnedTaskCategory: "" },
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("preferences: unpin failed", error.code, error.message);
+    return;
+  }
+
+  revalidatePath("/", "layout");
+}
+
 export async function saveDashboardPreferencesAction(
   _state: DashboardPreferencesActionState,
   formData: FormData,

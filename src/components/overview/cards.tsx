@@ -45,7 +45,9 @@ import type { Task } from "@/lib/tasks";
 import { formatRelativeTaskDate, getTaskStats, isRepeating } from "@/lib/tasks";
 import { describeRepeat } from "@/lib/routines";
 import { formatReward } from "@/lib/reward";
+import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { TrainingToggle } from "@/components/overview/TrainingToggle";
+import { clearPinnedTaskCategoryAction } from "@/app/actions";
 import { toggleTaskAction } from "@/app/tasks/actions";
 
 export function greeting(locale: string, timeZone: string) {
@@ -325,6 +327,7 @@ export function TasksCard({
   today,
   timeZone,
   total,
+  totalUnfiltered,
 }: {
   /** Routines already ticked for today; a routine is never done for good. */
   doneToday: string[];
@@ -336,7 +339,14 @@ export function TasksCard({
   today: string;
   timeZone: string;
   total: number;
+  /** How many tasks the day has before the pinned category filters them. */
+  totalUnfiltered: number;
 }) {
+  // A pin that matches nothing is indistinguishable from an empty day, and
+  // "Nothing in this view" is what an account with three open tasks and a
+  // stale pin sees. Say which filter is on, and let it come off here.
+  const hidden = Math.max(0, totalUnfiltered - total);
+
   return (
     <TintPanel className="settle-in settle-3 flex flex-col gap-5" system="tasks">
       <CardHeading
@@ -349,15 +359,44 @@ export function TasksCard({
         )}
         seed={6}
         title={
-          total === 0
-            ? "The queue is clear."
-            : `${taskStats.activeTasksCount} open of ${total}.`
+          total > 0
+            ? `${taskStats.activeTasksCount} open of ${total}.`
+            : // "The queue is clear" is only true when there is nothing to
+              // clear. With a filter on and tasks behind it, it is the lie
+              // that made this card useless.
+              hidden > 0
+              ? `${hidden} ${hidden === 1 ? "task" : "tasks"} outside this filter.`
+              : "The queue is clear."
         }
       />
 
+      {pinnedCategory && hidden > 0 ? (
+        <form action={clearPinnedTaskCategoryAction}>
+          <PendingSubmitButton
+            className="press-row flex w-full items-center justify-between gap-3 rounded-xl bg-card/70 px-4 py-3 text-left text-[13px] transition-colors hover:bg-card"
+            pendingLabel="Showing everything…"
+          >
+            <span className="min-w-0">
+              <span className="block font-semibold">
+                Showing only “{pinnedCategory}”.
+              </span>
+              <span className="block text-[12px] text-muted-foreground">
+                {hidden} more {hidden === 1 ? "task is" : "tasks are"} hidden by
+                this filter.
+              </span>
+            </span>
+            <span className="shrink-0 text-[12px] font-bold text-tasks-ink">
+              Show all
+            </span>
+          </PendingSubmitButton>
+        </form>
+      ) : null}
+
       {quickTasks.length === 0 ? (
         <p className="rounded-xl bg-card/70 p-4 text-[13px]">
-          Nothing in this view. Plan only what deserves a day.
+          {pinnedCategory && hidden > 0
+            ? `Nothing in “${pinnedCategory}” today.`
+            : "Nothing in this view. Plan only what deserves a day."}
         </p>
       ) : (
         <ul className="flex flex-col gap-2">

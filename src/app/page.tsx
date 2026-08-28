@@ -331,6 +331,10 @@ export default async function Home({
     calendar.timeZone,
   ).slice(0, 6);
   const pinnedTaskStats = getTaskStats(pinnedTasks);
+  // The tiles answer "what is the day", so they count the whole day. The
+  // pinned category is a lens on the card underneath them, and a tile reading
+  // "Nothing on the list" while three tasks are open is simply false.
+  const dayTaskStats = getTaskStats(orderedTasks);
   // A routine is done for a date, so today's completions decide whether it is
   // still asking for something.
   const doneToday = new Set(
@@ -411,6 +415,7 @@ export default async function Home({
         today={today}
         timeZone={calendar.timeZone}
         total={pinnedTasks.length}
+        totalUnfiltered={orderedTasks.length}
       />
     ),
   };
@@ -539,7 +544,7 @@ export default async function Home({
             anything about; a task and a session are. */}
         <DayTiles
           habits={dailyRings.habits}
-          taskStats={pinnedTaskStats}
+          taskStats={dayTaskStats}
           training={fitnessStats.todayTraining}
         />
 
