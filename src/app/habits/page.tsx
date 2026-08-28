@@ -26,10 +26,15 @@ export default async function HabitsPage() {
   const holdWindow = Array.from({ length: 28 }, (_, index) =>
     shiftDate(today, index - 27),
   );
-  const [habits, checks] = await Promise.all([
+  const [habitRead, checkRead] = await Promise.all([
     getHabits(supabase, user.id),
     getHabitChecks(supabase, user.id, holdWindow[0], today),
   ]);
+  const habits = habitRead.rows;
+  const checks = checkRead.rows;
+  // Said out loud rather than shown as an empty list. A page that cannot read
+  // its own table and draws "nothing yet" is lying to the person reading it.
+  const trouble = habitRead.error || checkRead.error;
   const doneToday = habits
     .filter((habit) => isHabitDoneOn(checks, habit.id, today))
     .map((habit) => habit.id);
@@ -56,6 +61,7 @@ export default async function HabitsPage() {
         holds={holds}
         timeZone={timeZone}
         today={today}
+        trouble={trouble}
       />
     </main>
   );

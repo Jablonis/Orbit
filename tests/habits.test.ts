@@ -8,6 +8,7 @@ import {
   habitHoldSentence,
   isHabitDoneOn,
   isHabitDueOn,
+  describeHabitError,
   isMissingHabitsSchema,
 } from "../src/lib/habits";
 import { getDailyRings } from "../src/lib/dashboard";
@@ -142,6 +143,21 @@ test("the daily rings carry habits without a caller having to pass them", () => 
     }).habits,
     { completed: 1, percent: 100, total: 1 },
   );
+});
+
+test("a failure says what the database said, not \"try again\"", () => {
+  // The reason is the whole message. A planner that answers a missing table
+  // with "that could not be saved" sends its one user round in circles, which
+  // is exactly what happened.
+  assert.match(
+    describeHabitError({ code: "PGRST205", message: "Could not find the table" }),
+    /migration has not been run/,
+  );
+  assert.equal(
+    describeHabitError({ code: "42501", message: "permission denied for table habits" }),
+    "permission denied for table habits (42501)",
+  );
+  assert.equal(describeHabitError(null), "");
 });
 
 test("a database without the habits migration reads as an account with none", () => {

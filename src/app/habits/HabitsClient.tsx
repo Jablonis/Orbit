@@ -36,12 +36,15 @@ export function HabitsClient({
   holds,
   timeZone,
   today,
+  trouble,
 }: {
   doneToday: string[];
   habits: Habit[];
   holds: Record<string, Hold>;
   timeZone: string;
   today: string;
+  /** Why the list could not be read, in the database's own words. */
+  trouble?: string;
 }) {
   const [state, save] = useActionState(saveHabitAction, idleHabitState);
   const [archiveState, archive] = useActionState(
@@ -59,8 +62,8 @@ export function HabitsClient({
     "habits",
     PIP_KITS.habits,
   );
-  const message = state.message || archiveState.message;
-  const failed = !state.ok || !archiveState.ok;
+  const message = trouble || state.message || archiveState.message;
+  const failed = Boolean(trouble) || !state.ok || !archiveState.ok;
 
   const startEdit = (habit: Habit) => {
     setEditing(habit);
