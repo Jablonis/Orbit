@@ -69,6 +69,7 @@ export type ProductivityScoringPreferences = {
   weights: {
     fitness: number;
     focus: number;
+    habits: number;
     tasks: number;
   };
 };
@@ -109,6 +110,7 @@ export const defaultProductivityScoring: ProductivityScoringPreferences = {
   weights: {
     fitness: 25,
     focus: 15,
+    habits: 25,
     tasks: 60,
   },
 };
@@ -259,6 +261,12 @@ export function parseDashboardPreferences(
         focus: boundedInteger(
           weights.focus,
           defaultProductivityScoring.weights.focus,
+          0,
+          100,
+        ),
+        habits: boundedInteger(
+          weights.habits,
+          defaultProductivityScoring.weights.habits,
           0,
           100,
         ),

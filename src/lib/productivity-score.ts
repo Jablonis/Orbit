@@ -1,16 +1,18 @@
 export type ProductivityPoint = {
   completedFitness: number;
+  completedHabits: number;
   completedTasks: number;
   date: string;
   focusMinutes: number;
   future: boolean;
   label: string;
   plannedFitness: number;
+  plannedHabits: number;
   plannedTasks: number;
   score: number | null;
 };
 
-export type ProductivityDomain = "tasks" | "fitness" | "focus";
+export type ProductivityDomain = "tasks" | "fitness" | "focus" | "habits";
 
 export type ProductivityScoring = {
   focusTargetMinutes: number;
@@ -22,6 +24,12 @@ const defaultScoring: ProductivityScoring = {
   weights: {
     fitness: 25,
     focus: 15,
+    // A habit is a peer of a session, not a garnish on the task list: the day
+    // you kept every one of them and did nothing else was still a day you kept
+    // them. Weights are normalised over whatever the day actually asked for,
+    // so an account with no habits scores exactly as it did before they
+    // existed.
+    habits: 25,
     tasks: 60,
   },
 };
@@ -71,6 +79,7 @@ export function scorePoint(
   const availableDomains = enabledDomains.filter((domain) => {
     if (domain === "tasks") return point.plannedTasks > 0;
     if (domain === "fitness") return point.plannedFitness > 0;
+    if (domain === "habits") return point.plannedHabits > 0;
     return scoring.focusTargetMinutes > 0;
   });
   const availableWeight = availableDomains.reduce(
@@ -82,6 +91,9 @@ export function scorePoint(
       ? Math.min(1, point.completedFitness / point.plannedFitness)
       : 0,
     focus: Math.min(1, point.focusMinutes / scoring.focusTargetMinutes),
+    habits: point.plannedHabits
+      ? Math.min(1, point.completedHabits / point.plannedHabits)
+      : 0,
     tasks: point.plannedTasks
       ? Math.min(1, point.completedTasks / point.plannedTasks)
       : 0,

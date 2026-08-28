@@ -20,6 +20,7 @@ function signatureFromPreferences(preferences: DashboardPreferences) {
     fitnessWeight: String(preferences.scoring.weights.fitness),
     focusTarget: String(preferences.scoring.focusTargetMinutes),
     focusWeight: String(preferences.scoring.weights.focus),
+    habitsWeight: String(preferences.scoring.weights.habits),
     hidden: [...preferences.hiddenCards].sort(),
     order: preferences.cardOrder,
     pinnedFinanceMetric: preferences.pinnedFinanceMetric,
@@ -59,6 +60,9 @@ export function DashboardCustomizer({
   const [fitnessWeight, setFitnessWeight] = useState(
     String(preferences.scoring.weights.fitness),
   );
+  const [habitsWeight, setHabitsWeight] = useState(
+    String(preferences.scoring.weights.habits),
+  );
   const [focusWeight, setFocusWeight] = useState(
     String(preferences.scoring.weights.focus),
   );
@@ -77,6 +81,7 @@ export function DashboardCustomizer({
     fitnessWeight,
     focusTarget,
     focusWeight,
+    habitsWeight,
     hidden: [...hidden].sort(),
     order,
     pinnedFinanceMetric,
@@ -421,6 +426,12 @@ export function DashboardCustomizer({
               label="Fitness weight"
               name="fitnessWeight"
               onChange={setFitnessWeight}
+            />
+            <WeightField
+              value={habitsWeight}
+              label="Habits weight"
+              name="habitsWeight"
+              onChange={setHabitsWeight}
             />
             <WeightField
               value={focusWeight}

@@ -20,8 +20,17 @@ altitude(today) = 0.85 × altitude(yesterday) + 0.15 × score(today)
 - A missed day costs 15 % of the altitude instead of everything.
 - Nothing is ever fully lost, and nothing holds itself up for free.
 
-`score` is the existing productivity score (tasks, fitness, focus), so the
-weights configured in dashboard settings flow straight into momentum.
+`score` is the existing productivity score (tasks, fitness, habits, focus), so
+the weights configured in dashboard settings flow straight into momentum.
+
+A day has three pillars: the list, the session, and a habit the account names
+itself. Money is not one of them — a ledger is either balanced at the end of a
+month or it is not, and there is nothing to do about it on a Tuesday, so a day
+should not read as unfinished for having spent nothing. The third pillar is
+whatever this person has decided to keep doing, with the weekdays it is asked
+for; on a day it is not asked for, its weight is not in the denominator at all,
+which is why an account with no habits scores exactly as it did before they
+existed.
 
 ## Tiers
 

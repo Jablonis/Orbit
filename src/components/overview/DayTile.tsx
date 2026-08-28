@@ -33,6 +33,7 @@ export function DayTile({
   seed = 0,
   title,
   tone,
+  wide = false,
 }: {
   /** Exactly one control. A tile with two is a card. */
   action?: ReactNode;
@@ -45,10 +46,12 @@ export function DayTile({
   seed?: number;
   title: string;
   tone: TileTone;
+  /** Spans both columns on a phone, where a lone third tile looks orphaned. */
+  wide?: boolean;
 }) {
   return (
     <TintPanel
-      className="flex min-h-[168px] flex-col gap-3"
+      className={`flex min-h-[168px] flex-col gap-3 ${wide ? "col-span-2 sm:col-span-1" : ""}`}
       padding="sm"
       system={tone}
     >

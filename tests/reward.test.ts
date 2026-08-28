@@ -9,12 +9,14 @@ const domains = ["tasks", "fitness", "focus"] as const;
 function point(overrides: Partial<ProductivityPoint> = {}): ProductivityPoint {
   return {
     completedFitness: 0,
+    completedHabits: 0,
     completedTasks: 0,
     date: "2026-08-24",
     focusMinutes: 0,
     future: false,
     label: "Mon",
     plannedFitness: 1,
+    plannedHabits: 0,
     plannedTasks: 4,
     score: 0,
     ...overrides,
@@ -58,6 +60,7 @@ test("the fewer are left, the more each one is worth", () => {
 test("a day already at the top has nothing left to give", () => {
   const done = point({
     completedFitness: 1,
+    completedHabits: 0,
     completedTasks: 4,
     focusMinutes: 240,
   });

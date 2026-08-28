@@ -15,12 +15,14 @@ function days(scores: Array<number | null>, future = 0): ProductivityPoint[] {
     date.setUTCDate(date.getUTCDate() + index);
     return {
       completedFitness: 0,
+      completedHabits: 0,
       completedTasks: 0,
       date: date.toISOString().slice(0, 10),
       focusMinutes: 0,
       future: index >= scores.length - future,
       label: "Day",
       plannedFitness: 0,
+      plannedHabits: 0,
       plannedTasks: 0,
       score,
     };

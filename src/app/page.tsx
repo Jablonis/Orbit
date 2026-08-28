@@ -49,6 +49,7 @@ import {
 import {
   getFinanceTransactions,
 } from "@/lib/finance";
+import { getHabitChecks, getHabits } from "@/lib/habits";
 import {
   type DashboardCardId,
   getDashboardPreferences,
@@ -121,6 +122,8 @@ export default async function Home({
     sessions,
     fitnessPlanHistory,
     reflection,
+    habitList,
+    habitChecks,
   ] =
     await Promise.all([
       getTasks(supabase, user.id, { includeHistory: true }),
@@ -130,7 +133,11 @@ export default async function Home({
       getFitnessSessions(supabase, user.id, historyFrom, historyTo),
       getFitnessPlanHistory(supabase, user.id, historyFrom, historyTo),
       getWeeklyReflection(supabase, user.id, currentWeek[0]),
+      getHabits(supabase, user.id),
+      getHabitChecks(supabase, user.id, historyFrom, historyTo),
     ]);
+  // The third pillar, passed as one bundle to everything that scores a day.
+  const habitInputs = { checks: habitChecks, habits: habitList };
   const visibleTasks = getVisibleTasks(taskHistory, today, calendar.timeZone);
   const orderedTasks = sortDashboardTasks(
     visibleTasks,
@@ -152,6 +159,7 @@ export default async function Home({
     fitnessStats.todayTraining,
     today,
     calendar.timeZone,
+    habitInputs,
   );
   const enabledDomains = getEnabledDomains(params.domains);
   const productivity = rescoreProductivity(
@@ -163,6 +171,7 @@ export default async function Home({
       today,
       preferences.rangeDays,
       calendar,
+      habitInputs,
     ),
     enabledDomains,
     preferences.scoring,
@@ -175,6 +184,7 @@ export default async function Home({
       fitnessPlanHistory,
       today,
       calendar,
+      habitInputs,
     ),
     enabledDomains,
     preferences.scoring,
@@ -197,6 +207,7 @@ export default async function Home({
       today,
       30,
       calendar,
+      habitInputs,
     ),
     enabledDomains,
     preferences.scoring,
@@ -221,6 +232,7 @@ export default async function Home({
           today,
           VOYAGE_HISTORY_DAYS,
           calendar,
+          habitInputs,
         ),
         previous: [],
       },
@@ -245,6 +257,7 @@ export default async function Home({
   });
   const setup = getSetupState({
     fitnessConfigured,
+    habitCount: habitList.length,
     hasOrbitDay: momentumRange.current.some(
       (point) => (point.score ?? 0) >= ORBIT_DAY_SCORE,
     ),
@@ -266,6 +279,7 @@ export default async function Home({
     areas: [
       { ...dailyRings.tasks, label: "Tasks", system: "tasks" as const },
       { ...dailyRings.fitness, label: "Fitness", system: "fitness" as const },
+      { ...dailyRings.habits, label: "Habits", system: "habits" as const },
     ],
     todayScore: momentum.todayScore,
   });
@@ -526,6 +540,7 @@ export default async function Home({
         {dashboardCards.momentum}
 
         <DayTiles
+          habits={dailyRings.habits}
           taskStats={pinnedTaskStats}
           training={fitnessStats.todayTraining}
         />
@@ -587,7 +602,7 @@ function filterTasks(
 
 function getEnabledDomains(value: string | undefined): ProductivityDomain[] {
   if (value === "none") return [];
-  if (!value) return ["tasks", "fitness", "focus"];
-  const valid: ProductivityDomain[] = ["tasks", "fitness", "focus"];
+  if (!value) return ["tasks", "fitness", "focus", "habits"];
+  const valid: ProductivityDomain[] = ["tasks", "fitness", "focus", "habits"];
   return valid.filter((domain) => value.split(",").includes(domain));
 }

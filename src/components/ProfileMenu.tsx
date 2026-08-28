@@ -258,6 +258,22 @@ function ProfileMenuDialog({
             </section>
           ) : null}
 
+          {/* Finance left the navigation bar when habits took its place: a
+              ledger is not a daily surface, and six items wrap on a phone. It
+              is whole, and it is here. */}
+          <section aria-labelledby="ledger-heading">
+            <p className="label-caps text-finance" id="ledger-heading">
+              Ledger
+            </p>
+            <a
+              className="mt-3 flex min-h-11 items-center justify-between rounded-xl border border-input px-4 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted"
+              href="/finance"
+            >
+              Open finance
+              <span aria-hidden="true">→</span>
+            </a>
+          </section>
+
           <section aria-labelledby="data-portability-heading" className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-xl p-4">
             <p className="label-caps text-finance" id="data-portability-heading">
               Data portability

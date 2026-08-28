@@ -7,6 +7,8 @@ import type {
 import { getWeekDateKeys, shiftDate } from "@/lib/fitness";
 import type { FinanceTransaction } from "@/lib/finance";
 import type { CalendarPreferences } from "@/lib/preferences";
+import type { Habit, HabitCheck } from "@/lib/habits";
+import { getHabitRing, isHabitDoneOn, isHabitDueOn } from "@/lib/habits";
 import type { Task, TaskCompletion } from "@/lib/tasks";
 import { getDateInTimeZone, getTaskDayStatus, isRepeating } from "@/lib/tasks";
 import { getDayTasks, isRoutineDueOn } from "@/lib/routines";
@@ -30,8 +32,22 @@ export type DailyRingMetric = {
  */
 export type DailyRings = {
   fitness: DailyRingMetric;
+  habits: DailyRingMetric;
   tasks: DailyRingMetric;
 };
+
+/**
+ * The habits a day is measured against. Passed as one bundle and defaulted to
+ * empty, because habits arrived after the scoring engine did: an account with
+ * none — or a caller that has not loaded them — scores exactly as it did
+ * before the pillar existed.
+ */
+export type HabitInputs = {
+  checks: HabitCheck[];
+  habits: Habit[];
+};
+
+const noHabits: HabitInputs = { checks: [], habits: [] };
 
 export type WeeklyReflection = {
   changeNextWeek: string;
@@ -65,6 +81,7 @@ export function getDailyRings(
   training: TodayTraining,
   today: string,
   timeZone: CalendarPreferences["timeZone"],
+  habits: HabitInputs = noHabits,
 ): DailyRings {
   // A routine is done for a date rather than for good, so the ring reads the
   // completions for today instead of the flag on the task.
@@ -73,11 +90,19 @@ export function getDailyRings(
   );
   const fitnessTotal = training.day.sport === "rest" ? 0 : 1;
 
+  const habitRing = getHabitRing(
+    habits.habits,
+    habits.checks,
+    today,
+    timeZone,
+  );
+
   return {
     fitness: toRingMetric(
       fitnessTotal && training.day.log.completed ? 1 : 0,
       fitnessTotal,
     ),
+    habits: toRingMetric(habitRing.completed, habitRing.total),
     tasks: toRingMetric(
       dailyTasks.filter((entry) => entry.done).length,
       dailyTasks.length,
@@ -129,6 +154,7 @@ function pointForDate(
   today: string,
   allowFuture: boolean,
   calendar: CalendarPreferences,
+  habitInputs: HabitInputs,
 ): ProductivityPoint {
   const dayPlan = plan.find((day) => day.date === date);
   const plannedIds = plannedTaskIds(
@@ -153,13 +179,27 @@ function pointForDate(
     (total, completion) => total + completion.estimateMinutes,
     0,
   );
+  const dueHabits = habitInputs.habits.filter((habit) =>
+    isHabitDueOn(habit, date, calendar.timeZone),
+  );
+  const plannedHabits = dueHabits.length;
+  const completedHabits = dueHabits.filter((habit) =>
+    isHabitDoneOn(habitInputs.checks, habit.id, date),
+  ).length;
   const future = allowFuture && date > today;
   const taskRatio = plannedTasks ? Math.min(1, completedTasks / plannedTasks) : 0;
   const fitnessRatio = plannedFitness ? completedFitness : 0;
   const focusRatio = Math.min(1, focusMinutes / 120);
+  const habitRatio = plannedHabits ? completedHabits / plannedHabits : 0;
+  // The unweighted seed the chart draws before `rescoreProductivity` asks the
+  // real engine. Habits only take a share of the day on the days they are
+  // asked for, so a day with none scores exactly as it always did.
+  const habitWeight = plannedHabits ? 25 : 0;
+  const totalWeight = 60 + 25 + 15 + habitWeight;
 
   return {
     completedFitness,
+    completedHabits,
     completedTasks,
     date,
     focusMinutes,
@@ -169,10 +209,18 @@ function pointForDate(
       weekday: "short",
     }).format(new Date(`${date}T12:00:00Z`)),
     plannedFitness,
+    plannedHabits,
     plannedTasks,
     score: future
       ? null
-      : Math.round(taskRatio * 60 + fitnessRatio * 25 + focusRatio * 15),
+      : Math.round(
+          ((taskRatio * 60 +
+            fitnessRatio * 25 +
+            focusRatio * 15 +
+            habitRatio * habitWeight) /
+            totalWeight) *
+            100,
+        ),
   };
 }
 
@@ -183,6 +231,7 @@ export function getProductivityWeeks(
   plan: DatedFitnessPlan[],
   today: string,
   calendar: CalendarPreferences,
+  habits: HabitInputs = noHabits,
 ) {
   const currentDates = getWeekDateKeys(today, calendar.weekStartsOn);
   const previousDates = currentDates.map((date) => shiftDate(date, -7));
@@ -198,6 +247,7 @@ export function getProductivityWeeks(
         today,
         true,
         calendar,
+        habits,
       ),
     ),
     previous: previousDates.map((date) =>
@@ -210,6 +260,7 @@ export function getProductivityWeeks(
         today,
         false,
         calendar,
+        habits,
       ),
     ),
   };
@@ -229,11 +280,22 @@ export function getProductivityHistory(
   today: string,
   days: number,
   calendar: CalendarPreferences,
+  habits: HabitInputs = noHabits,
 ): ProductivityPoint[] {
   return Array.from({ length: days }, (_, index) =>
     shiftDate(today, index - days + 1),
   ).map((date) =>
-    pointForDate(date, tasks, completions, sessions, plan, today, false, calendar),
+    pointForDate(
+      date,
+      tasks,
+      completions,
+      sessions,
+      plan,
+      today,
+      false,
+      calendar,
+      habits,
+    ),
   );
 }
 
@@ -245,6 +307,7 @@ export function getProductivityRange(
   today: string,
   days: 7 | 30,
   calendar: CalendarPreferences,
+  habits: HabitInputs = noHabits,
 ) {
   const currentDates = Array.from({ length: days }, (_, index) =>
     shiftDate(today, index - days + 1),
@@ -262,6 +325,7 @@ export function getProductivityRange(
         today,
         false,
         calendar,
+        habits,
       ),
     ),
     previous: previousDates.map((date) =>
@@ -274,6 +338,7 @@ export function getProductivityRange(
         today,
         false,
         calendar,
+        habits,
       ),
     ),
   };

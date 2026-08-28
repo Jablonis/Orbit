@@ -118,6 +118,7 @@ export function RingsCard({
     areas: [
       { ...dailyRings.tasks, label: "Tasks", system: "tasks" as const },
       { ...dailyRings.fitness, label: "Fitness", system: "fitness" as const },
+      { ...dailyRings.habits, label: "Habits", system: "habits" as const },
     ],
     todayScore: todayScore ?? null,
   });
@@ -548,6 +549,7 @@ export function AnalyticsCard({
   const domainToggles: Array<{ id: ProductivityDomain; label: string }> = [
     { id: "tasks", label: "Tasks" },
     { id: "fitness", label: "Fitness" },
+    { id: "habits", label: "Habits" },
     { id: "focus", label: "Focus" },
   ];
 

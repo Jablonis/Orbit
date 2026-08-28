@@ -9,12 +9,14 @@ import { getDateInTimeZone } from "../src/lib/tasks";
 
 const point = {
   completedFitness: 1,
+  completedHabits: 0,
   completedTasks: 2,
   date: "2026-07-23",
   focusMinutes: 120,
   future: false,
   label: "Thu",
   plannedFitness: 1,
+  plannedHabits: 0,
   plannedTasks: 2,
   score: 100,
 };
@@ -51,7 +53,7 @@ test("uses the user's focus target and score weights", () => {
     ["tasks", "focus"],
     {
       focusTargetMinutes: 60,
-      weights: { tasks: 20, fitness: 0, focus: 80 },
+      weights: { tasks: 20, fitness: 0, focus: 80, habits: 0 },
     },
   );
 

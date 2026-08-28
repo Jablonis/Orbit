@@ -7,7 +7,7 @@ import type { ThemeChoice } from "@/lib/theme";
 import { QuickAdd } from "@/components/QuickAdd";
 import type { RegionalPreferences } from "@/lib/preferences";
 
-type NavKey = "dashboard" | "fitness" | "tasks" | "finance" | "crew";
+type NavKey = "dashboard" | "fitness" | "tasks" | "habits" | "finance" | "crew";
 
 const navItems: Array<{
   key: NavKey;
@@ -18,9 +18,14 @@ const navItems: Array<{
   { key: "dashboard", label: "Overview", href: "/", icon: <GridIcon /> },
   { key: "fitness", label: "Fitness", href: "/fitness", icon: <SparkIcon /> },
   { key: "tasks", label: "Tasks", href: "/tasks", icon: <CheckIcon /> },
-  { key: "finance", label: "Finance", href: "/finance", icon: <WalletIcon /> },
+  { key: "habits", label: "Habits", href: "/habits", icon: <LoopIcon /> },
   { key: "crew", label: "Crew", href: "/crew", icon: <CrewIcon /> },
 ];
+
+// Finance is not in the bar. A ledger is not a daily surface — it is somewhere
+// you go when a statement lands — and a sixth item wraps onto two rows on a
+// phone, which is how the bar stopped reading as a bar. It lives in the
+// profile menu instead, one tap away and still whole.
 
 export function AppNavigation({
   active,
@@ -148,12 +153,13 @@ function CheckIcon() {
   );
 }
 
-function WalletIcon() {
+function LoopIcon() {
   return (
     <Svg>
-      <path d="M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
-      <path d="M16 14h5v-4h-5a2 2 0 0 0 0 4Z" />
-      <path d="M3 7c0-2 1-3 3-3h12" />
+      <path d="M4 9a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5" />
+      <path d="M17 2.5 20.5 6 17 9.5" />
+      <path d="M20 15a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5" />
+      <path d="M7 21.5 3.5 18 7 14.5" />
     </Svg>
   );
 }

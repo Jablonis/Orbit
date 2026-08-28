@@ -6,6 +6,7 @@ import type { Ascent, AscentSystem } from "@/lib/ascent";
 // generate.
 const fill: Record<AscentSystem, string> = {
   fitness: "bg-fitness",
+  habits: "bg-plum",
   tasks: "bg-tasks",
 };
 
@@ -13,11 +14,13 @@ const fill: Record<AscentSystem, string> = {
 // so it is one: it goes to the page that moves it.
 const href: Record<AscentSystem, string> = {
   fitness: "/fitness",
+  habits: "/habits",
   tasks: "/tasks",
 };
 
 const ink: Record<AscentSystem, string> = {
   fitness: "text-fitness-ink",
+  habits: "text-plum-ink",
   tasks: "text-tasks-ink",
 };
 
