@@ -535,15 +535,16 @@ export default async function Home({
           today={today}
         />
 
-        {/* How the day is going, first and large: the altitude, and the climb
-            today has actually drawn. */}
-        {dashboardCards.momentum}
-
+        {/* The day itself first. An altitude is not something you can do
+            anything about; a task and a session are. */}
         <DayTiles
           habits={dailyRings.habits}
           taskStats={pinnedTaskStats}
           training={fitnessStats.todayTraining}
         />
+
+        {/* And then how it is going, underneath, small. */}
+        {dashboardCards.momentum}
 
         {listCards.map((card) => dashboardCards[card])}
 

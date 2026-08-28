@@ -77,6 +77,10 @@ export function TasksClient({
   const [estimateMode, setEstimateMode] = useState<TaskEstimateMode>("1hr");
   const [repeatDays, setRepeatDays] = useState<number[]>([]);
   const [formVersion, setFormVersion] = useState(0);
+  // Which of the three screens the new-task form is on. Editing skips the
+  // wizard: someone changing one field should not walk through a flow.
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [createdTitle, setCreatedTitle] = useState("");
   const [controlsOpen, setControlsOpen] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [bulkDate, setBulkDate] = useState(today);
@@ -238,6 +242,7 @@ export function TasksClient({
         setEditing(null);
         setEstimateMode("1hr");
         setRepeatDays([]);
+        setStep(1);
         setFormOpen(true);
       }
     };
@@ -277,15 +282,20 @@ export function TasksClient({
         setTaskSaveNotice({ error: true, message: result.error });
         return;
       }
-      setTaskSaveNotice({
-        error: false,
-        message: editing ? "Task updated." : "Task created.",
-      });
-      setEditing(null);
-      setEstimateMode("1hr");
-      setRepeatDays([]);
-      setFormVersion((current) => current + 1);
-      setFormOpen(false);
+      // An edit is done when it is saved. A new task earns the third screen:
+      // the moment something is finished is the only moment worth marking, and
+      // a form that just vanishes marks nothing.
+      if (editing) {
+        setTaskSaveNotice({ error: false, message: "Task updated." });
+        setEditing(null);
+        setEstimateMode("1hr");
+        setRepeatDays([]);
+        setFormVersion((current) => current + 1);
+        setFormOpen(false);
+        return;
+      }
+      setCreatedTitle(String(formData.get("title") ?? "").trim());
+      setStep(3);
     } catch {
       setTaskSaveNotice({
         error: true,
@@ -382,7 +392,13 @@ export function TasksClient({
               className="label-caps text-muted-foreground"
               id="task-editor-title"
             >
-              {editing ? "Edit task" : "New task"}
+              {editing
+                ? "Edit task"
+                : step === 1
+                  ? "New task · what is it"
+                  : step === 2
+                    ? "New task · the details"
+                    : "Added"}
             </p>
             <button
               aria-label="Close task form"
@@ -393,13 +409,52 @@ export function TasksClient({
               ×
             </button>
           </div>
+          {editing || step === 3 ? null : (
+            <div aria-hidden="true" className="mt-4 flex gap-1.5">
+              {[1, 2].map((dot) => (
+                <span
+                  className={`h-1 flex-1 rounded-full transition-colors ${
+                    dot <= step ? "bg-primary" : "bg-muted"
+                  }`}
+                  key={dot}
+                />
+              ))}
+            </div>
+          )}
+
+          {step === 3 && !editing ? (
+            <TaskAdded
+              onAnother={() => {
+                setEstimateMode("1hr");
+                setRepeatDays([]);
+                setFormVersion((current) => current + 1);
+                setTaskSaveNotice(null);
+                setStep(1);
+              }}
+              onDone={() => {
+                setEstimateMode("1hr");
+                setRepeatDays([]);
+                setFormVersion((current) => current + 1);
+                setTaskSaveNotice(null);
+                setStep(1);
+                setFormOpen(false);
+              }}
+              title={createdTitle}
+            />
+          ) : null}
+
           <form
             action={saveTask}
-            className="mt-5 grid gap-3"
+            className={`mt-4 grid gap-3 ${step === 3 && !editing ? "hidden" : ""}`}
             key={`${editing?.id ?? "new-task"}-${formVersion}`}
           >
             <input name="id" type="hidden" value={editing?.id ?? ""} />
             <input name="completed" type="hidden" value={String(editing?.completed ?? false)} />
+
+            {/* Screen one. Hidden rather than unmounted: an unmounted input is
+                not in the form, and the answers given here would be posted as
+                empty. */}
+            <div className={`grid gap-3 ${editing || step === 1 ? "" : "hidden"}`}>
             <Field label="Title">
               <input
                 className="field-input"
@@ -428,6 +483,11 @@ export function TasksClient({
                 </span>
               ) : null}
             </Field>
+            </div>
+
+            {/* Screen two: everything that has a sensible answer already, so
+                nobody has to touch it to get a task onto the list. */}
+            <div className={`grid gap-3 ${editing || step === 2 ? "" : "hidden"}`}>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Type">
                 <select className="field-input" defaultValue={editing?.type ?? "deep-work"} name="type">
@@ -498,9 +558,46 @@ export function TasksClient({
                 name="note"
               />
             </Field>
+            </div>
+
             <div className="flex gap-3">
+              {!editing && step === 1 ? (
+                <button
+                  className="flex-1 rounded-xl bg-primary px-4 py-3 text-[13px] font-bold text-primary-foreground transition-transform duration-150 active:scale-[0.98]"
+                  onClick={(event) => {
+                    // The browser cannot validate a screen it is not showing,
+                    // so this asks the two fields on this one directly.
+                    const form = event.currentTarget.form;
+                    const title = form?.elements.namedItem("title");
+                    const category = form?.elements.namedItem("category");
+                    for (const field of [title, category]) {
+                      if (
+                        field instanceof HTMLInputElement &&
+                        !field.reportValidity()
+                      ) {
+                        return;
+                      }
+                    }
+                    setStep(2);
+                  }}
+                  type="button"
+                >
+                  Next
+                </button>
+              ) : null}
+              {!editing && step === 2 ? (
+                <button
+                  className="rounded-xl border border-input bg-secondary px-4 py-3 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={() => setStep(1)}
+                  type="button"
+                >
+                  Back
+                </button>
+              ) : null}
               <PendingSubmitButton
-                className="flex-1 rounded-xl bg-primary px-4 py-3 text-[13px] font-bold text-primary-foreground transition-transform duration-150 active:scale-[0.98]"
+                className={`flex-1 rounded-xl bg-primary px-4 py-3 text-[13px] font-bold text-primary-foreground transition-transform duration-150 active:scale-[0.98] ${
+                  !editing && step === 1 ? "hidden" : ""
+                }`}
                 pendingLabel={editing ? "Saving…" : "Creating…"}
               >
                 {editing ? "Save changes" : "Create task"}
@@ -1172,5 +1269,63 @@ function Metric({
     >
       {inside}
     </button>
+  );
+}
+
+/**
+ * The third screen: the one that says it worked.
+ *
+ * A form that closes itself is the weakest possible confirmation — you are
+ * left looking at a list, hunting for the row you just made. This is the
+ * moment the task exists, so it gets a screen, a name, and the only penguin
+ * on this page who is genuinely pleased.
+ */
+function TaskAdded({
+  onAnother,
+  onDone,
+  title,
+}: {
+  onAnother: () => void;
+  onDone: () => void;
+  title: string;
+}) {
+  return (
+    <div className="mt-6 flex flex-col items-center gap-4 py-4 text-center">
+      <Pip
+        burn={1}
+        className="h-20 w-auto"
+        kit={PIP_KITS.tasks}
+        mood="sealed"
+        seed={3}
+        size={80}
+        title="Pip, pleased"
+      />
+      <div>
+        <p className="text-[22px] font-bold leading-7 tracking-[-0.02em]">
+          Task added.
+        </p>
+        {title ? (
+          <p className="mt-1 line-clamp-2 text-[14px] text-muted-foreground">
+            “{title}” is on the list.
+          </p>
+        ) : null}
+      </div>
+      <div className="flex w-full flex-col gap-2 sm:flex-row">
+        <button
+          className="flex-1 rounded-xl border border-input bg-secondary px-4 py-3 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted"
+          onClick={onAnother}
+          type="button"
+        >
+          Add another
+        </button>
+        <button
+          className="flex-1 rounded-xl bg-primary px-4 py-3 text-[13px] font-bold text-primary-foreground transition-transform duration-150 active:scale-[0.98]"
+          onClick={onDone}
+          type="button"
+        >
+          Done
+        </button>
+      </div>
+    </div>
   );
 }
