@@ -1,6 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { Pip } from "@/components/brand/Pip";
@@ -47,6 +49,12 @@ export function FitnessClient({
   weeklyPlan: WeeklyPlanDay[];
 }) {
   const [localPlan, setLocalPlan] = useState(weeklyPlan);
+  const searchParams = useSearchParams();
+  // Which screen this is. Read from the URL rather than held in state, so each
+  // one has its own address and the phone's Back button does what it looks
+  // like it does. The page used to be all four at once, which on a 390px
+  // screen meant none of them.
+  const view = fitnessView(searchParams.get("view"));
   const [mode, setMode] = useState<"plan" | "review">("review");
   const [openDayId, setOpenDayId] = useState<WeekdayId | null>(null);
   const [pendingDayId, setPendingDayId] = useState<WeekdayId | null>(null);
@@ -214,16 +222,28 @@ export function FitnessClient({
             title={weekPip.title}
           />
         <div>
-          <p className="label-caps text-primary">Fitness plan</p>
+          <p className="label-caps text-primary">
+            {view === "today" ? (
+              "Fitness"
+            ) : (
+              <Link className="hover:text-foreground" href="/fitness">
+                ← Fitness
+              </Link>
+            )}
+          </p>
           <h1 className="page-title mt-2 text-foreground">
-            Today&apos;s training
+            {view === "week"
+              ? "Your training week"
+              : view === "guidance"
+                ? "How to train it"
+                : "Today’s training"}
           </h1>
           <p className="mt-3 text-[14px] text-muted-foreground">
             {completedSessionsCount} of {trainingDaysCount} planned sessions complete
           </p>
         </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className={`flex flex-wrap items-center gap-3 ${view === "week" ? "" : "hidden"}`}>
           <div
             aria-label="Fitness mode"
             className="inline-flex rounded-xl border border-border bg-[var(--wash)] p-1"
@@ -277,6 +297,7 @@ export function FitnessClient({
         </div>
       </header>
 
+      {view === "today" ? (
       <section className="grid gap-5 xl:grid-cols-12">
         <article className={`rounded-2xl bg-card shadow-[var(--shadow-card)] relative overflow-hidden rounded-2xl p-6 sm:p-8 xl:col-span-8 ${todayDay.log.completed ? "completion-celebrate" : ""}`}>
           <div className="absolute inset-y-0 left-0 w-1 bg-primary" />
@@ -349,7 +370,11 @@ export function FitnessClient({
           </div>
         </aside>
       </section>
+      ) : null}
 
+      {view === "today" ? <FitnessHub /> : null}
+
+      {view === "week" ? (
       <section className="mt-8" id="training-calendar">
         <span className="block scroll-mt-6" id="weekly-plan" />
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -469,8 +494,9 @@ export function FitnessClient({
           })}
         </div>
       </section>
+      ) : null}
 
-      {openDay ? (
+      {view === "week" && openDay ? (
         <article className="rounded-2xl bg-card shadow-[var(--shadow-card)] modal-animate mt-5 rounded-2xl p-5 sm:p-7">
           <div className="flex flex-col gap-4 border-b border-[var(--hairline)] pb-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -563,12 +589,14 @@ export function FitnessClient({
         </article>
       ) : null}
 
+      {view === "guidance" ? (
       <section className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <TrainingInfoCard label="Warm up" value={guidance.warmup} tone="lime" />
         <TrainingInfoCard label="Main work" value={guidance.main} tone="blue" />
         <TrainingInfoCard label="Finish" value={guidance.finish} tone="pink" />
         <TrainingInfoCard label="Recovery" value={guidance.recovery} tone="amber" />
       </section>
+      ) : null}
       {notice ? (
         <ActionToast message={notice.text} tone={notice.tone} />
       ) : resetNotice ? (
@@ -730,3 +758,55 @@ function TrainingInfoCard({
   );
 }
 
+const FITNESS_VIEWS = ["today", "week", "guidance"] as const;
+type FitnessView = (typeof FITNESS_VIEWS)[number];
+
+function fitnessView(value: string | null): FitnessView {
+  return FITNESS_VIEWS.includes(value as FitnessView)
+    ? (value as FitnessView)
+    : "today";
+}
+
+/**
+ * The way into everything this page used to show at once.
+ *
+ * Four full sections stacked on one route is readable on a desktop and is a
+ * scroll with no landmarks on a phone — which is what "na mobile nic dokopy
+ * nevidis" means. So the page answers today, and the rest are doors.
+ */
+function FitnessHub() {
+  const rows: Array<{ detail: string; href: string; label: string }> = [
+    {
+      detail: "Change the sport, the time and the length of each day.",
+      href: "/fitness?view=week",
+      label: "Your training week",
+    },
+    {
+      detail: "Warm up, main work, finish and recovery for today’s session.",
+      href: "/fitness?view=guidance",
+      label: "How to train it",
+    },
+  ];
+
+  return (
+    <nav className="mt-5 flex flex-col gap-2" aria-label="Fitness settings">
+      {rows.map((row) => (
+        <Link
+          className="press-row flex min-h-16 items-center justify-between gap-4 rounded-2xl bg-card p-4 shadow-[var(--shadow-card)] transition-colors hover:bg-muted"
+          href={row.href}
+          key={row.href}
+        >
+          <span className="min-w-0">
+            <span className="block text-[15px] font-semibold">{row.label}</span>
+            <span className="block text-[12px] leading-4 text-muted-foreground">
+              {row.detail}
+            </span>
+          </span>
+          <span aria-hidden="true" className="shrink-0 text-muted-foreground">
+            →
+          </span>
+        </Link>
+      ))}
+    </nav>
+  );
+}

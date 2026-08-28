@@ -238,6 +238,84 @@ export async function completeTodayTrainingAction(): Promise<FitnessActionResult
   return { ok: true };
 }
 
+/**
+ * Marking today's session done from the dashboard.
+ *
+ * The dashboard knows the date and nothing else — it draws one day, not a
+ * week — so this resolves the sport and the planned duration from the plan
+ * itself rather than trusting a form to carry them. It used to post `date` to
+ * an action that read `weekday` and `sport`, so every press was rejected as an
+ * invalid session, and the result was thrown away without being shown: the
+ * button moved, nothing was written, and the app looked like it had no
+ * functionality at all. It very nearly did.
+ */
+export async function setTrainingDoneAction(
+  _state: FitnessSetupActionState,
+  formData: FormData,
+): Promise<FitnessSetupActionState> {
+  const { supabase, user } = await getAuthenticatedUser();
+  const date = String(formData.get("date") ?? "");
+  const completed = String(formData.get("completed") ?? "") === "true";
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return { message: "That day could not be identified.", ok: false };
+  }
+
+  const preferences = await getDashboardPreferences(supabase, user.id);
+  const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
+  const plan = await ensureFitnessPlan(
+    supabase,
+    user.id,
+    today,
+    preferences.regional.weekStartsOn,
+  );
+  const day = plan?.find((item) => item.date === date);
+
+  if (!day) {
+    return { message: "Set up your training week first.", ok: false };
+  }
+  if (day.sport === "rest") {
+    return { message: "That day is a recovery day.", ok: false };
+  }
+
+  const { data: existing, error: readError } = await supabase
+    .from("fitness_sessions")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("performed_on", date)
+    .maybeSingle();
+  if (readError) {
+    console.error("fitness: session read failed", readError.code, readError.message);
+    return { message: readError.message, ok: false };
+  }
+
+  const { error } = existing
+    ? await supabase
+        .from("fitness_sessions")
+        .update({ completed })
+        .eq("id", existing.id)
+        .eq("user_id", user.id)
+    : await supabase.from("fitness_sessions").insert({
+        completed,
+        duration_minutes: day.plannedDurationMinutes || 60,
+        performed_on: date,
+        quality: day.log.quality,
+        sport: day.sport,
+        user_id: user.id,
+      });
+
+  if (error) {
+    console.error("fitness: session write failed", error.code, error.message);
+    return { message: error.message, ok: false };
+  }
+
+  revalidateFitness();
+  return {
+    message: completed ? "Training logged." : "Training un-marked.",
+    ok: true,
+  };
+}
+
 export async function toggleFitnessDoneFormAction(formData: FormData) {
   await toggleFitnessDoneAction(formData);
 }

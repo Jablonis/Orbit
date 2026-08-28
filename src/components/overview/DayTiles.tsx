@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { DayTile } from "@/components/overview/DayTile";
-import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { PIP_KITS, getPanelPip } from "@/lib/mascot";
 import type { DailyRingMetric } from "@/lib/dashboard";
 import type { TodayTraining } from "@/lib/fitness";
 import { getTaskStats } from "@/lib/tasks";
-import { toggleFitnessDoneFormAction } from "@/app/fitness/actions";
+import { TrainingToggle } from "@/components/overview/TrainingToggle";
 
 const button =
   "ui-button ui-button--secondary h-10 min-h-10 w-full px-3 text-[12px]";
@@ -73,21 +72,12 @@ export function DayTiles({
               Open fitness
             </Link>
           ) : (
-            <form action={toggleFitnessDoneFormAction}>
-              <input name="date" type="hidden" value={training.day.date} />
-              <input
-                name="completed"
-                type="hidden"
-                value={trained ? "false" : "true"}
-              />
-              <input name="redirectTo" type="hidden" value="/" />
-              <PendingSubmitButton
-                className={trained ? button : fitnessPrimary}
-                pendingLabel="Saving…"
-              >
-                {trained ? "Not done" : "Mark done"}
-              </PendingSubmitButton>
-            </form>
+            <TrainingToggle
+              className={fitnessPrimary}
+              date={training.day.date}
+              doneClassName={button}
+              trained={trained}
+            />
           )
         }
         eyebrow={

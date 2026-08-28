@@ -5,7 +5,6 @@ import { DayCardShare } from "@/components/DayCardShare";
 import { RecapShare } from "@/components/RecapShare";
 import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { MomentumOrbit } from "@/components/MomentumOrbit";
-import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { WeeklyReflectionForm } from "@/components/WeeklyReflectionForm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,7 +45,7 @@ import type { Task } from "@/lib/tasks";
 import { formatRelativeTaskDate, getTaskStats, isRepeating } from "@/lib/tasks";
 import { describeRepeat } from "@/lib/routines";
 import { formatReward } from "@/lib/reward";
-import { toggleFitnessDoneFormAction } from "@/app/fitness/actions";
+import { TrainingToggle } from "@/components/overview/TrainingToggle";
 import { toggleTaskAction } from "@/app/tasks/actions";
 
 export function greeting(locale: string, timeZone: string) {
@@ -205,19 +204,27 @@ export function MomentumCard({
 
   return (
     <TintPanel
-      className="settle-in settle-2 flex flex-col gap-5 lg:col-span-2"
+      className="settle-in settle-2 flex flex-col gap-4 lg:col-span-2"
+      padding="sm"
       system="plum"
     >
-      <CardHeading
-        action={<Badge variant="plum">{momentum.tier.name}</Badge>}
-        eyebrow="Momentum"
-        title={holdLine}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="label-caps text-[var(--ink,var(--muted-foreground))]">
+          Momentum
+        </p>
+        <Badge variant="plum">{momentum.tier.name}</Badge>
+      </div>
+      <p className="text-[15px] font-bold leading-6 tracking-[-0.02em]">
+        {holdLine}
+      </p>
 
-      {/* The climb is capped rather than stretched: across a full desktop card
-          the curve flattens into a straight line and stops being a climb. */}
-      <div className="grid gap-6 sm:grid-cols-[minmax(0,160px)_minmax(0,560px)] sm:items-center">
-        <div className="relative mx-auto w-full max-w-[160px]">
+      {/* Small on purpose. This used to be the hero and it buried the two
+          things a day is actually made of under half a screen of chart — you
+          cannot act on an altitude, and you can act on a task. So: the number,
+          the curve, and nothing else, sitting under the tiles rather than on
+          top of them. */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="relative w-[96px] shrink-0">
           <MomentumOrbit
             altitude={momentum.altitude}
             projected={momentum.projected}
@@ -226,29 +233,28 @@ export function MomentumCard({
           />
           <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
             <div>
-              <p className="metric-value display-figure text-[36px]">
+              {/* The number alone. At this size the word under it ran into
+                  the ring on both sides, and "Momentum" is written above the
+                  card anyway. */}
+              <p className="metric-value display-figure text-[24px] leading-7">
                 <CountUp value={momentum.projected} />
               </p>
-              <p className="label-caps mt-1 text-[var(--ink,var(--muted-foreground))]">Altitude</p>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="rounded-xl bg-card/70 p-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="label-caps text-[var(--ink,var(--muted-foreground))]">
-                Today&rsquo;s climb
-              </p>
-              <p className="text-[12px] text-muted-foreground">
-                {climb.rising
-                  ? "What today did to the orbit."
-                  : "An empty day multiplies by 0.85."}
-              </p>
-            </div>
-            <ClimbCurve climb={climb} />
+        <div className="min-w-[160px] flex-1">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="label-caps text-[var(--ink,var(--muted-foreground))]">
+              Today&rsquo;s climb
+            </p>
+            <p className="text-[12px] text-muted-foreground">
+              {climb.rising
+                ? "What today did to the orbit."
+                : "An empty day multiplies by 0.85."}
+            </p>
           </div>
-
+          <ClimbCurve climb={climb} />
         </div>
       </div>
 
@@ -494,21 +500,12 @@ export function FitnessCard({
       )}
 
       {resting ? null : (
-        <form action={toggleFitnessDoneFormAction}>
-          <input name="date" type="hidden" value={training.day.date} />
-          <input
-            name="completed"
-            type="hidden"
-            value={done ? "false" : "true"}
-          />
-          <input name="redirectTo" type="hidden" value="/" />
-          <PendingSubmitButton
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-fitness px-5 text-[13px] font-semibold text-white transition hover:bg-fitness/90"
-            pendingLabel="Saving"
-          >
-            {done ? "Mark as not done" : "Mark session complete"}
-          </PendingSubmitButton>
-        </form>
+        <TrainingToggle
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-fitness px-5 text-[13px] font-semibold text-white transition hover:bg-fitness/90"
+          date={training.day.date}
+          doneClassName="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-input px-5 text-[13px] font-semibold text-foreground transition hover:bg-muted"
+          trained={done}
+        />
       )}
 
       <Link
