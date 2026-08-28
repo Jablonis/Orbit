@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionToast } from "@/components/ActionToast";
 import { useActionState } from "react";
 import {
   type WeeklyReflectionActionState,
@@ -54,15 +55,16 @@ export function WeeklyReflectionForm({
       >
         {pending ? "Saving…" : "Save review"}
       </button>
-      {state.message ? (
+      {/* Success leaves the form and becomes a toast, so it reads the same
+          here as everywhere else; a failure stays where the form is, because
+          that is where it has to be fixed. */}
+      {state.message && state.ok ? (
+        <ActionToast message={state.message} tone="success" />
+      ) : null}
+      {state.message && !state.ok ? (
         <p
-          aria-live="polite"
-          className={`rounded-xl border px-4 py-3 text-[13px] lg:col-span-3 ${
-            state.ok
-              ? "border-primary/25 bg-primary/10 text-fitness-ink"
-              : "border-[var(--destructive)]/25 bg-destructive/10 text-destructive"
-          }`}
-          role={state.ok ? "status" : "alert"}
+          className="rounded-xl border border-[var(--destructive)]/25 bg-destructive/10 px-4 py-3 text-[13px] text-destructive lg:col-span-3"
+          role="alert"
         >
           {state.message}
         </p>

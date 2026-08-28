@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionToast } from "@/components/ActionToast";
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -183,14 +184,13 @@ export function FitnessSetupForm({
         </button>
       </div>
 
-      {state.message ? (
+      {state.message && state.ok ? (
+        <ActionToast message={state.message} tone="success" />
+      ) : null}
+      {state.message && !state.ok ? (
         <p
-          className={`mt-4 rounded-xl border p-3 text-[13px] ${
-            state.ok
-              ? "border-[color-mix(in_srgb,var(--fitness)_30%,transparent)] text-fitness-ink"
-              : "border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] text-destructive"
-          }`}
-          role={state.ok ? "status" : "alert"}
+          className="mt-4 rounded-xl border border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] p-3 text-[13px] text-destructive"
+          role="alert"
         >
           {state.message}
         </p>
