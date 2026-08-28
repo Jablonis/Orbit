@@ -1049,3 +1049,47 @@
   filter: blur(0.38rem);
   user-select: none;
 }
+
+/* The splash: a ring that turns, and Pip riding it.
+   Transform and opacity only, and it stops entirely when the device asks for
+   less motion — a loading screen is the last place to argue with that. */
+.orbit-splash__arc {
+  animation: orbit-splash-sweep 1.6s cubic-bezier(0.66, 0, 0.34, 1) infinite;
+  transform-origin: 66px 66px;
+}
+
+.orbit-splash__carrier {
+  animation: orbit-splash-turn 2.8s linear infinite;
+}
+
+/* Counter-turned at the same rate, so Pip rides the ring upright instead of
+   rolling round it head over feet. */
+.orbit-splash__rider {
+  animation: orbit-splash-turn 2.8s linear infinite reverse;
+}
+
+@keyframes orbit-splash-sweep {
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(270deg);
+  }
+}
+
+@keyframes orbit-splash-turn {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-splash__arc,
+  .orbit-splash__carrier,
+  .orbit-splash__rider {
+    animation: none;
+  }
+}

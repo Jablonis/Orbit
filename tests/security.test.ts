@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { getContentSecurityPolicy } from "../src/proxy";
 
@@ -36,6 +36,23 @@ test("every interactive route stays dynamic, because the CSP nonce demands it", 
       read(route),
       /export const dynamic = "force-dynamic"/,
       `${route} must opt out of static prerendering`,
+    );
+  }
+});
+
+test("every route can fail without falling out of Orbit", () => {
+  // A route with no error boundary hands its failure to the platform, and the
+  // visitor gets an opaque reference number instead of a page that says what
+  // to do. Both new routes shipped without one, which is why two failures came
+  // back as bare Vercel references.
+  for (const route of ["tasks", "fitness", "finance", "habits", "crew"]) {
+    assert.ok(
+      existsSync(new URL(`../src/app/${route}/error.tsx`, import.meta.url)),
+      `${route} needs an error boundary`,
+    );
+    assert.ok(
+      existsSync(new URL(`../src/app/${route}/loading.tsx`, import.meta.url)),
+      `${route} needs a loading state`,
     );
   }
 });

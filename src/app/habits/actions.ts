@@ -39,10 +39,43 @@ function readDays(formData: FormData) {
   );
 }
 
+/**
+ * A thrown server action gives the browser an opaque reference number and
+ * nothing else — the reason is redacted in production. So nothing here is
+ * allowed to throw: whatever happens becomes a sentence.
+ */
+async function guarded(
+  where: string,
+  run: () => Promise<HabitActionState>,
+): Promise<HabitActionState> {
+  try {
+    return await run();
+  } catch (error) {
+    // A redirect is not a failure: `getAuthenticatedUser` throws one to send a
+    // signed-out visitor to the login form, and swallowing it would strand
+    // them here instead.
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      String((error as { digest?: unknown }).digest).startsWith("NEXT_REDIRECT")
+    ) {
+      throw error;
+    }
+    const reason = error instanceof Error ? error.message : String(error);
+    console.error(`habits: ${where} threw`, reason);
+    return { message: reason, ok: false };
+  }
+}
+
 export async function saveHabitAction(
   _state: HabitActionState,
   formData: FormData,
 ): Promise<HabitActionState> {
+  return guarded("save", () => saveHabit(formData));
+}
+
+async function saveHabit(formData: FormData): Promise<HabitActionState> {
   const { supabase } = await getAuthenticatedUser();
   const name = String(formData.get("name") ?? "").trim();
   const id = String(formData.get("id") ?? "").trim();
@@ -71,6 +104,10 @@ export async function archiveHabitAction(
   _state: HabitActionState,
   formData: FormData,
 ): Promise<HabitActionState> {
+  return guarded("archive", () => archiveHabit(formData));
+}
+
+async function archiveHabit(formData: FormData): Promise<HabitActionState> {
   const { supabase } = await getAuthenticatedUser();
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return { message: "That habit no longer exists.", ok: false };
@@ -87,9 +124,13 @@ export async function archiveHabitAction(
  * rather than the form, so a stale tab cannot tick yesterday by accident.
  */
 export async function toggleHabitAction(formData: FormData) {
+  await guarded("tick", () => tickHabit(formData));
+}
+
+async function tickHabit(formData: FormData): Promise<HabitActionState> {
   const { supabase, user } = await getAuthenticatedUser();
   const id = String(formData.get("id") ?? "").trim();
-  if (!id) return;
+  if (!id) return { message: "", ok: true };
   const preferences = await getDashboardPreferences(supabase, user.id);
   const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
   const done = formData.get("done") === "true";
@@ -101,8 +142,9 @@ export async function toggleHabitAction(formData: FormData) {
   });
   if (error) {
     console.error("habits: tick failed", error.code, error.message);
-    return;
+    return { message: describeHabitError(error), ok: false };
   }
 
   revalidateHabits();
+  return { message: "", ok: true };
 }
