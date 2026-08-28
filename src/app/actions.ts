@@ -49,6 +49,7 @@ export async function saveDashboardPreferencesAction(
           weights: {
             fitness: Number(formData.get("fitnessWeight")),
             focus: Number(formData.get("focusWeight")),
+            habits: Number(formData.get("habitsWeight")),
             tasks: Number(formData.get("tasksWeight")),
           },
         },

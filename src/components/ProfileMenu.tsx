@@ -8,19 +8,23 @@ import {
   useSettingsDirtyState,
 } from "@/components/SettingsDirtyState";
 import type { RegionalPreferences } from "@/lib/preferences";
+import { ThemeChoice } from "@/components/ThemeChoice";
+import type { ThemeChoice as ThemeChoiceValue } from "@/lib/theme";
 
 export function ProfileMenu({
   children,
   profile,
+  theme,
   userEmail,
 }: {
   children?: ReactNode;
   profile?: RegionalPreferences;
+  theme: ThemeChoiceValue;
   userEmail: string;
 }) {
   return (
     <SettingsDirtyStateProvider>
-      <ProfileMenuDialog profile={profile} userEmail={userEmail}>
+      <ProfileMenuDialog profile={profile} theme={theme} userEmail={userEmail}>
         {children}
       </ProfileMenuDialog>
     </SettingsDirtyStateProvider>
@@ -30,10 +34,12 @@ export function ProfileMenu({
 function ProfileMenuDialog({
   children,
   profile,
+  theme,
   userEmail,
 }: {
   children?: ReactNode;
   profile?: RegionalPreferences;
+  theme: ThemeChoiceValue;
   userEmail: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -129,7 +135,7 @@ function ProfileMenuDialog({
       </button>
       <button
         aria-label="Open profile and settings"
-        className="rounded-2xl bg-popover shadow-[0_24px_60px_-30px_rgba(27,26,31,0.35)] fixed right-4 top-[calc(1rem+env(safe-area-inset-top))] z-40 grid h-11 w-11 place-items-center rounded-full text-foreground md:hidden"
+        className="rounded-2xl bg-popover shadow-[var(--shadow-pop)] fixed right-4 top-[calc(1rem+env(safe-area-inset-top))] z-40 grid h-11 w-11 place-items-center rounded-full text-foreground md:hidden"
         onClick={open}
         type="button"
       >
@@ -138,7 +144,7 @@ function ProfileMenuDialog({
 
       <dialog
         aria-labelledby="profile-settings-title"
-        className="rounded-2xl bg-popover shadow-[0_24px_60px_-30px_rgba(27,26,31,0.35)] modal-animate fixed inset-x-3 bottom-[calc(1rem+env(safe-area-inset-bottom))] top-auto m-0 max-h-[calc(100dvh-2rem)] w-auto max-w-none overflow-y-auto rounded-2xl p-0 text-left text-foreground backdrop:bg-black/70 backdrop:backdrop-blur-[2px] md:inset-x-auto md:bottom-6 md:right-6 md:w-[min(580px,calc(100vw-3rem))]"
+        className="rounded-2xl bg-popover shadow-[var(--shadow-pop)] modal-animate fixed inset-x-3 bottom-[calc(1rem+env(safe-area-inset-bottom))] top-auto m-0 max-h-[calc(100dvh-2rem)] w-auto max-w-none overflow-y-auto rounded-2xl p-0 text-left text-foreground backdrop:bg-black/70 backdrop:backdrop-blur-[2px] md:inset-x-auto md:bottom-6 md:right-6 md:w-[min(580px,calc(100vw-3rem))]"
         onCancel={(event) => {
           event.preventDefault();
           requestDismiss();
@@ -213,7 +219,7 @@ function ProfileMenuDialog({
         </div>
 
         <div className="grid gap-5 p-5 sm:p-6">
-          <section aria-labelledby="account-heading" className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-xl p-4">
+          <section aria-labelledby="account-heading" className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-xl p-4">
             <p className="label-caps text-muted-foreground" id="account-heading">
               Account
             </p>
@@ -238,6 +244,8 @@ function ProfileMenuDialog({
             </div>
           </section>
 
+          <ThemeChoice value={theme} />
+
           {children ? (
             <section aria-labelledby="overview-preferences-heading">
               <div className="mb-3">
@@ -250,7 +258,23 @@ function ProfileMenuDialog({
             </section>
           ) : null}
 
-          <section aria-labelledby="data-portability-heading" className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-xl p-4">
+          {/* Finance left the navigation bar when habits took its place: a
+              ledger is not a daily surface, and six items wrap on a phone. It
+              is whole, and it is here. */}
+          <section aria-labelledby="ledger-heading">
+            <p className="label-caps text-finance" id="ledger-heading">
+              Ledger
+            </p>
+            <a
+              className="mt-3 flex min-h-11 items-center justify-between rounded-xl border border-input px-4 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted"
+              href="/finance"
+            >
+              Open finance
+              <span aria-hidden="true">→</span>
+            </a>
+          </section>
+
+          <section aria-labelledby="data-portability-heading" className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-xl p-4">
             <p className="label-caps text-finance" id="data-portability-heading">
               Data portability
             </p>

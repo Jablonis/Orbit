@@ -115,8 +115,21 @@ Rules:
   dashboard's Pip reads the whole day; a card only knows its own corner of it,
   so `getPanelPip(done, total)` reads that corner up the same ladder — nothing
   asked of a panel gets a penguin standing still rather than a cheerful one.
-  Empty states are Pip grounded with the engine off, which is what an empty list
-  actually is. Every Pip on a screen takes its own `seed`.
+  Empty states are Pip asleep on the pad with the engine off, which is what an
+  empty list actually is. Every Pip on a screen takes its own `seed`.
+- **Nothing asked and nothing done are different faces.** A panel with nothing
+  planned gets Pip dozing; a panel that asked for five things and got none gets
+  the downcast face — brows out, eyes low. They wore the same expression once,
+  and it made the mascot say nothing at all.
+- **A panel's Pip carries the tools of the thing it stands next to.** Notes and
+  glasses on tasks, a dumbbell on training — a racket on a tennis day, because
+  the plan already knows which sport it is — a book on habits. Kits are named in
+  `PIP_KITS` and passed explicitly, never guessed from the label, so rewording a
+  heading cannot change what the mascot is holding. A panel that names no kit
+  gets the plain penguin: a prop that means nothing is worse than none.
+  Props live in the margin the poses leave empty, and the glasses are plum
+  rather than ink — the face is ten white cells wide and the eyes take four, so
+  colour is the only thing that can separate a frame from an eye at this size.
 - Pip is drawn once. `src/lib/pip-pixels.ts` holds the art and `pip-art.ts` the
   contract; the interface renders it as SVG and the shared images draw it on
   canvas, so the character on a posted card is the same character as the one on

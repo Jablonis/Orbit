@@ -13,10 +13,12 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [
       { sizes: "192x192", src: "/icon-192.png", type: "image/png" },
       { sizes: "512x512", src: "/icon-512.png", type: "image/png" },
+      // A launcher that crops to a circle gets the padded drawing, or Pip
+      // loses his feet and the top of his helmet to the mask.
       {
         purpose: "maskable",
         sizes: "512x512",
-        src: "/icon-512.png",
+        src: "/icon-maskable-512.png",
         type: "image/png",
       },
     ],

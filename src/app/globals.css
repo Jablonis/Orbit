@@ -10,6 +10,7 @@
  * repeated in a component: every colour has a name and a job.
  */
 :root {
+  color-scheme: light;
   --radius: 0.875rem;
 
   --background: #fbf9f7;
@@ -59,10 +60,156 @@
   --chart-4: #3d63dd;
   --chart-5: #c8791a;
 
+  /* Pip is a black-and-white bird: his colours are his, not the surface's, or
+     he inverts into a photo negative the moment the canvas turns dark. */
+  --pip-ink: #1b1a1f;
+  --pip-paper: #ffffff;
+
+  /* The two washes v1 left behind as raw rgba: a surface a step off the card,
+     and a line a step off the border. Named so dark mode can answer them. */
+  --wash: #f6f3f4;
+  --hairline: #ece7ea;
+  --shadow-card: 0 1px 2px rgba(27, 26, 31, 0.05);
+  --shadow-pop: 0 24px 60px -30px rgba(27, 26, 31, 0.35);
+
   --ease-orbit: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-ring: cubic-bezier(0.32, 0.94, 0.35, 1);
   --duration-micro: 150ms;
   --duration-state: 260ms;
+}
+
+
+/*
+ * Bloom at night.
+ *
+ * Same names, same jobs, one canvas turned down. Two rules the light palette
+ * never has to think about: a tint is a *dark* tinted surface rather than a
+ * pale one, and the ink on it has to come up to meet it — a plum that reads on
+ * paper is a smudge on charcoal.
+ *
+ * Written twice on purpose. The first block is the system preference and yields
+ * to anyone who has explicitly chosen light; the second is that explicit
+ * choice, stamped on the document by the server so there is no flash and no
+ * inline script to find a CSP nonce for. CSS has no way to say it once.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+  --background: #131118;
+  --foreground: #f4f1f7;
+
+  --card: #1c1924;
+  --card-foreground: #f4f1f7;
+  --popover: #221e2b;
+  --popover-foreground: #f4f1f7;
+
+  --primary: #a274f5;
+  --primary-foreground: #17121f;
+  --secondary: #262130;
+  --secondary-foreground: #e6e1ec;
+
+  --muted: #221e2b;
+  --muted-foreground: #a49eb0;
+  --accent: #2b2139;
+  --accent-foreground: #d9c6ff;
+
+  --destructive: #f2647c;
+  --destructive-foreground: #1a1016;
+  --success: #35c793;
+  --warning: #e0a34a;
+
+  --border: #2c2735;
+  --input: #362f42;
+  --ring: #a274f5;
+
+  --tasks: #f56ba0;
+  --tasks-tint: #2b1723;
+  --tasks-ink: #ff9dc0;
+  --fitness: #2fc48f;
+  --fitness-tint: #10251e;
+  --fitness-ink: #63dcb0;
+  --finance: #6a8bff;
+  --finance-tint: #161d35;
+  --finance-ink: #a3b8ff;
+  --plum: #a274f5;
+  --plum-tint: #241a35;
+  --plum-ink: #c9aef5;
+
+  --chart-1: #a274f5;
+  --chart-2: #f56ba0;
+  --chart-3: #2fc48f;
+  --chart-4: #6a8bff;
+  --chart-5: #e0a34a;
+
+  /* His belly stays paper and his body stays ink; only the black lifts, so a
+     black bird on a near-black card is not a hole in the page. */
+  --pip-ink: #2b2634;
+  --pip-paper: #f4f1f7;
+
+  --wash: #201c29;
+  --hairline: #2c2735;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 24px 60px -24px rgba(0, 0, 0, 0.75);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #131118;
+  --foreground: #f4f1f7;
+
+  --card: #1c1924;
+  --card-foreground: #f4f1f7;
+  --popover: #221e2b;
+  --popover-foreground: #f4f1f7;
+
+  --primary: #a274f5;
+  --primary-foreground: #17121f;
+  --secondary: #262130;
+  --secondary-foreground: #e6e1ec;
+
+  --muted: #221e2b;
+  --muted-foreground: #a49eb0;
+  --accent: #2b2139;
+  --accent-foreground: #d9c6ff;
+
+  --destructive: #f2647c;
+  --destructive-foreground: #1a1016;
+  --success: #35c793;
+  --warning: #e0a34a;
+
+  --border: #2c2735;
+  --input: #362f42;
+  --ring: #a274f5;
+
+  --tasks: #f56ba0;
+  --tasks-tint: #2b1723;
+  --tasks-ink: #ff9dc0;
+  --fitness: #2fc48f;
+  --fitness-tint: #10251e;
+  --fitness-ink: #63dcb0;
+  --finance: #6a8bff;
+  --finance-tint: #161d35;
+  --finance-ink: #a3b8ff;
+  --plum: #a274f5;
+  --plum-tint: #241a35;
+  --plum-ink: #c9aef5;
+
+  --chart-1: #a274f5;
+  --chart-2: #f56ba0;
+  --chart-3: #2fc48f;
+  --chart-4: #6a8bff;
+  --chart-5: #e0a34a;
+
+  /* His belly stays paper and his body stays ink; only the black lifts, so a
+     black bird on a near-black card is not a hole in the page. */
+  --pip-ink: #2b2634;
+  --pip-paper: #f4f1f7;
+
+  --wash: #201c29;
+  --hairline: #2c2735;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 24px 60px -24px rgba(0, 0, 0, 0.75);
 }
 
 @theme inline {
@@ -103,6 +250,11 @@
   --color-plum: var(--plum);
   --color-plum-tint: var(--plum-tint);
   --color-plum-ink: var(--plum-ink);
+
+  --color-wash: var(--wash);
+  --color-hairline: var(--hairline);
+  --color-pip-ink: var(--pip-ink);
+  --color-pip-paper: var(--pip-paper);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);

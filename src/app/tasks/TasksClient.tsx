@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Pip } from "@/components/brand/Pip";
-import { getPanelPip } from "@/lib/mascot";
+import { PIP_KITS, getPanelPip } from "@/lib/mascot";
 import { RepeatPicker } from "@/components/RepeatPicker";
 import { RoutineSetup } from "@/components/RoutineSetup";
 import { EmptyState } from "@/components/EmptyState";
@@ -317,6 +317,7 @@ export function TasksClient({
     stats.completedTasksCount,
     stats.completedTasksCount + stats.activeTasksCount,
     "today's queue",
+    PIP_KITS.tasks,
   );
 
   return (
@@ -326,6 +327,7 @@ export function TasksClient({
           <Pip
             burn={queuePip.burn}
             className="h-12 w-auto shrink-0 sm:h-16"
+            kit={queuePip.kit}
             mood={queuePip.mood}
             seed={17}
             size={64}
@@ -360,7 +362,7 @@ export function TasksClient({
       <section className="grid gap-6">
         <dialog
           aria-labelledby="task-editor-title"
-          className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[90] m-0 max-h-[calc(100dvh-7rem)] w-auto max-w-none overflow-y-auto rounded-2xl p-5 text-foreground backdrop:bg-black/65 backdrop:backdrop-blur-[2px] sm:p-6 sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-h-[calc(100dvh-4rem)]"
+          className="rounded-2xl bg-card shadow-[var(--shadow-card)] fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[90] m-0 max-h-[calc(100dvh-7rem)] w-auto max-w-none overflow-y-auto rounded-2xl p-5 text-foreground backdrop:bg-black/65 backdrop:backdrop-blur-[2px] sm:p-6 sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[min(560px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-h-[calc(100dvh-4rem)]"
           id="new-task"
           onCancel={() => setFormOpen(false)}
           onClick={(event) => {
@@ -535,7 +537,7 @@ export function TasksClient({
           <RoutineSetup hasRoutines={hasRoutines} />
           {/* Three of these four count something you can then look at, so
               they filter the list rather than only reporting it. */}
-          <div className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] grid grid-cols-2 overflow-hidden rounded-2xl sm:grid-cols-4">
+          <div className="rounded-2xl bg-card shadow-[var(--shadow-card)] grid grid-cols-2 overflow-hidden rounded-2xl sm:grid-cols-4">
             <Metric
               active={status === "open" && complexity === "all"}
               label="Active"
@@ -586,7 +588,7 @@ export function TasksClient({
               and open by themselves when a filter is already on. */}
           <section
             aria-labelledby="task-view-controls"
-            className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-3 sm:p-4"
+            className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-2xl p-3 sm:p-4"
           >
             <div className="flex min-h-11 flex-wrap items-center justify-between gap-3">
               <p aria-live="polite" className="text-[12px] text-muted-foreground" id="task-view-controls">
@@ -686,7 +688,7 @@ export function TasksClient({
               </div>
             ) : null}
           </section>
-          <div className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-5">
+          <div className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-2xl p-5">
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <p className="label-caps text-muted-foreground">Active queue</p>
@@ -700,7 +702,7 @@ export function TasksClient({
             </div>
             {/* The bulk bar used to sit there greyed out whether or not
                 anything was selected. Selecting is the request for it. */}
-            <div className="mb-5 flex flex-col gap-3 rounded-xl border border-border bg-[rgba(244,235,221,0.025)] p-3 lg:flex-row lg:items-center">
+            <div className="mb-5 flex flex-col gap-3 rounded-xl border border-border bg-[var(--wash)] p-3 lg:flex-row lg:items-center">
               <label className="flex min-h-11 items-center gap-3 px-1 text-[12px] font-semibold text-foreground">
                 <input
                   checked={allVisibleSelected}
@@ -772,7 +774,7 @@ export function TasksClient({
                 <EmptyState
                   action={(
                     <button
-                      className="inline-flex min-h-11 items-center justify-center rounded-xl border border-input bg-[rgba(244,235,221,0.045)] px-4 text-[12px] font-semibold text-foreground"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border border-input bg-[var(--wash)] px-4 text-[12px] font-semibold text-foreground"
                       onClick={() => {
                         setEditing(null);
                         setEstimateMode("1hr");
@@ -824,7 +826,7 @@ export function TasksClient({
               ) : null}
             </div>
           </div>
-          <details className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-5">
+          <details className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-2xl p-5">
             <summary className="cursor-pointer text-[14px] font-semibold text-foreground">
               Archive and history · {archivedTasks.length}
             </summary>
@@ -1111,8 +1113,8 @@ const taskDayTones = {
     title: "text-finance-ink",
   },
   today: {
-    badge: "bg-[rgba(244,235,221,0.07)] text-muted-foreground",
-    card: "border-[rgba(244,235,221,0.1)] bg-muted/55",
+    badge: "bg-[var(--wash)] text-muted-foreground",
+    card: "border-[var(--hairline)] bg-muted/55",
     label: "Today",
     title: "text-foreground",
   },

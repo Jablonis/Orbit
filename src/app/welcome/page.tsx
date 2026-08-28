@@ -234,7 +234,7 @@ function Hero({ primary }: { primary: { href: string; label: string } }) {
 
 function HeroFigure({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-[0_1px_2px_rgba(27,26,31,0.05)]">
+    <div className="rounded-2xl bg-card p-4 shadow-[var(--shadow-card)]">
       <dt className="label-caps text-muted-foreground">{label}</dt>
       <dd className="metric-value mt-2 text-[26px] font-semibold leading-none text-foreground">
         {value}
@@ -283,7 +283,6 @@ function SystemsSection() {
               areas: [
                 { completed: 3, label: "Tasks", percent: 72, system: "tasks", total: 4 },
                 { completed: 1, label: "Fitness", percent: 100, system: "fitness", total: 1 },
-                { completed: 2, label: "Finance", percent: 100, system: "finance", total: 2 },
               ],
               todayScore: 78,
             })}
@@ -550,7 +549,7 @@ function FaqSection() {
       <dl className="mt-12 grid gap-4 md:grid-cols-2">
         {faq.map((item) => (
           <div
-            className="rounded-2xl bg-card p-6 shadow-[0_1px_2px_rgba(27,26,31,0.05)]"
+            className="rounded-2xl bg-card p-6 shadow-[var(--shadow-card)]"
             key={item.question}
           >
             <dt className="text-[15px] font-semibold text-foreground">
@@ -619,7 +618,7 @@ function Section({
 
 function Plate({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl bg-card p-6 shadow-[0_1px_2px_rgba(27,26,31,0.05)] sm:p-8">
+    <div className="rounded-2xl bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
       {children}
     </div>
   );

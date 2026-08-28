@@ -10,9 +10,9 @@ import {
 test("setup starts empty and names the first thing to do", () => {
   const state = getSetupState({
     fitnessConfigured: false,
+    habitCount: 0,
     hasOrbitDay: false,
     taskCount: 0,
-    transactionCount: 0,
   });
 
   assert.equal(state.done, 0);
@@ -24,20 +24,23 @@ test("setup starts empty and names the first thing to do", () => {
 test("setup completes only when every step is done", () => {
   const partial = getSetupState({
     fitnessConfigured: true,
+    habitCount: 0,
     hasOrbitDay: false,
     taskCount: 3,
-    transactionCount: 12,
   });
-  assert.equal(partial.done, 3);
-  assert.equal(partial.percent, 75);
+  // Four steps: the list, the training week, the pillar you name yourself, and
+  // the first day that actually reaches orbit. Money is not one of them —
+  // money is a ledger, not a thing you have to do today.
+  assert.equal(partial.done, 2);
+  assert.equal(partial.percent, 50);
   assert.equal(partial.complete, false);
-  assert.equal(partial.next?.id, "orbit-day");
+  assert.equal(partial.next?.id, "habits");
 
   const full = getSetupState({
     fitnessConfigured: true,
+    habitCount: 1,
     hasOrbitDay: true,
     taskCount: 3,
-    transactionCount: 12,
   });
   assert.equal(full.complete, true);
   assert.equal(full.next, null);
@@ -119,22 +122,35 @@ test("today is only celebrated when it is actually earned", () => {
 
 test("the closing lines name the last mile, nearest ring first", () => {
   const lines = getClosingLines({
-    finance: { completed: 0, percent: 0, total: 3 },
     fitness: { completed: 0, percent: 0, total: 1 },
+    habits: { completed: 1, percent: 33, total: 3 },
     tasks: { completed: 5, percent: 71, total: 7 },
   });
 
   assert.deepEqual(
     lines.map((line) => line.system),
-    ["fitness", "tasks", "finance"],
+    ["fitness", "habits", "tasks"],
   );
   assert.equal(lines[0].text, "One session from clearing fitness.");
-  assert.equal(lines[1].text, "2 tasks from clearing tasks.");
+  assert.equal(lines[1].text, "2 habits from clearing habits.");
+  assert.equal(lines[2].text, "2 tasks from clearing tasks.");
+});
+
+test("an account with no habits is never told to clear them", () => {
+  const lines = getClosingLines({
+    fitness: { completed: 1, percent: 100, total: 1 },
+    habits: { completed: 0, percent: 0, total: 0 },
+    tasks: { completed: 5, percent: 71, total: 7 },
+  });
+
+  assert.deepEqual(
+    lines.map((line) => line.system),
+    ["tasks"],
+  );
 });
 
 test("a closed or empty ring has nothing left to say", () => {
   const lines = getClosingLines({
-    finance: { completed: 0, percent: 0, total: 0 },
     fitness: { completed: 1, percent: 100, total: 1 },
     tasks: { completed: 7, percent: 100, total: 7 },
   });

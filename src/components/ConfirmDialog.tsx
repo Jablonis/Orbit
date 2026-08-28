@@ -83,7 +83,7 @@ export function ConfirmDialog({
       <dialog
         aria-describedby={descriptionId}
         aria-labelledby={titleId}
-        className="rounded-2xl bg-popover shadow-[0_24px_60px_-30px_rgba(27,26,31,0.35)] modal-animate m-auto max-h-[calc(100dvh-2rem)] w-[min(calc(100%-2rem),28rem)] overflow-y-auto rounded-2xl border-0 p-6 text-left text-foreground backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+        className="rounded-2xl bg-popover shadow-[var(--shadow-pop)] modal-animate m-auto max-h-[calc(100dvh-2rem)] w-[min(calc(100%-2rem),28rem)] overflow-y-auto rounded-2xl border-0 p-6 text-left text-foreground backdrop:bg-black/70 backdrop:backdrop-blur-sm"
         onCancel={(event) => {
           if (pending) {
             event.preventDefault();
@@ -139,7 +139,7 @@ export function ConfirmDialog({
         ) : null}
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="min-h-11 rounded-xl border border-[rgba(244,235,221,0.1)] px-4 py-2.5 text-[13px] font-semibold text-muted-foreground"
+            className="min-h-11 rounded-xl border border-[var(--hairline)] px-4 py-2.5 text-[13px] font-semibold text-muted-foreground"
             disabled={pending}
             onClick={() => setOpen(false)}
             ref={cancelButton}

@@ -20,6 +20,7 @@ function signatureFromPreferences(preferences: DashboardPreferences) {
     fitnessWeight: String(preferences.scoring.weights.fitness),
     focusTarget: String(preferences.scoring.focusTargetMinutes),
     focusWeight: String(preferences.scoring.weights.focus),
+    habitsWeight: String(preferences.scoring.weights.habits),
     hidden: [...preferences.hiddenCards].sort(),
     order: preferences.cardOrder,
     pinnedFinanceMetric: preferences.pinnedFinanceMetric,
@@ -44,7 +45,10 @@ export function DashboardCustomizer({
   const [pinnedTaskCategory, setPinnedTaskCategory] = useState(
     preferences.pinnedTaskCategory,
   );
-  const [pinnedFinanceMetric, setPinnedFinanceMetric] = useState(
+  // Finance left the dashboard, so this has no control any more — it is still
+  // read and posted so saving preferences does not quietly wipe a value the
+  // finance page may want back.
+  const [pinnedFinanceMetric] = useState(
     preferences.pinnedFinanceMetric,
   );
   const [focusTarget, setFocusTarget] = useState(
@@ -55,6 +59,9 @@ export function DashboardCustomizer({
   );
   const [fitnessWeight, setFitnessWeight] = useState(
     String(preferences.scoring.weights.fitness),
+  );
+  const [habitsWeight, setHabitsWeight] = useState(
+    String(preferences.scoring.weights.habits),
   );
   const [focusWeight, setFocusWeight] = useState(
     String(preferences.scoring.weights.focus),
@@ -74,6 +81,7 @@ export function DashboardCustomizer({
     fitnessWeight,
     focusTarget,
     focusWeight,
+    habitsWeight,
     hidden: [...hidden].sort(),
     order,
     pinnedFinanceMetric,
@@ -106,7 +114,6 @@ export function DashboardCustomizer({
       setDensity(preferences.density);
       setRangeDays(preferences.rangeDays);
       setPinnedTaskCategory(preferences.pinnedTaskCategory);
-      setPinnedFinanceMetric(preferences.pinnedFinanceMetric);
       setFocusTarget(String(preferences.scoring.focusTargetMinutes));
       setTasksWeight(String(preferences.scoring.weights.tasks));
       setFitnessWeight(String(preferences.scoring.weights.fitness));
@@ -142,7 +149,6 @@ export function DashboardCustomizer({
     setDensity(defaultDashboardPreferences.density);
     setRangeDays(defaultDashboardPreferences.rangeDays);
     setPinnedTaskCategory(defaultDashboardPreferences.pinnedTaskCategory);
-    setPinnedFinanceMetric(defaultDashboardPreferences.pinnedFinanceMetric);
     setFocusTarget(
       String(defaultDashboardPreferences.scoring.focusTargetMinutes),
     );
@@ -165,7 +171,7 @@ export function DashboardCustomizer({
       <form
         action={action}
         aria-busy={pending}
-        className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-xl p-4 sm:p-5"
+        className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-xl p-4 sm:p-5"
       >
         <p className="mb-4 text-[13px] leading-5 text-muted-foreground">
           Choose what appears in Today and Trends. Ordering stays within those two
@@ -190,7 +196,7 @@ export function DashboardCustomizer({
                 const visible = !hidden.includes(card);
                 return (
                   <div
-                    className="flex items-center gap-2 rounded-xl border border-border bg-[rgba(244,235,221,0.025)] p-2"
+                    className="flex items-center gap-2 rounded-xl border border-border bg-[var(--wash)] p-2"
                     key={card}
                   >
                     <button
@@ -198,7 +204,7 @@ export function DashboardCustomizer({
                       className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[12px] font-bold ${
                         visible
                           ? "bg-primary text-[var(--card)]"
-                          : "bg-[rgba(244,235,221,0.05)] text-muted-foreground"
+                          : "bg-[var(--wash)] text-muted-foreground"
                       }`}
                       onClick={() => toggle(card)}
                       type="button"
@@ -271,23 +277,6 @@ export function DashboardCustomizer({
                 {categories.map((category) => (
                   <option key={category} value={category}>{category}</option>
                 ))}
-              </select>
-            </PreferenceField>
-            <PreferenceField label="Pinned finance metric">
-              <select
-                className="field-input"
-                name="pinnedFinanceMetric"
-                onChange={(event) =>
-                  setPinnedFinanceMetric(
-                    event.target.value as DashboardPreferences["pinnedFinanceMetric"],
-                  )
-                }
-                value={pinnedFinanceMetric}
-              >
-                <option value="balance">Imported net cashflow</option>
-                <option value="income">Income</option>
-                <option value="expenses">Expenses</option>
-                <option value="net">Net cashflow</option>
               </select>
             </PreferenceField>
           </div>
@@ -439,6 +428,12 @@ export function DashboardCustomizer({
               onChange={setFitnessWeight}
             />
             <WeightField
+              value={habitsWeight}
+              label="Habits weight"
+              name="habitsWeight"
+              onChange={setHabitsWeight}
+            />
+            <WeightField
               value={focusWeight}
               label="Focus weight"
               name="focusWeight"
@@ -464,7 +459,7 @@ export function DashboardCustomizer({
                 : "All settings are saved."}
           </p>
           <button
-            className="min-h-11 rounded-xl border border-input px-4 py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-[rgba(244,235,221,0.05)] hover:text-foreground disabled:opacity-55"
+            className="min-h-11 rounded-xl border border-input px-4 py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-[var(--wash)] hover:text-foreground disabled:opacity-55"
             disabled={pending}
             name="intent"
             onClick={showDefaults}

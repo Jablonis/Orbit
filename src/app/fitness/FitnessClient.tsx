@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { Pip } from "@/components/brand/Pip";
 import { getTrainingGuidance } from "@/lib/training-guidance";
-import { getPanelPip } from "@/lib/mascot";
+import { PIP_KITS, getPanelPip } from "@/lib/mascot";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   SportType,
@@ -197,6 +197,7 @@ export function FitnessClient({
     completedSessionsCount,
     trainingDaysCount,
     "this training week",
+    PIP_KITS.fitness,
   );
 
   return (
@@ -206,6 +207,7 @@ export function FitnessClient({
           <Pip
             burn={weekPip.burn}
             className="h-12 w-auto shrink-0 sm:h-16"
+            kit={weekPip.kit}
             mood={weekPip.mood}
             seed={16}
             size={64}
@@ -224,7 +226,7 @@ export function FitnessClient({
         <div className="flex flex-wrap items-center gap-3">
           <div
             aria-label="Fitness mode"
-            className="inline-flex rounded-xl border border-border bg-[rgba(244,235,221,0.025)] p-1"
+            className="inline-flex rounded-xl border border-border bg-[var(--wash)] p-1"
             role="group"
           >
             {(["review", "plan"] as const).map((value) => (
@@ -268,7 +270,7 @@ export function FitnessClient({
             setResetNotice("Plan reset. Session history was preserved.");
           }}
           title="Reset the weekly plan?"
-          triggerClassName="rounded-xl border border-[rgba(244,235,221,0.1)] bg-muted px-4 py-2.5 text-[13px] font-semibold text-muted-foreground transition hover:border-[rgba(244,235,221,0.2)] hover:bg-secondary hover:text-foreground"
+          triggerClassName="rounded-xl border border-[var(--hairline)] bg-muted px-4 py-2.5 text-[13px] font-semibold text-muted-foreground transition hover:border-[var(--hairline)] hover:bg-secondary hover:text-foreground"
           triggerLabel="Reset plan"
           />
           ) : null}
@@ -276,7 +278,7 @@ export function FitnessClient({
       </header>
 
       <section className="grid gap-5 xl:grid-cols-12">
-        <article className={`rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] relative overflow-hidden rounded-2xl p-6 sm:p-8 xl:col-span-8 ${todayDay.log.completed ? "completion-celebrate" : ""}`}>
+        <article className={`rounded-2xl bg-card shadow-[var(--shadow-card)] relative overflow-hidden rounded-2xl p-6 sm:p-8 xl:col-span-8 ${todayDay.log.completed ? "completion-celebrate" : ""}`}>
           <div className="absolute inset-y-0 left-0 w-1 bg-primary" />
           <div className="grid gap-7 md:grid-cols-[1.35fr_1fr] md:items-end">
             <div>
@@ -307,7 +309,7 @@ export function FitnessClient({
                 </button>
               ) : (
                 <button
-                  className="mt-5 min-h-11 rounded-xl border border-input bg-[rgba(244,235,221,0.04)] px-5 text-[13px] font-semibold text-foreground"
+                  className="mt-5 min-h-11 rounded-xl border border-input bg-[var(--wash)] px-5 text-[13px] font-semibold text-foreground"
                   onClick={() => document.getElementById("weekly-plan")?.scrollIntoView({ behavior: "smooth" })}
                   type="button"
                 >
@@ -315,7 +317,7 @@ export function FitnessClient({
                 </button>
               )}
             </div>
-            <div className="border-t border-[rgba(244,235,221,0.1)] pt-5 md:border-l md:border-t-0 md:pl-7 md:pt-0">
+            <div className="border-t border-[var(--hairline)] pt-5 md:border-l md:border-t-0 md:pl-7 md:pt-0">
               <p className="label-caps text-tasks">Main focus</p>
               <p className="mt-3 text-[18px] font-semibold leading-6 text-foreground">
                 {todayGuidance.headline}
@@ -327,7 +329,7 @@ export function FitnessClient({
           </div>
         </article>
 
-        <aside className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-6 sm:p-8 xl:col-span-4">
+        <aside className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-2xl p-6 sm:p-8 xl:col-span-4">
           <div className="flex items-center justify-between gap-6">
             <div>
               <p className="label-caps text-finance">Week progress</p>
@@ -340,7 +342,7 @@ export function FitnessClient({
             </div>
             <ProgressRing value={completionPercent} />
           </div>
-          <div className="mt-7 grid grid-cols-3 border-t border-[rgba(244,235,221,0.1)] pt-5">
+          <div className="mt-7 grid grid-cols-3 border-t border-[var(--hairline)] pt-5">
             <Metric label="Gym" value={localPlan.filter((day) => day.sport === "gym").length} tone="text-primary" />
             <Metric label="Rest" value={localPlan.filter((day) => day.sport === "rest").length} tone="text-muted-foreground" />
             <Metric label="Done" value={completedSessionsCount} tone="text-finance" />
@@ -368,7 +370,7 @@ export function FitnessClient({
           </div>
         </div>
 
-        <div className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] grid overflow-hidden rounded-2xl sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+        <div className="rounded-2xl bg-card shadow-[var(--shadow-card)] grid overflow-hidden rounded-2xl sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           {localPlan.map((day) => {
             const isOpen = day.id === openDayId;
             const displayDay =
@@ -395,7 +397,7 @@ export function FitnessClient({
                   </p>
                   {displayDay.sport !== "rest" || day.log.completed ? (
                     <>
-                      <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-xl border border-border bg-[rgba(244,235,221,0.025)]">
+                      <div className="mt-3 grid grid-cols-2 overflow-hidden rounded-xl border border-border bg-[var(--wash)]">
                         <div className="border-r border-border p-2.5">
                           <p className="label-caps text-muted-foreground">Planned</p>
                           <p className="metric-value mt-1 text-[14px] font-semibold text-finance-ink">
@@ -450,7 +452,7 @@ export function FitnessClient({
                     className={`mt-5 flex h-11 w-full items-center justify-between rounded-xl px-3 text-[13px] font-semibold transition ${
                       isOpen
                         ? "bg-primary text-primary-foreground"
-                        : "bg-[rgba(244,235,221,0.06)] text-muted-foreground hover:bg-[rgba(244,235,221,0.1)] hover:text-foreground"
+                        : "bg-[var(--wash)] text-muted-foreground hover:bg-[var(--hairline)] hover:text-foreground"
                     }`}
                     onClick={() => {
                       setNotice(null);
@@ -469,8 +471,8 @@ export function FitnessClient({
       </section>
 
       {openDay ? (
-        <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] modal-animate mt-5 rounded-2xl p-5 sm:p-7">
-          <div className="flex flex-col gap-4 border-b border-[rgba(244,235,221,0.1)] pb-5 sm:flex-row sm:items-start sm:justify-between">
+        <article className="rounded-2xl bg-card shadow-[var(--shadow-card)] modal-animate mt-5 rounded-2xl p-5 sm:p-7">
+          <div className="flex flex-col gap-4 border-b border-[var(--hairline)] pb-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
                 <p className="label-caps text-primary">{openDay.label}</p>
@@ -484,7 +486,7 @@ export function FitnessClient({
               </p>
             </div>
             <button
-              className="h-11 rounded-xl border border-[rgba(244,235,221,0.1)] px-4 text-[13px] font-semibold text-muted-foreground transition hover:bg-[rgba(244,235,221,0.06)] hover:text-foreground"
+              className="h-11 rounded-xl border border-[var(--hairline)] px-4 text-[13px] font-semibold text-muted-foreground transition hover:bg-[var(--wash)] hover:text-foreground"
               onClick={() => setOpenDayId(null)}
               type="button"
             >
@@ -505,7 +507,7 @@ export function FitnessClient({
               value={openDay.log.sport ?? openDay.sport}
             />
 
-            <label className="flex h-11 cursor-pointer items-center gap-3 rounded-xl border border-[rgba(244,235,221,0.1)] bg-[rgba(244,235,221,0.04)] px-3">
+            <label className="flex h-11 cursor-pointer items-center gap-3 rounded-xl border border-[var(--hairline)] bg-[var(--wash)] px-3">
               <input
                 className="h-5 w-5 accent-[var(--primary)]"
                 defaultChecked={openDay.log.completed}
@@ -550,7 +552,7 @@ export function FitnessClient({
             </div>
           </form>
           ) : (
-            <div className="mt-6 rounded-xl border border-border bg-[rgba(244,235,221,0.025)] p-5">
+            <div className="mt-6 rounded-xl border border-border bg-[var(--wash)] p-5">
               <p className="text-[14px] font-semibold text-foreground">Recovery is the plan for this day.</p>
               <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
                 There is no workout to log. Switch to Plan mode if this day should contain a session instead.
@@ -646,7 +648,7 @@ function StatusBadge({
 
   if (day.sport === "rest") {
     return (
-      <span className={`${size} rounded-full border border-[rgba(244,235,221,0.1)] bg-[rgba(244,235,221,0.06)] font-bold text-muted-foreground`}>
+      <span className={`${size} rounded-full border border-[var(--hairline)] bg-[var(--wash)] font-bold text-muted-foreground`}>
         Rest
       </span>
     );
@@ -697,7 +699,7 @@ function Field({ children, label }: { children: ReactNode; label: string }) {
 
 function Metric({ label, tone, value }: { label: string; tone: string; value: number }) {
   return (
-    <div className="border-r border-[rgba(244,235,221,0.1)] px-3 last:border-r-0 first:pl-0 last:pr-0">
+    <div className="border-r border-[var(--hairline)] px-3 last:border-r-0 first:pl-0 last:pr-0">
       <p className="label-caps text-muted-foreground">{label}</p>
       <p className={`mt-2 text-[26px] font-semibold ${tone}`}>{value}</p>
     </div>

@@ -52,6 +52,31 @@ examples. It is not part of primary navigation.
 state, interaction-state, and performance-budget matrix. Visual automation
 should consume that file once an authenticated screenshot baseline is approved.
 
+## Light and dark
+
+Every colour is a named token, so a second theme is the same names with
+different values — but two rules only apply at night:
+
+- **A tint is a dark tinted surface, and its ink comes up to meet it.** The
+  light theme's `--tasks-tint` is a pale pink under `--tasks-ink` at near-black;
+  the dark one is a deep pink-brown under a pink that is nearly pastel. A tint
+  that merely darkens, with the same ink on it, is a muddy card.
+- **Pip owns his own two colours.** He is a black-and-white bird: reading his
+  body from `--foreground` and his belly from `--card` inverted him into a photo
+  negative the moment the canvas went dark. `--pip-ink` and `--pip-paper` stay
+  the way round he is drawn, and only lift off pure black so he is not a hole in
+  a dark card.
+
+The choice lives in a cookie and the server stamps `data-theme` on the document,
+so the first paint is already right. No stamp means "follow the system", which
+the stylesheet answers with `prefers-color-scheme`. The local-storage version of
+this needs an inline script to beat the paint, and an inline script here needs a
+CSP nonce — a lot of machinery to avoid one white flash.
+
+Two washes from v1 survived as raw `rgba(244,235,221,…)` in sixty-odd places —
+bone at low alpha, invisible on paper and wrong at night. They are `--wash` and
+`--hairline` now, and `--shadow-card` / `--shadow-pop` answer the same way.
+
 ## Semantic tokens
 
 Tokens live in `src/app/globals.css`. Nothing in the product may introduce a

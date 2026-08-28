@@ -10,7 +10,7 @@ export type SetupStep = {
   detail: string;
   done: boolean;
   href: string;
-  id: "tasks" | "fitness" | "finance" | "orbit-day";
+  id: "tasks" | "fitness" | "habits" | "orbit-day";
   label: string;
 };
 
@@ -24,14 +24,14 @@ export type SetupState = {
 
 export function getSetupState({
   fitnessConfigured,
+  habitCount,
   hasOrbitDay,
   taskCount,
-  transactionCount,
 }: {
   fitnessConfigured: boolean;
+  habitCount: number;
   hasOrbitDay: boolean;
   taskCount: number;
-  transactionCount: number;
 }): SetupState {
   const steps: SetupStep[] = [
     {
@@ -49,11 +49,14 @@ export function getSetupState({
       label: "Set your training week",
     },
     {
-      detail: "Import a statement, or add one payment by hand.",
-      done: transactionCount > 0,
-      href: "/finance",
-      id: "finance",
-      label: "Bring in your money",
+      // The third pillar is the only one Orbit cannot guess: tasks are work
+      // and training is the body, and whatever else this person means to keep
+      // doing has to be named by them.
+      detail: "One thing you mean to keep doing, and the days you want it.",
+      done: habitCount > 0,
+      href: "/habits",
+      id: "habits",
+      label: "Name a habit of your own",
     },
     {
       detail: `Finish a day at ${ORBIT_DAY_SCORE}% or better and the climb starts.`,
@@ -186,13 +189,13 @@ export type RingProgress = {
 
 export type ClosingLine = {
   remaining: number;
-  system: "tasks" | "fitness" | "finance";
+  system: "tasks" | "fitness" | "habits";
   text: string;
 };
 
 const systemNoun: Record<ClosingLine["system"], [string, string]> = {
-  finance: ["payment", "payments"],
   fitness: ["session", "sessions"],
+  habits: ["habit", "habits"],
   tasks: ["task", "tasks"],
 };
 
@@ -201,13 +204,13 @@ const systemNoun: Record<ClosingLine["system"], [string, string]> = {
  * what makes it worth walking — "one task" moves people, "72%" does not.
  */
 export function getClosingLines(rings: {
-  finance: RingProgress;
   fitness: RingProgress;
+  habits?: RingProgress;
   tasks: RingProgress;
 }): ClosingLine[] {
-  const entries = Object.entries(rings) as Array<
-    [ClosingLine["system"], RingProgress]
-  >;
+  const entries = Object.entries(rings).filter(
+    (entry): entry is [ClosingLine["system"], RingProgress] => Boolean(entry[1]),
+  );
 
   return entries
     .filter(([, ring]) => ring.total > 0 && ring.percent < 100)

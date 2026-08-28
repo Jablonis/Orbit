@@ -306,7 +306,7 @@ export function QuickAdd() {
       <dialog
         aria-label={view === "task" ? "Quick task" : "Quick Add commands"}
         aria-modal="true"
-        className="rounded-2xl bg-popover shadow-[0_24px_60px_-30px_rgba(27,26,31,0.35)] modal-animate fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[100] m-0 max-h-[min(78dvh,560px)] w-auto overflow-y-auto rounded-2xl border-0 p-2 text-foreground backdrop:bg-black/55 backdrop:backdrop-blur-[2px] sm:inset-x-auto sm:bottom-auto sm:left-[var(--quick-add-left)] sm:top-[var(--quick-add-top)] sm:w-[352px] sm:rounded-xl sm:backdrop:bg-transparent sm:backdrop:backdrop-blur-none"
+        className="rounded-2xl bg-popover shadow-[var(--shadow-pop)] modal-animate fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-auto z-[100] m-0 max-h-[min(78dvh,560px)] w-auto overflow-y-auto rounded-2xl border-0 p-2 text-foreground backdrop:bg-black/55 backdrop:backdrop-blur-[2px] sm:inset-x-auto sm:bottom-auto sm:left-[var(--quick-add-left)] sm:top-[var(--quick-add-top)] sm:w-[352px] sm:rounded-xl sm:backdrop:bg-transparent sm:backdrop:backdrop-blur-none"
         id="quick-add-dialog"
         onCancel={(event) => {
           event.preventDefault();
@@ -336,7 +336,7 @@ export function QuickAdd() {
             <div className="flex items-center gap-2">
               <button
                 aria-label="Back to commands"
-                className="grid h-11 w-11 place-items-center rounded-xl text-muted-foreground hover:bg-[rgba(244,235,221,0.06)]"
+                className="grid h-11 w-11 place-items-center rounded-xl text-muted-foreground hover:bg-[var(--wash)]"
                 onClick={() => setView("commands")}
                 type="button"
               >
@@ -417,7 +417,7 @@ export function QuickAdd() {
                   {searchError}
                 </p>
                 <button
-                  className="min-h-11 rounded-xl px-3 text-[12px] font-bold text-foreground hover:bg-[rgba(244,235,221,0.07)]"
+                  className="min-h-11 rounded-xl px-3 text-[12px] font-bold text-foreground hover:bg-[var(--wash)]"
                   onClick={() => setSearchRevision((revision) => revision + 1)}
                   type="button"
                 >
@@ -434,7 +434,7 @@ export function QuickAdd() {
                 return (
                   <Link
                     aria-selected={index === activeIndex}
-                    className={`block min-h-11 rounded-xl px-3 py-3 transition ${index === activeIndex ? "bg-[rgba(244,235,221,0.08)]" : "hover:bg-[rgba(244,235,221,0.06)]"}`}
+                    className={`block min-h-11 rounded-xl px-3 py-3 transition ${index === activeIndex ? "bg-[var(--wash)]" : "hover:bg-[var(--wash)]"}`}
                     href={result.href}
                     id={optionId}
                     key={optionId}
@@ -471,7 +471,7 @@ export function QuickAdd() {
                   </>
                 );
                 return (
-                  <div className={`group flex rounded-xl ${selected ? "bg-[rgba(244,235,221,0.08)]" : "hover:bg-[rgba(244,235,221,0.06)]"}`} key={action.id}>
+                  <div className={`group flex rounded-xl ${selected ? "bg-[var(--wash)]" : "hover:bg-[var(--wash)]"}`} key={action.id}>
                     {action.kind === "link" && action.href ? (
                       <Link
                         aria-selected={selected}
@@ -507,7 +507,7 @@ export function QuickAdd() {
                     <button
                       aria-label={`${pins.includes(action.id) ? "Unpin" : "Pin"} ${action.label}`}
                       aria-pressed={pins.includes(action.id)}
-                      className="grid h-11 w-11 shrink-0 place-items-center self-center rounded-xl text-[16px] text-muted-foreground hover:bg-[rgba(244,235,221,0.07)] hover:text-foreground"
+                      className="grid h-11 w-11 shrink-0 place-items-center self-center rounded-xl text-[16px] text-muted-foreground hover:bg-[var(--wash)] hover:text-foreground"
                       onClick={() => togglePin(action.id)}
                       title={pins.includes(action.id) ? "Unpin command" : "Pin command"}
                       type="button"

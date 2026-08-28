@@ -43,7 +43,7 @@ export default async function LoginPage({
       id="main-content"
       tabIndex={-1}
     >
-      <section className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] w-full max-w-[460px] rounded-2xl p-6 shadow-[0_24px_70px_rgba(0,0,0,0.32)]">
+      <section className="rounded-2xl bg-card shadow-[var(--shadow-card)] w-full max-w-[460px] rounded-2xl p-6 shadow-[0_24px_70px_rgba(0,0,0,0.32)]">
         <div className="mb-8">
           <div className="flex items-center justify-between gap-4">
             <Link aria-label="About Orbit" className="inline-flex" href="/welcome">

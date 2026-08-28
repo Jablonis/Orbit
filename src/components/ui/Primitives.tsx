@@ -340,7 +340,7 @@ export function Skeleton({
     <span
       aria-hidden="true"
       className={joinClasses(
-        "skeleton-shimmer block rounded-xl bg-[rgba(244,235,221,0.06)]",
+        "skeleton-shimmer block rounded-xl bg-[var(--wash)]",
         className,
       )}
     />

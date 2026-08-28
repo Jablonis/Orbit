@@ -17,7 +17,6 @@ export const dashboardCardIds = [
   "fitness",
   "rings",
   "momentum",
-  "finance",
   "voyage",
   "recap",
   "review",
@@ -46,7 +45,6 @@ const LEGACY_CARD_ORDER = [
 
 export const dashboardCardLabels: Record<DashboardCardId, string> = {
   analytics: "Analytics",
-  finance: "Finance summary",
   fitness: "Fitness today",
   milestones: "Milestones",
   momentum: "Momentum orbit",
@@ -71,6 +69,7 @@ export type ProductivityScoringPreferences = {
   weights: {
     fitness: number;
     focus: number;
+    habits: number;
     tasks: number;
   };
 };
@@ -111,6 +110,7 @@ export const defaultProductivityScoring: ProductivityScoringPreferences = {
   weights: {
     fitness: 25,
     focus: 15,
+    habits: 25,
     tasks: 60,
   },
 };
@@ -261,6 +261,12 @@ export function parseDashboardPreferences(
         focus: boundedInteger(
           weights.focus,
           defaultProductivityScoring.weights.focus,
+          0,
+          100,
+        ),
+        habits: boundedInteger(
+          weights.habits,
+          defaultProductivityScoring.weights.habits,
           0,
           100,
         ),

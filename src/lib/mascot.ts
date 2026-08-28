@@ -12,6 +12,25 @@
  */
 
 import { MOMENTUM_DECAY } from "@/lib/momentum";
+import type { PipKit } from "@/lib/pip-pixels";
+import { BARE_KIT } from "@/lib/pip-pixels";
+
+/**
+ * What Pip carries on each domain's panel.
+ *
+ * Named here rather than guessed from the subject sentence, because the
+ * sentence is prose — "today's queue", "this training week" — and a mascot
+ * that changed its tools when someone reworded a label would be a bug nobody
+ * could find. Tennis gets the racket because the training day already knows
+ * which sport it is, and a dumbbell on a tennis day is a small lie.
+ */
+export const PIP_KITS = {
+  bare: BARE_KIT,
+  fitness: { glasses: false, prop: "dumbbell" },
+  habits: { glasses: false, prop: "book" },
+  tasks: { glasses: true, prop: "notes" },
+  tennis: { glasses: false, prop: "racket" },
+} as const satisfies Record<string, PipKit>;
 
 export const pipMoods = [
   "asleep",
@@ -122,6 +141,7 @@ export type Climb = {
 
 export type PanelPip = {
   burn: number;
+  kit: PipKit;
   mood: PipMood;
   /** What Pip is reacting to, for anyone who cannot see him. */
   title: string;
@@ -143,22 +163,31 @@ export function getPanelPip(
   done: number,
   total: number,
   subject = "this",
+  kit: PipKit = BARE_KIT,
 ): PanelPip {
   const complete = Math.max(0, done);
   const asked = Math.max(0, total);
 
+  // Nothing asked is not the same as nothing done, and it used to wear the
+  // same face. An empty panel gets a penguin dozing on the pad; a panel that
+  // asked for five things and got none gets one who minds.
   if (asked === 0) {
-    return { burn: 0.15, mood: "grounded", title: `Nothing planned in ${subject}.` };
+    return {
+      burn: 0.15,
+      kit,
+      mood: "asleep",
+      title: `Nothing planned in ${subject}.`,
+    };
   }
 
   const ratio = Math.min(1, complete / asked);
   const said = `${complete} of ${asked} in ${subject}.`;
 
-  if (complete >= asked) return { burn: 1, mood: "sealed", title: said };
-  if (ratio >= 0.8) return { burn: 0.9, mood: "soaring", title: said };
-  if (ratio >= 0.5) return { burn: 0.7, mood: "cruising", title: said };
-  if (ratio > 0) return { burn: 0.45, mood: "lifting", title: said };
-  return { burn: 0.2, mood: "grounded", title: said };
+  if (complete >= asked) return { burn: 1, kit, mood: "sealed", title: said };
+  if (ratio >= 0.8) return { burn: 0.9, kit, mood: "soaring", title: said };
+  if (ratio >= 0.5) return { burn: 0.7, kit, mood: "cruising", title: said };
+  if (ratio > 0) return { burn: 0.45, kit, mood: "lifting", title: said };
+  return { burn: 0.2, kit, mood: "grounded", title: said };
 }
 
 /** The lowest a day can multiply an orbit: doing nothing at all. */

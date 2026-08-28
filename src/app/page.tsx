@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { THEME_COOKIE, parseTheme } from "@/lib/theme";
 import type { ReactNode } from "react";
 import { DayCardShare } from "@/components/DayCardShare";
 import { DayComplete } from "@/components/DayComplete";
 import { RecapShare } from "@/components/RecapShare";
 import { WeekSealed } from "@/components/WeekSealed";
 import { Arrival } from "@/components/Arrival";
-import { NowCard } from "@/components/overview/NowCard";
+import { DayTiles } from "@/components/overview/DayTiles";
 import { VoyageCard } from "@/components/overview/VoyageCard";
 import { WeekStrip } from "@/components/overview/WeekStrip";
 import {
   AnalyticsCard,
-  FinanceCard,
   FitnessCard,
   MilestonesCard,
   MomentumCard,
@@ -46,9 +47,9 @@ import {
   shiftDate,
 } from "@/lib/fitness";
 import {
-  getFinanceSummary,
   getFinanceTransactions,
 } from "@/lib/finance";
+import { getHabitChecks, getHabits } from "@/lib/habits";
 import {
   type DashboardCardId,
   getDashboardPreferences,
@@ -57,7 +58,6 @@ import type {
   OverviewQueryState,
   OverviewTaskFilter,
 } from "@/lib/overview-query";
-import { getPinnedFinanceMetric } from "@/lib/finance-metric";
 import { getAscent } from "@/lib/ascent";
 import { hasCrew, publishSnapshot } from "@/lib/crew";
 import { getRecapWeek, getWeekRecap } from "@/lib/recap";
@@ -122,6 +122,8 @@ export default async function Home({
     sessions,
     fitnessPlanHistory,
     reflection,
+    habitList,
+    habitChecks,
   ] =
     await Promise.all([
       getTasks(supabase, user.id, { includeHistory: true }),
@@ -131,7 +133,11 @@ export default async function Home({
       getFitnessSessions(supabase, user.id, historyFrom, historyTo),
       getFitnessPlanHistory(supabase, user.id, historyFrom, historyTo),
       getWeeklyReflection(supabase, user.id, currentWeek[0]),
+      getHabits(supabase, user.id),
+      getHabitChecks(supabase, user.id, historyFrom, historyTo),
     ]);
+  // The third pillar, passed as one bundle to everything that scores a day.
+  const habitInputs = { checks: habitChecks, habits: habitList };
   const visibleTasks = getVisibleTasks(taskHistory, today, calendar.timeZone);
   const orderedTasks = sortDashboardTasks(
     visibleTasks,
@@ -147,14 +153,13 @@ export default async function Home({
     today,
     fitnessConfigured,
   );
-  const finance = getFinanceSummary(transactions, today.slice(0, 7));
   const dailyRings = getDailyRings(
     visibleTasks,
     completions,
     fitnessStats.todayTraining,
-    transactions,
     today,
     calendar.timeZone,
+    habitInputs,
   );
   const enabledDomains = getEnabledDomains(params.domains);
   const productivity = rescoreProductivity(
@@ -166,6 +171,7 @@ export default async function Home({
       today,
       preferences.rangeDays,
       calendar,
+      habitInputs,
     ),
     enabledDomains,
     preferences.scoring,
@@ -178,6 +184,7 @@ export default async function Home({
       fitnessPlanHistory,
       today,
       calendar,
+      habitInputs,
     ),
     enabledDomains,
     preferences.scoring,
@@ -200,6 +207,7 @@ export default async function Home({
       today,
       30,
       calendar,
+      habitInputs,
     ),
     enabledDomains,
     preferences.scoring,
@@ -224,6 +232,7 @@ export default async function Home({
           today,
           VOYAGE_HISTORY_DAYS,
           calendar,
+          habitInputs,
         ),
         previous: [],
       },
@@ -248,11 +257,11 @@ export default async function Home({
   });
   const setup = getSetupState({
     fitnessConfigured,
+    habitCount: habitList.length,
     hasOrbitDay: momentumRange.current.some(
       (point) => (point.score ?? 0) >= ORBIT_DAY_SCORE,
     ),
     taskCount: taskHistory.length,
-    transactionCount: transactions.length,
   });
   const milestones = getMilestones({
     bestAltitude: momentumRecords.bestAltitude,
@@ -270,7 +279,7 @@ export default async function Home({
     areas: [
       { ...dailyRings.tasks, label: "Tasks", system: "tasks" as const },
       { ...dailyRings.fitness, label: "Fitness", system: "fitness" as const },
-      { ...dailyRings.finance, label: "Finance", system: "finance" as const },
+      { ...dailyRings.habits, label: "Habits", system: "habits" as const },
     ],
     todayScore: momentum.todayScore,
   });
@@ -331,9 +340,6 @@ export default async function Home({
       )
       .map((task) => task.id),
   );
-  const nextTask = orderedTasks.find((task) =>
-    isRepeating(task) ? !doneToday.has(task.id) : !task.completed,
-  );
   // What each open task is worth right now, in the same kilometres the voyage
   // counts, so the reward on the button is the reward on the map.
   const todayPoint = weeklyProductivity.current.find(
@@ -346,22 +352,6 @@ export default async function Home({
           getTaskReward(todayPoint, task, enabledDomains, preferences.scoring),
         ])
       : [],
-  );
-  const monthTransactions = transactions.filter((transaction) =>
-    transaction.date.startsWith(today.slice(0, 7)),
-  );
-  const pendingFinance = [...transactions]
-    .filter((transaction) => transaction.status !== "paid")
-    .sort((a, b) => a.date.localeCompare(b.date))[0];
-  // What Pip reads on the finance card: how much of this month is settled.
-  const settledFinance = {
-    done: monthTransactions.filter((transaction) => transaction.status === "paid")
-      .length,
-    total: monthTransactions.length,
-  };
-  const pinnedFinance = getPinnedFinanceMetric(
-    preferences.pinnedFinanceMetric,
-    finance,
   );
   const trendsSectionTitle = enabledDomains.length > 0
     ? `Weekly score: ${review.score}%`
@@ -383,15 +373,6 @@ export default async function Home({
         streak={streak}
         today={today}
         weekChange={momentum.weekChange}
-      />
-    ),
-    finance: (
-      <FinanceCard
-        finance={finance}
-        key="finance"
-        pendingFinance={pendingFinance}
-        pinnedFinance={pinnedFinance}
-        settled={settledFinance}
       />
     ),
     fitness: (
@@ -422,9 +403,7 @@ export default async function Home({
     tasks: (
       <TasksCard
         doneToday={[...doneToday]}
-        filter={filter}
         key="tasks"
-        overviewQuery={overviewQuery}
         pinnedCategory={preferences.pinnedTaskCategory}
         quickTasks={quickTasks}
         rewards={taskRewards}
@@ -445,8 +424,14 @@ export default async function Home({
     "recap",
     "review",
   ];
-  const todayCards = visibleCards.filter(
-    (card) => !trendCardIds.includes(card),
+  // The tiles answer the glance; the list answers "which ones". Everything
+  // else is detail, and detail goes under the fold.
+  const listCards = visibleCards.filter((card) => card === "tasks");
+  // Momentum is the hero above, and the tasks list sits under the tiles; what
+  // is left is detail, and detail goes under the fold.
+  const foldedCards = visibleCards.filter(
+    (card) =>
+      card !== "tasks" && card !== "momentum" && !trendCardIds.includes(card),
   );
   const trendCards = visibleCards.filter((card) => trendCardIds.includes(card));
   const dateLabel = new Intl.DateTimeFormat(preferences.regional.locale, {
@@ -456,10 +441,13 @@ export default async function Home({
     weekday: "long",
   }).format(new Date(`${today}T12:00:00Z`));
 
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+
   return (
     <main className="app-shell" id="main-content" tabIndex={-1}>
       <AppNavigation
         active="dashboard"
+        theme={theme}
         profile={preferences.regional}
         settings={(
           <DashboardCustomizer
@@ -539,32 +527,30 @@ export default async function Home({
 
         <SetupCard setup={setup} />
 
-        <NowCard
-          dailyRings={dailyRings}
-          nextTask={nextTask}
-          reward={nextTask ? taskRewards[nextTask.id] ?? 0 : 0}
-          timeZone={calendar.timeZone}
-          today={today}
-          todayScore={momentum.todayScore}
-          training={fitnessStats.todayTraining}
-        />
-
+        {/* The week first, because "which day am I in" is answered before
+            anything else is read, and then the day itself as four tiles. */}
         <WeekStrip
           locale={calendar.locale}
           points={weeklyProductivity.current}
           today={today}
         />
 
-        {todayCards.length > 0 ? (
-          <div className="grid gap-5 lg:grid-cols-2">
-            {todayCards.map((card) => dashboardCards[card])}
-          </div>
-        ) : null}
+        {/* How the day is going, first and large: the altitude, and the climb
+            today has actually drawn. */}
+        {dashboardCards.momentum}
+
+        <DayTiles
+          habits={dailyRings.habits}
+          taskStats={pinnedTaskStats}
+          training={fitnessStats.todayTraining}
+        />
+
+        {listCards.map((card) => dashboardCards[card])}
 
         {/* The history is worth having and is not worth reading first: the
             day is the point, and five charts under it is why the page felt
             like homework. It states its headline and opens when asked. */}
-        {trendCards.length > 0 ? (
+        {trendCards.length + foldedCards.length > 0 ? (
           <details className="settle-in rounded-2xl border border-border bg-card">
             <summary className="flex min-h-14 cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted">
               <h2
@@ -578,6 +564,7 @@ export default async function Home({
               </p>
             </summary>
             <div className="grid gap-5 border-t border-border p-4">
+              {foldedCards.map((card) => dashboardCards[card])}
               {trendCards.map((card) => dashboardCards[card])}
             </div>
           </details>
@@ -615,7 +602,7 @@ function filterTasks(
 
 function getEnabledDomains(value: string | undefined): ProductivityDomain[] {
   if (value === "none") return [];
-  if (!value) return ["tasks", "fitness", "focus"];
-  const valid: ProductivityDomain[] = ["tasks", "fitness", "focus"];
+  if (!value) return ["tasks", "fitness", "focus", "habits"];
+  const valid: ProductivityDomain[] = ["tasks", "fitness", "focus", "habits"];
   return valid.filter((domain) => value.split(",").includes(domain));
 }

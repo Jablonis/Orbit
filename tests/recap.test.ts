@@ -15,6 +15,7 @@ function points(lastDate: string, scores: Array<number | null>) {
     const date = shift(lastDate, index - scores.length + 1);
     return {
       completedFitness: score !== null && score >= 50 ? 1 : 0,
+      completedHabits: 0,
       completedTasks: score === null ? 0 : Math.round(score / 20),
       date,
       focusMinutes: score === null ? 0 : score,
@@ -24,6 +25,7 @@ function points(lastDate: string, scores: Array<number | null>) {
         weekday: "short",
       }).format(new Date(`${date}T12:00:00Z`)),
       plannedFitness: 1,
+      plannedHabits: 0,
       plannedTasks: 5,
       score,
     };

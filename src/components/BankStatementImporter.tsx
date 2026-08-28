@@ -107,7 +107,7 @@ export function BankStatementImporter({
   const correctedCategoryCount = Object.keys(categoryOverrides).length;
 
   return (
-    <article className="rounded-2xl bg-card shadow-[0_1px_2px_rgba(27,26,31,0.05)] rounded-2xl p-6 xl:col-span-7" id="bank-statement-import">
+    <article className="rounded-2xl bg-card shadow-[var(--shadow-card)] rounded-2xl p-6 xl:col-span-7" id="bank-statement-import">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="label-caps text-primary">Monthly bank PDF</p>
@@ -166,7 +166,7 @@ export function BankStatementImporter({
         </button>
       </form>
 
-      <div className="mt-4 flex items-start gap-3 rounded-xl border border-border bg-[rgba(244,235,221,0.02)] p-4">
+      <div className="mt-4 flex items-start gap-3 rounded-xl border border-border bg-[var(--wash)] p-4">
         <span aria-hidden="true" className="mt-0.5 text-finance">◈</span>
         <p className="text-[12px] leading-[18px] text-muted-foreground">
           Orbit validates the file type, size, PDF signature, page count, origin, and signed-in user on the server. It discards the document after parsing and stores only confirmed transactions plus a non-reversible duplicate fingerprint. Account and card numbers found in descriptions are masked.
@@ -315,7 +315,7 @@ async function readStatementResponse(response: Response): Promise<StatementRespo
 
 function PreviewMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-[rgba(244,235,221,0.025)] p-4">
+    <div className="rounded-xl border border-border bg-[var(--wash)] p-4">
       <p className="label-caps text-muted-foreground">{label}</p>
       <p className="metric-value mt-2 text-[18px] font-semibold text-foreground">{value}</p>
     </div>

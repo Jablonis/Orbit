@@ -6,12 +6,14 @@ import type { ProductivityPoint } from "../src/lib/productivity-score";
 function point(overrides: Partial<ProductivityPoint> = {}): ProductivityPoint {
   return {
     completedFitness: 0,
+    completedHabits: 0,
     completedTasks: 0,
     date: "2026-08-24",
     focusMinutes: 0,
     future: false,
     label: "Mon",
     plannedFitness: 0,
+    plannedHabits: 0,
     plannedTasks: 0,
     score: 0,
     ...overrides,
@@ -22,9 +24,11 @@ test("a day that counted says so", () => {
   const detail = getDayDetail(
     point({
       completedFitness: 1,
+      completedHabits: 0,
       completedTasks: 3,
       focusMinutes: 95,
       plannedFitness: 1,
+      plannedHabits: 0,
       plannedTasks: 4,
       score: 78,
     }),
