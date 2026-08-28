@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { Pip } from "@/components/brand/Pip";
 
 export function ActionToast({
   action,
@@ -28,20 +29,34 @@ export function ActionToast({
         role={tone === "error" ? "alert" : "status"}
       >
         <span className="flex min-w-0 items-center gap-2">
-          <span
-            aria-hidden="true"
-            className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[12px] font-bold ${
-              tone === "error"
-                ? "bg-destructive text-primary-foreground"
-                : tone === "loading"
-                  ? "bg-finance/15 text-finance-ink"
-                  : "bg-primary text-primary-foreground"
-            }`}
-          >
-            {tone === "loading" ? (
-              <span className="action-toast-spinner h-3.5 w-3.5 rounded-full border-2 border-current border-r-transparent" />
-            ) : tone === "success" ? "✓" : "!"}
-          </span>
+          {/* A tick tells you the request finished. Pip with his flippers up
+              tells you it worked, which is the same fact and a better one to
+              be handed. Failure keeps the plain mark: this is not the moment
+              for a character. */}
+          {tone === "success" ? (
+            <Pip
+              burn={1}
+              className="h-7 w-auto shrink-0"
+              mood="sealed"
+              seed={2}
+              size={28}
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[12px] font-bold ${
+                tone === "error"
+                  ? "bg-destructive text-primary-foreground"
+                  : "bg-finance/15 text-finance-ink"
+              }`}
+            >
+              {tone === "loading" ? (
+                <span className="action-toast-spinner h-3.5 w-3.5 rounded-full border-2 border-current border-r-transparent" />
+              ) : (
+                "!"
+              )}
+            </span>
+          )}
           <span className="min-w-0 leading-5">{message}</span>
         </span>
         {action}

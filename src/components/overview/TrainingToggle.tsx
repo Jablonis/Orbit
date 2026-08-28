@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { ActionToast } from "@/components/ActionToast";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { setTrainingDoneAction } from "@/app/fitness/actions";
 
@@ -37,10 +38,11 @@ export function TrainingToggle({
       >
         {trained ? "Done ✓" : "Mark done"}
       </PendingSubmitButton>
-      {state.message && !state.ok ? (
-        <p className="mt-1.5 text-[12px] font-semibold text-destructive" role="status">
-          {state.message}
-        </p>
+      {state.message ? (
+        <ActionToast
+          message={state.message}
+          tone={state.ok ? "success" : "error"}
+        />
       ) : null}
     </form>
   );
