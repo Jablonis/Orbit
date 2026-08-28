@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { THEME_COOKIE, parseTheme, themeAttribute } from "@/lib/theme";
 import { DM_Mono, Figtree } from "next/font/google";
 import "./globals.css";
+import { PullToRefresh } from "@/components/PullToRefresh";
 
 // Figtree carries the product: humanist rather than geometric, so it reads
 // like a person wrote it and not like a terminal printed it.
@@ -69,6 +70,7 @@ export default async function RootLayout({
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
+        <PullToRefresh />
         {children}
       </body>
     </html>
