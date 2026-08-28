@@ -7,6 +7,8 @@ const skeletonCardClasses = [
   "xl:col-span-12",
 ] as const;
 
+import { Pip } from "@/components/brand/Pip";
+
 export function RouteLoading({ label = "Loading Orbit" }: { label?: string }) {
   return (
     <main
@@ -19,8 +21,20 @@ export function RouteLoading({ label = "Loading Orbit" }: { label?: string }) {
       <span aria-hidden="true" className="route-loading-progress" />
       <div className="fixed left-0 top-0 hidden h-screen w-[112px] border-r border-[var(--hairline)] bg-card/86 md:block" />
       <section className="page-container py-7">
-        <div className="skeleton-shimmer h-3 w-28 rounded-full bg-primary/20" />
-        <div className="skeleton-shimmer mt-4 h-11 w-full max-w-lg rounded-xl bg-[var(--hairline)]" />
+        {/* The skeleton says what shape is coming; Pip says something is
+            coming at all. A grey page with no sign of life reads as broken
+            long before it reads as slow. */}
+        <div className="flex items-center gap-3">
+          <Pip
+            burn={0.9}
+            className="route-loading-pip h-9 w-auto shrink-0"
+            mood="lifting"
+            seed={0}
+            size={36}
+          />
+          <p className="label-caps text-muted-foreground">{label}</p>
+        </div>
+        <div className="skeleton-shimmer mt-6 h-11 w-full max-w-lg rounded-xl bg-[var(--hairline)]" />
         <div className="skeleton-shimmer mt-3 h-4 w-full max-w-2xl rounded-full bg-[var(--wash)]" />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-12">
           {skeletonCardClasses.map((spanClass, index) => (
@@ -30,7 +44,6 @@ export function RouteLoading({ label = "Loading Orbit" }: { label?: string }) {
             />
           ))}
         </div>
-        <span className="sr-only">{label}</span>
       </section>
     </main>
   );
