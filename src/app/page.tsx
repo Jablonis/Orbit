@@ -137,7 +137,7 @@ export default async function Home({
       getHabitChecks(supabase, user.id, historyFrom, historyTo),
     ]);
   // The third pillar, passed as one bundle to everything that scores a day.
-  const habitInputs = { checks: habitChecks, habits: habitList };
+  const habitInputs = { checks: habitChecks.rows, habits: habitList.rows };
   const visibleTasks = getVisibleTasks(taskHistory, today, calendar.timeZone);
   const orderedTasks = sortDashboardTasks(
     visibleTasks,
@@ -257,7 +257,7 @@ export default async function Home({
   });
   const setup = getSetupState({
     fitnessConfigured,
-    habitCount: habitList.length,
+    habitCount: habitList.rows.length,
     hasOrbitDay: momentumRange.current.some(
       (point) => (point.score ?? 0) >= ORBIT_DAY_SCORE,
     ),

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { isMissingHabitsSchema } from "@/lib/habits";
+import { describeHabitError } from "@/lib/habits";
 import { getDashboardPreferences } from "@/lib/preferences";
 import { normaliseRepeatDays } from "@/lib/routines";
 import { getDateInTimeZone } from "@/lib/tasks";
@@ -20,20 +20,17 @@ function revalidateHabits() {
 }
 
 /**
- * The one sentence a failure is allowed to say, plus the reason underneath it
- * in the server log. Routines shipped without the second half, and a whole
- * afternoon went into rediscovering that the database simply had not been
- * migrated yet.
+ * What went wrong, said out loud.
+ *
+ * "That could not be saved. Try again." is the failure telling you nothing,
+ * and trying again does not help when the reason is a table that does not
+ * exist. This is a personal planner with one account on it, so the database's
+ * own message and code go to the screen as well as the log: they are the
+ * difference between a bug report and a round trip.
  */
 function failure(where: string, error: { code?: string; message?: string } | null) {
   console.error(`habits: ${where} failed`, error?.code, error?.message);
-  if (isMissingHabitsSchema(error)) {
-    return {
-      message: "Habits are not set up on this database yet.",
-      ok: false,
-    } satisfies HabitActionState;
-  }
-  return { message: "That could not be saved. Try again.", ok: false };
+  return { message: describeHabitError(error), ok: false } satisfies HabitActionState;
 }
 
 function readDays(formData: FormData) {

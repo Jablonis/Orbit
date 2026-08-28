@@ -127,18 +127,39 @@ type PostgrestErrorish = { code?: string; message?: string } | null;
 /**
  * Whether this database is simply one without the habits migration.
  *
- * The lesson from routines, applied before it can be relearned: a deploy can
- * land before its migration does, and a dashboard that reads a table the
- * database has never heard of takes every signed-in page down with it. Reads
- * are compiled to SQL and refused by Postgres (`42P01`); requests routed by
+ * A deploy can land before its migration does, and a page that reads a table
+ * the database has never heard of takes itself down with it. Reads are
+ * compiled to SQL and refused by Postgres (`42P01`); requests routed by
  * PostgREST are refused against its schema cache first, as `PGRST205` for a
- * table and `PGRST202` for a function. Habits are additive, so the honest
- * answer to all three is "this account has no habits yet".
+ * table and `PGRST202` for a function.
  */
 export function isMissingHabitsSchema(error: PostgrestErrorish) {
   const code = error?.code ?? "";
   return code === "42P01" || code === "PGRST205" || code === "PGRST202";
 }
+
+/** What went wrong, in the words the database used, for a person to read. */
+export function describeHabitError(error: PostgrestErrorish) {
+  if (!error) return "";
+  if (isMissingHabitsSchema(error)) {
+    return "Habits are not set up on this database yet — the migration has not been run.";
+  }
+  const code = error.code ? ` (${error.code})` : "";
+  return `${error.message ?? "Unknown database error"}${code}`;
+}
+
+/**
+ * How reading habits went. Never a throw.
+ *
+ * The first version guarded only the three codes that mean "not migrated" and
+ * rethrew everything else, which is the same mistake in a smaller box: a
+ * permission that did not apply, or a policy that did not, would take the whole
+ * page down rather than the one panel that could not be drawn. Habits are an
+ * addition to a day; nothing about them is worth a blank screen. So every
+ * failure degrades to "no habits", and carries the reason up so the page can
+ * say it out loud instead of pretending the list is empty.
+ */
+export type HabitRead<T> = { error: string; rows: T[] };
 
 type DbHabit = {
   created_at: string;
@@ -161,7 +182,10 @@ export function mapDbHabit(row: DbHabit): Habit {
   };
 }
 
-export async function getHabits(supabase: SupabaseClient, userId: string) {
+export async function getHabits(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<HabitRead<Habit>> {
   const { data, error } = await supabase
     .from("habits")
     .select("id,name,repeat_days,created_at")
@@ -170,11 +194,14 @@ export async function getHabits(supabase: SupabaseClient, userId: string) {
     .order("created_at", { ascending: true });
 
   if (error) {
-    if (isMissingHabitsSchema(error)) return [];
-    throw new Error(error.message);
+    console.error("habits: read failed", error.code, error.message);
+    return { error: describeHabitError(error), rows: [] };
   }
 
-  return (data ?? []).map((row) => mapDbHabit(row as DbHabit));
+  return {
+    error: "",
+    rows: (data ?? []).map((row) => mapDbHabit(row as DbHabit)),
+  };
 }
 
 export async function getHabitChecks(
@@ -182,7 +209,7 @@ export async function getHabitChecks(
   userId: string,
   from: string,
   to: string,
-) {
+): Promise<HabitRead<HabitCheck>> {
   const { data, error } = await supabase
     .from("habit_checks")
     .select("habit_id,done_on")
@@ -191,12 +218,15 @@ export async function getHabitChecks(
     .lte("done_on", to);
 
   if (error) {
-    if (isMissingHabitsSchema(error)) return [];
-    throw new Error(error.message);
+    console.error("habits: checks read failed", error.code, error.message);
+    return { error: describeHabitError(error), rows: [] };
   }
 
-  return (data ?? []).map((row) => {
-    const check = row as DbHabitCheck;
-    return { date: check.done_on, habitId: check.habit_id } satisfies HabitCheck;
-  });
+  return {
+    error: "",
+    rows: (data ?? []).map((row) => {
+      const check = row as DbHabitCheck;
+      return { date: check.done_on, habitId: check.habit_id } satisfies HabitCheck;
+    }),
+  };
 }
