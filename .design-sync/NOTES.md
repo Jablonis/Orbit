@@ -98,3 +98,19 @@ has no Checkbox component, the app pairs `Label` with raw checkboxes, and
   patch release could change the compiled output.
 - `dist/`, `.cache/` and `ds-bundle/` are gitignored and regenerated; a fresh clone
   must run `buildCmd` before the converter.
+
+## Why this directory doesn't break the app build
+
+`.design-sync/previews/*.tsx` import `"orbit-design-system"`, which is not a real
+entry in `node_modules` — so if TypeScript ever pulled those files into the app's
+program they would fail with TS2307 and break `next build`. They don't, and the
+reason is worth knowing before anyone renames anything: the app `tsconfig.json`
+includes `**/*.tsx` and excludes only `node_modules`, but **TypeScript's `include`
+globs skip dot-prefixed directories**, so a directory named `.design-sync` is never
+walked. Verified: `npx tsc --noEmit` exits 0 and `--listFilesOnly` reports zero
+preview files in the program.
+
+The leading dot is therefore load-bearing. Renaming this directory to something
+without it (`design-sync/`) would drag 17 unresolvable imports into the app build;
+if that ever happens, add the new name to the app tsconfig's `exclude` array. The
+converter is unaffected either way — it only reads `compilerOptions.paths`.
