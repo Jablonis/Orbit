@@ -84,6 +84,8 @@ export type CrewState = {
   displayName: string;
   members: CrewMember[];
   requests: CrewRequest[];
+  /** Why the crew could not be read, in the database's own words. */
+  trouble: string;
 };
 
 /** What `request_friendship` reports back, and what to say about it. */
@@ -248,19 +250,47 @@ export function getStandingLine(rows: LeaderboardRow[]) {
 
 // ------------------------------------------------------------------ queries
 
+type PostgrestErrorish = { code?: string; message?: string } | null;
+
+/**
+ * What went wrong, in words a person can read and repeat.
+ *
+ * Every crew query used to destructure `data` and drop `error` on the floor,
+ * which made three very different situations render identically: a database
+ * without the crew migration, a policy refusing the read, and an account with
+ * no friends yet. The audit called it the worst error-handling in the repo,
+ * and it was — a feature that cannot say "I am broken" reads as a feature
+ * that does nothing.
+ */
+export function describeCrewError(error: PostgrestErrorish) {
+  if (!error) return "";
+  const code = error.code ?? "";
+  if (code === "42P01" || code === "PGRST205" || code === "PGRST202") {
+    return "The crew tables are not set up on this database yet — the crew migration has not been run.";
+  }
+  return `${error.message ?? "Unknown database error"}${code ? ` (${code})` : ""}`;
+}
+
 export async function getCrewState(
   supabase: SupabaseClient,
   userId: string,
   displayName: string,
 ): Promise<CrewState> {
   // Creating the identity is idempotent, and it is what mints the code.
-  const { data: code } = await supabase.rpc("ensure_orbit_profile", {
-    p_display_name: displayName,
-  });
+  const { data: code, error: codeError } = await supabase.rpc(
+    "ensure_orbit_profile",
+    { p_display_name: displayName },
+  );
+  if (codeError) {
+    console.error("crew: profile failed", codeError.code, codeError.message);
+  }
 
-  const { data: links } = await supabase
+  const { data: links, error: linksError } = await supabase
     .from("friendships")
     .select("id, requester_id, addressee_id, status");
+  if (linksError) {
+    console.error("crew: links read failed", linksError.code, linksError.message);
+  }
 
   const rows = links ?? [];
   const otherIds = rows.map((row) =>
@@ -305,6 +335,9 @@ export async function getCrewState(
     displayName,
     members: members.sort((a, b) => a.displayName.localeCompare(b.displayName)),
     requests,
+    // Said out loud on the page. An unmigrated database and an empty crew are
+    // different situations and deserve different sentences.
+    trouble: describeCrewError(codeError) || describeCrewError(linksError),
   };
 }
 
@@ -313,12 +346,15 @@ export async function getCrewSnapshots(
   from: string,
   to: string,
 ): Promise<CrewSnapshot[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("orbit_snapshots")
     .select("user_id, day, score, altitude, tier_id, streak, rings_closed, rings_total")
     .gte("day", from)
     .lte("day", to)
     .order("day", { ascending: false });
+  if (error) {
+    console.error("crew: snapshots read failed", error.code, error.message);
+  }
 
   return (data ?? []).map((row) => ({
     altitude: row.altitude,
@@ -337,11 +373,14 @@ export async function getCrewReactions(
   from: string,
   to: string,
 ): Promise<CrewReaction[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("orbit_reactions")
     .select("from_user, to_user, day, kind")
     .gte("day", from)
     .lte("day", to);
+  if (error) {
+    console.error("crew: reactions read failed", error.code, error.message);
+  }
 
   return (data ?? [])
     .filter((row): row is typeof row & { kind: ReactionKind } =>
@@ -372,7 +411,7 @@ export async function publishSnapshot(
     tierId: string;
   },
 ) {
-  await supabase.rpc("publish_orbit_snapshot", {
+  const { error } = await supabase.rpc("publish_orbit_snapshot", {
     p_altitude: Math.round(snapshot.altitude),
     p_day: snapshot.day,
     p_rings_closed: snapshot.ringsClosed,
@@ -381,6 +420,12 @@ export async function publishSnapshot(
     p_streak: snapshot.streak,
     p_tier_id: snapshot.tierId,
   });
+  // Not surfaced to the person — publishing is a side effect of rendering the
+  // dashboard — but a snapshot that silently never publishes is a support
+  // ticket, and the log is where that hunt starts.
+  if (error) {
+    console.error("crew: snapshot publish failed", error.code, error.message);
+  }
 }
 
 export async function hasCrew(supabase: SupabaseClient) {
