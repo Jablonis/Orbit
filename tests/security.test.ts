@@ -281,3 +281,53 @@ test("habits are owner-only, and every write goes through a pinned function", ()
     3,
   );
 });
+
+test("a watch token is stored as a fingerprint, never in the clear", () => {
+  const migration = read("supabase/migrations/20260829090000_add_ingest_tokens.sql");
+
+  // The column is a hash and the constraint says so, so a plaintext token
+  // cannot be written into it even by mistake.
+  assert.match(migration, /token_hash text not null unique check \(token_hash ~ '\^\[0-9a-f\]\{64\}\$'\)/i);
+  // A column literally called `token`, as opposed to the `p_token` parameter
+  // the functions take — the secret arrives, is hashed, and is not kept.
+  assert.doesNotMatch(migration, /^\s+token text/im);
+
+  assert.match(
+    migration,
+    /alter table public\.ingest_tokens enable row level security/i,
+  );
+  assert.match(
+    migration,
+    /revoke all on table public\.ingest_tokens from public, anon/i,
+  );
+  assert.match(
+    migration,
+    /revoke insert, update, delete on table public\.ingest_tokens from authenticated/i,
+  );
+
+  for (const name of ["hash_ingest_token", "set_ingest_token", "clear_ingest_token"]) {
+    assert.match(
+      migration,
+      new RegExp(
+        `create or replace function public\\.${name}\\([\\s\\S]*?security definer\\s+set search_path = ''`,
+        "i",
+      ),
+      `${name} must pin its search path`,
+    );
+    assert.match(
+      migration,
+      new RegExp(`revoke all on function public\\.${name}\\([\\s\\S]*?from public, anon`, "i"),
+      `${name} must be unavailable to anonymous clients`,
+    );
+  }
+});
+
+test("the ingest endpoint never tells a prober which token exists", () => {
+  const route = read("src/app/api/fitness/ingest/route.ts");
+
+  // The same answer for a wrong token and a missing row.
+  assert.match(route, /if \(!owner\) return bad\("Unknown token\.", 401\)/);
+  // The service-role key stays server-side: this route may use the admin
+  // client, but nothing about it may be handed to a browser.
+  assert.doesNotMatch(route, /NEXT_PUBLIC_SUPABASE_SERVICE|SERVICE_ROLE_KEY/);
+});
