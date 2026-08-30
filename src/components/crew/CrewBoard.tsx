@@ -1,4 +1,5 @@
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
+import { CrewActionForm } from "@/components/crew/CrewActionForm";
 import { CrewCodePanel } from "@/components/crew/CrewCodePanel";
 import { AppNavigation } from "@/components/AppNavigation";
 import type { ThemeChoice } from "@/lib/theme";
@@ -75,6 +76,17 @@ export function CrewBoard({
           </p>
         </header>
 
+        {/* An unmigrated database and an empty crew are different situations,
+            and until this banner they wore the same face. */}
+        {crew.trouble ? (
+          <p
+            className="rounded-xl border border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] bg-destructive/10 px-4 py-3 text-[13px] font-semibold text-destructive"
+            role="alert"
+          >
+            {crew.trouble}
+          </p>
+        ) : null}
+
         <CrewCodePanel code={crew.code} />
 
         {incoming.length > 0 ? (
@@ -92,28 +104,20 @@ export function CrewBoard({
                     {request.displayName}
                   </span>
                   <span className="flex gap-2">
-                    <form action={respondToCrewRequestAction}>
-                      <input
-                        name="friendshipId"
-                        type="hidden"
-                        value={request.friendshipId}
-                      />
-                      <input name="intent" type="hidden" value="accept" />
-                      <PendingSubmitButton className="ui-button ui-button--primary h-9 min-h-9 px-4 text-[12px]">
-                        Accept
-                      </PendingSubmitButton>
-                    </form>
-                    <form action={respondToCrewRequestAction}>
-                      <input
-                        name="friendshipId"
-                        type="hidden"
-                        value={request.friendshipId}
-                      />
-                      <input name="intent" type="hidden" value="decline" />
-                      <PendingSubmitButton className="ui-button ui-button--secondary h-9 min-h-9 px-4 text-[12px]">
-                        Decline
-                      </PendingSubmitButton>
-                    </form>
+                    <CrewActionForm
+                      action={respondToCrewRequestAction}
+                      buttonClassName="ui-button ui-button--primary h-9 min-h-9 px-4 text-[12px]"
+                      fields={{ friendshipId: request.friendshipId, intent: "accept" }}
+                    >
+                      Accept
+                    </CrewActionForm>
+                    <CrewActionForm
+                      action={respondToCrewRequestAction}
+                      buttonClassName="ui-button ui-button--secondary h-9 min-h-9 px-4 text-[12px]"
+                      fields={{ friendshipId: request.friendshipId, intent: "decline" }}
+                    >
+                      Decline
+                    </CrewActionForm>
                   </span>
                 </li>
               ))}
@@ -291,16 +295,13 @@ export function CrewBoard({
                   <span className="truncate text-[14px] font-semibold">
                     {member.displayName}
                   </span>
-                  <form action={removeCrewMemberAction}>
-                    <input
-                      name="friendshipId"
-                      type="hidden"
-                      value={member.friendshipId}
-                    />
-                    <PendingSubmitButton className="ui-button h-9 min-h-9 px-3 text-[12px] text-muted-foreground hover:text-foreground">
-                      Remove
-                    </PendingSubmitButton>
-                  </form>
+                  <CrewActionForm
+                    action={removeCrewMemberAction}
+                    buttonClassName="ui-button h-9 min-h-9 px-3 text-[12px] text-muted-foreground hover:text-foreground"
+                    fields={{ friendshipId: member.friendshipId }}
+                  >
+                    Remove
+                  </CrewActionForm>
                 </div>
               ))}
               {outgoing.map((request) => (
@@ -311,16 +312,13 @@ export function CrewBoard({
                   <span className="truncate text-[14px] text-muted-foreground">
                     {request.displayName} · waiting
                   </span>
-                  <form action={removeCrewMemberAction}>
-                    <input
-                      name="friendshipId"
-                      type="hidden"
-                      value={request.friendshipId}
-                    />
-                    <PendingSubmitButton className="ui-button h-9 min-h-9 px-3 text-[12px] text-muted-foreground hover:text-foreground">
-                      Cancel
-                    </PendingSubmitButton>
-                  </form>
+                  <CrewActionForm
+                    action={removeCrewMemberAction}
+                    buttonClassName="ui-button h-9 min-h-9 px-3 text-[12px] text-muted-foreground hover:text-foreground"
+                    fields={{ friendshipId: request.friendshipId }}
+                  >
+                    Cancel
+                  </CrewActionForm>
                 </div>
               ))}
             </TintPanel>
