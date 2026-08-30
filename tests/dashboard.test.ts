@@ -127,3 +127,96 @@ test("splits productivity chart paths at missing days without plunging to zero",
   assert.match(paths[1], /^M 20 40 C 25 40, 25 10, 30 10$/);
   assert.doesNotMatch(paths.join(" "), /100/);
 });
+
+test("the indexed scorer answers exactly like the scanning one did", async () => {
+  // A fixture built to hit every branch the old per-day scans covered: a
+  // routine, a due date, a created-today one-off, a task excused by history,
+  // a completion planned for another day, and a completed session.
+  const { getProductivityHistory } = await import("../src/lib/dashboard");
+  const calendar = {
+    locale: "en-GB",
+    timeZone: "UTC",
+    weekStartsOn: "monday",
+  } as never;
+  const task = (over: Record<string, unknown>) => ({
+    category: "General",
+    complexity: "medium",
+    completed: false,
+    createdAt: "2026-08-24T08:00:00Z",
+    dueDate: "",
+    estimateMinutes: 30,
+    estimateMode: "1hr",
+    id: String(over.id),
+    note: "",
+    priority: "normal",
+    repeatDays: [],
+    timeFrom: "",
+    timeTo: "",
+    title: String(over.id),
+    type: "admin",
+    ...over,
+  });
+  const tasks = [
+    task({ id: "routine", repeatDays: [1, 2, 3, 4, 5] }),
+    task({ id: "due", dueDate: "2026-08-25" }),
+    task({ id: "created" }),
+    task({ id: "history" }),
+  ] as never[];
+  const completions = [
+    {
+      completedAt: "2026-08-25T10:00:00Z",
+      estimateMinutes: 30,
+      plannedFor: "2026-08-25",
+      taskId: "history",
+    },
+    {
+      completedAt: "2026-08-26T09:00:00Z",
+      estimateMinutes: 45,
+      plannedFor: "2026-08-24",
+      taskId: "routine",
+    },
+  ];
+  const sessions = [
+    {
+      completed: true,
+      durationMinutes: 60,
+      notes: "",
+      performedOn: "2026-08-25",
+      performedAt: "",
+      quality: "medium",
+    },
+  ] as never[];
+  const plan = [
+    { date: "2026-08-25", sport: "gym" },
+    { date: "2026-08-26", sport: "rest" },
+  ] as never[];
+
+  const week = getProductivityHistory(
+    tasks as never,
+    completions as never,
+    sessions,
+    plan,
+    "2026-08-26",
+    3,
+    calendar,
+  );
+
+  // Hand-computed against the pre-index algorithm.
+  assert.deepEqual(
+    week.map((point) => ({
+      completedFitness: point.completedFitness,
+      completedTasks: point.completedTasks,
+      date: point.date,
+      plannedTasks: point.plannedTasks,
+    })),
+    [
+      // Mon 24th: the routine due plus the created-today one-off; the
+      // plannedFor backfill names the routine again and a Set counts it once.
+      { completedFitness: 0, completedTasks: 0, date: "2026-08-24", plannedTasks: 2 },
+      // Tue 25th: routine + due task + planned completion; session done.
+      { completedFitness: 1, completedTasks: 1, date: "2026-08-25", plannedTasks: 3 },
+      // Wed 26th: routine only planned; its completion lands today.
+      { completedFitness: 0, completedTasks: 1, date: "2026-08-26", plannedTasks: 1 },
+    ],
+  );
+});

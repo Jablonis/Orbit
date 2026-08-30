@@ -198,6 +198,32 @@ export function formatTaskTime(task: Task) {
   return taskEstimateLabels[task.estimateMode];
 }
 
+/**
+ * One formatter per time zone, forever.
+ *
+ * Constructing Intl.DateTimeFormat is among the most expensive things V8 does,
+ * and this function used to construct one per call — which the scoring engine
+ * drove to roughly 1.7 million constructions per Overview load on a two-year
+ * account, growing with every completion. The audit named it the single
+ * biggest cost in the repo. An account meets a handful of time zones in its
+ * life, so the cache stays tiny.
+ */
+const dateFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function dateFormatter(timeZone: string) {
+  let formatter = dateFormatters.get(timeZone);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat("en-US", {
+      day: "2-digit",
+      month: "2-digit",
+      timeZone,
+      year: "numeric",
+    });
+    dateFormatters.set(timeZone, formatter);
+  }
+  return formatter;
+}
+
 export function getDateInTimeZone(
   date: Date | string = new Date(),
   timeZone = taskTimeZone,
@@ -208,12 +234,7 @@ export function getDateInTimeZone(
     return "";
   }
 
-  const parts = new Intl.DateTimeFormat("en-US", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone,
-    year: "numeric",
-  }).formatToParts(value);
+  const parts = dateFormatter(timeZone).formatToParts(value);
   const part = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((item) => item.type === type)?.value ?? "";
 
