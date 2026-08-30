@@ -7,6 +7,22 @@ import { ensureFitnessPlan, getFitnessStats } from "@/lib/fitness";
 import { getFitnessProfile } from "@/lib/fitness-setup";
 import { getDashboardPreferences } from "@/lib/preferences";
 import { getDateInTimeZone } from "@/lib/tasks";
+import { collectTrouble, settle } from "@/lib/settle";
+import { getExerciseName } from "@/lib/exercises";
+import {
+  buildBlock,
+  buildFitnessPlanPayload,
+  getBlockWeek,
+  getCoverageForExercises,
+  getMuscleCoverage,
+} from "@/lib/training-block";
+import { getActiveTrainingBlock } from "@/lib/training-block-data";
+import { getSplit } from "@/lib/training-split";
+import type {
+  PlanChange,
+  ProgrammeView,
+} from "@/components/fitness/TrainingBlockPanel";
+import { sportLabels, type SportType } from "@/lib/fitness";
 import { FitnessClient } from "./FitnessClient";
 import { FitnessSetupForm } from "./FitnessSetupForm";
 import { WatchLink } from "@/components/fitness/WatchLink";
@@ -46,6 +62,88 @@ export default async function FitnessPage() {
   const host = (await headers()).get("host") ?? "";
   const origin = host ? `https://${host}` : "";
 
+  // The programme. Both loaders are allowed to fail: a table that is not there
+  // yet costs Fitness a sentence on one screen, not the page.
+  const block = await settle(
+    "training block",
+    getActiveTrainingBlock(supabase, user.id),
+    null,
+  );
+
+  const active: ProgrammeView | null = block.value
+    ? {
+        blockIndex: block.value.blockIndex,
+        coverage: getCoverageForExercises(
+          block.value.sessions.flatMap((session) =>
+            session.exercises.map((exercise) => exercise.exerciseId),
+          ),
+        ),
+        sessions: block.value.sessions.map((session) => ({
+          exercises: session.exercises.map((exercise) => ({
+            name: getExerciseName(exercise.exerciseId),
+            repHigh: exercise.repHigh,
+            repLow: exercise.repLow,
+            targetSets: exercise.targetSets,
+          })),
+          label: session.label,
+          weekday: session.weekday,
+        })),
+        splitName:
+          getSplit(block.value.splitId)?.name ??
+          block.value.splitId.replace(/_/g, " "),
+      }
+    : null;
+
+  const nextBlock = fitnessProfile
+    ? buildBlock(fitnessProfile, (block.value?.blockIndex ?? 0) + 1)
+    : null;
+
+  const planChange: PlanChange[] = [];
+  if (fitnessProfile && nextBlock && weeklyPlan) {
+    const payload = buildFitnessPlanPayload(fitnessProfile, nextBlock);
+    const sportNow = new Map(weeklyPlan.map((day) => [day.id, day.sport]));
+    for (const row of payload) {
+      const current = sportNow.get(row.weekday);
+      if (current && current !== row.sport) {
+        planChange.push({
+          from: sportLabels[current as SportType] ?? current,
+          to: sportLabels[row.sport as SportType] ?? row.sport,
+          weekday: row.weekday,
+        });
+      }
+    }
+  }
+
+  const programme = {
+    active,
+    next: nextBlock
+      ? {
+          blockIndex: nextBlock.blockIndex,
+          coverage: getMuscleCoverage(nextBlock.sessions),
+          sessions: nextBlock.sessions.map((session) => ({
+            exercises: session.prescriptions.map((prescription) => ({
+              name: getExerciseName(prescription.exerciseId),
+              repHigh: prescription.repHigh,
+              repLow: prescription.repLow,
+              targetSets: prescription.targetSets,
+            })),
+            label: session.label,
+            weekday: session.weekday,
+          })),
+          splitName: nextBlock.splitName,
+        }
+      : null,
+    planChange,
+    reason: !fitnessProfile
+      ? "Finish Training setup first — the programme is built from your days, your equipment and how long a session can be."
+      : !nextBlock
+        ? "With one training day a week no programme can train every muscle group twice. Add a second day in Training setup, and if two is all you have, make them at least 60 minutes."
+        : null,
+    trouble: collectTrouble([block]),
+    week: block.value ? getBlockWeek(block.value.startedOn, today) : 0,
+    weeks: block.value?.weeks ?? 6,
+  };
+
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
 
   return (
@@ -58,6 +156,7 @@ export default async function FitnessPage() {
             key={weeklyPlan
               .map((day) => `${day.date}:${day.sport}:${day.log.completed}`)
               .join("|")}
+            programme={programme}
             stats={getFitnessStats(weeklyPlan, today)}
             weeklyPlan={weeklyPlan}
           />

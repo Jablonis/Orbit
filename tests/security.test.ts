@@ -282,6 +282,81 @@ test("habits are owner-only, and every write goes through a pinned function", ()
   );
 });
 
+test("the training programme is owner-only, and every write is pinned", () => {
+  const migration = read(
+    "supabase/migrations/20260830090000_add_training_blocks.sql",
+  );
+
+  for (const table of [
+    "training_blocks",
+    "training_block_sessions",
+    "training_block_exercises",
+    "exercise_sets",
+  ]) {
+    assert.match(
+      migration,
+      new RegExp(`alter table public\\.${table} enable row level security`, "i"),
+      `${table} must have row level security on`,
+    );
+    assert.match(
+      migration,
+      new RegExp(`revoke all on table public\\.${table} from public, anon`, "i"),
+      `${table} must be unreachable anonymously`,
+    );
+    assert.match(
+      migration,
+      new RegExp(
+        `revoke insert, update, delete on table public\\.${table}\\s+from authenticated`,
+        "i",
+      ),
+      `${table} must be written only through functions`,
+    );
+    assert.match(
+      migration,
+      new RegExp(
+        `create policy "${table}_select_own"[\\s\\S]*?using \\(user_id = \\(select auth\\.uid\\(\\)\\)\\)`,
+        "i",
+      ),
+      `${table} must only ever return the caller's own rows`,
+    );
+  }
+
+  for (const name of [
+    "start_training_block",
+    "log_exercise_sets",
+    "clear_exercise_sets",
+    "archive_training_block",
+  ]) {
+    assert.match(
+      migration,
+      new RegExp(
+        `create or replace function public\\.${name}\\([\\s\\S]*?security definer\\s+set search_path = ''`,
+        "i",
+      ),
+      `${name} must be a security-definer function with a pinned search path`,
+    );
+    assert.match(
+      migration,
+      new RegExp(
+        `revoke all on function public\\.${name}\\([\\s\\S]*?from public, anon`,
+        "i",
+      ),
+      `${name} must be unavailable to anonymous clients`,
+    );
+  }
+
+  // The owner is decided by the function, never sent by the client.
+  assert.doesNotMatch(migration, /p_user_id/i);
+  assert.equal(
+    (migration.match(/v_user_id uuid := \(select auth\.uid\(\)\)/g) ?? []).length,
+    4,
+  );
+
+  // PostgREST caches the schema; a migration that does not say so ships four
+  // tables the API cannot see.
+  assert.match(migration, /notify pgrst, 'reload schema';/);
+});
+
 test("a watch token is stored as a fingerprint, never in the clear", () => {
   const migration = read("supabase/migrations/20260829090000_add_ingest_tokens.sql");
 

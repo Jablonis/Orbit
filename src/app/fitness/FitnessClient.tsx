@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -9,6 +9,7 @@ import { Pip } from "@/components/brand/Pip";
 import { getTrainingGuidance } from "@/lib/training-guidance";
 import { PIP_KITS, getPanelPip } from "@/lib/mascot";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { TrainingBlockPanel } from "@/components/fitness/TrainingBlockPanel";
 import {
   SportType,
   TrainingQuality,
@@ -38,9 +39,11 @@ type Notice = {
 };
 
 export function FitnessClient({
+  programme,
   stats,
   weeklyPlan,
 }: {
+  programme: ComponentProps<typeof TrainingBlockPanel>;
   stats: {
     completedSessionsCount: number;
     gymDaysCount: number;
@@ -57,6 +60,12 @@ export function FitnessClient({
   // like it does. The page used to be all four at once, which on a 390px
   // screen meant none of them.
   const view = fitnessView(searchParams.get("view"));
+  // Nobody goes looking for a finished block, so the door says so.
+  const programmeDetail = programme.active
+    ? programme.week > programme.weeks
+      ? `Block ${programme.active.blockIndex} has finished — start the next one.`
+      : `Block ${programme.active.blockIndex}, week ${programme.week} of ${programme.weeks}.`
+    : "Six weeks of the same sessions, every muscle group twice a week.";
   const [mode, setMode] = useState<"plan" | "review">("review");
   // Seeded from the URL so a tap on the week strip arrives with that day
   // already open, rather than on a list you then have to find it in.
@@ -256,7 +265,9 @@ export function FitnessClient({
               ? "Your training week"
               : view === "guidance"
                 ? "How to train it"
-                : "Today’s training"}
+                : view === "block"
+                  ? "Your programme"
+                  : "Today’s training"}
           </h1>
           {/* The week card says "2/5 done" three centimetres below this, and
               saying it twice made the top of the page feel like padding. */}
@@ -433,7 +444,7 @@ export function FitnessClient({
       </section>
       ) : null}
 
-      {view === "today" ? <FitnessHub /> : null}
+      {view === "today" ? <FitnessHub programme={programmeDetail} /> : null}
 
       {view === "week" ? (
       <section className="mt-8" id="training-calendar">
@@ -658,6 +669,12 @@ export function FitnessClient({
         <TrainingInfoCard label="Recovery" value={guidance.recovery} tone="amber" />
       </section>
       ) : null}
+
+      {view === "block" ? (
+        <div className="mt-5">
+          <TrainingBlockPanel {...programme} />
+        </div>
+      ) : null}
       {notice ? (
         <ActionToast message={notice.text} tone={notice.tone} />
       ) : resetNotice ? (
@@ -785,7 +802,7 @@ function TrainingInfoCard({
   );
 }
 
-const FITNESS_VIEWS = ["today", "week", "guidance"] as const;
+const FITNESS_VIEWS = ["today", "week", "guidance", "block"] as const;
 type FitnessView = (typeof FITNESS_VIEWS)[number];
 
 function fitnessView(value: string | null): FitnessView {
@@ -801,7 +818,7 @@ function fitnessView(value: string | null): FitnessView {
  * scroll with no landmarks on a phone — which is what "na mobile nic dokopy
  * nevidis" means. So the page answers today, and the rest are doors.
  */
-function FitnessHub() {
+function FitnessHub({ programme }: { programme: string }) {
   const rows: Array<{ detail: string; href: string; label: string }> = [
     {
       detail: "Change the sport, the time and the length of each day.",
@@ -812,6 +829,11 @@ function FitnessHub() {
       detail: "Warm up, main work, finish and recovery for today’s session.",
       href: "/fitness?view=guidance",
       label: "How to train it",
+    },
+    {
+      detail: programme,
+      href: "/fitness?view=block",
+      label: "Your programme",
     },
   ];
 

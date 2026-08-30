@@ -16,8 +16,15 @@ import {
 import {
   buildReviewedFitnessPlan,
   defaultFitnessProfile,
+  getFitnessProfile,
   normalizeFitnessProfile,
 } from "@/lib/fitness-setup";
+import {
+  buildBlock,
+  buildFitnessPlanPayload,
+  meetsFrequencyRule,
+} from "@/lib/training-block";
+import { getActiveTrainingBlock } from "@/lib/training-block-data";
 import { getDashboardPreferences } from "@/lib/preferences";
 import { getDateInTimeZone } from "@/lib/tasks";
 
@@ -348,4 +355,117 @@ export async function configureFitnessAction(
     message: "Training setup saved and the future plan was rebuilt.",
     ok: true,
   };
+}
+
+/**
+ * Start the next six weeks.
+ *
+ * Two calls, deliberately not one: the weekly plan is rewritten first through
+ * the function that already owns that job and snapshots every row it touches,
+ * and the block is written second. Both are idempotent enough to press again —
+ * if the second fails the message says exactly that, rather than leaving a
+ * definer function here with a second copy of the plan-writing rules in it.
+ */
+export async function startTrainingBlockAction(): Promise<FitnessActionResult> {
+  const { supabase, user } = await getAuthenticatedUser();
+  const profile = await getFitnessProfile(supabase, user.id);
+  if (!profile) {
+    return { ok: false, error: "Finish Training setup first." };
+  }
+
+  const preferences = await getDashboardPreferences(supabase, user.id);
+  const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
+
+  let blockIndex = 1;
+  try {
+    const active = await getActiveTrainingBlock(supabase, user.id);
+    blockIndex = (active?.blockIndex ?? 0) + 1;
+  } catch (error) {
+    console.error("fitness: block lookup failed", error);
+    return { ok: false, error: "The programme could not be read." };
+  }
+
+  const block = buildBlock(profile, blockIndex);
+  if (!block) {
+    return {
+      ok: false,
+      error:
+        "With one training day a week no programme can train every muscle group twice. Add a second day in Training setup — and if two is all you have, make them at least 60 minutes.",
+    };
+  }
+
+  // Belt to the library's braces. The tests prove this never fires; the action
+  // still refuses rather than shipping a programme that breaks the rule.
+  const verdict = meetsFrequencyRule(block.coverage);
+  if (!verdict.ok || block.unfilled.length > 0) {
+    const thin = [...verdict.missing, ...verdict.under].join(", ");
+    return {
+      ok: false,
+      error: `Your equipment and avoid list leave ${thin || "some muscle groups"} under twice a week. Add equipment in Training setup, or shorten the avoid list.`,
+    };
+  }
+
+  const planError = await supabase.rpc("replace_fitness_plan", {
+    p_effective_from: today,
+    p_plan: buildFitnessPlanPayload(profile, block),
+  });
+  if (planError.error) {
+    console.error(
+      "fitness: block plan write failed",
+      planError.error.code,
+      planError.error.message,
+    );
+    return { ok: false, error: "The training week could not be updated." };
+  }
+
+  const { error } = await supabase.rpc("start_training_block", {
+    p_sessions: block.sessions.map((session) => ({
+      exercises: session.prescriptions.map((prescription) => ({
+        exercise_id: prescription.exerciseId,
+        position: prescription.position,
+        rep_high: prescription.repHigh,
+        rep_low: prescription.repLow,
+        target_sets: prescription.targetSets,
+      })),
+      label: session.label,
+      slot: session.slot,
+      weekday: session.weekday,
+    })),
+    p_split_id: block.splitId,
+    p_started_on: today,
+    p_weeks: block.weeks,
+  });
+  if (error) {
+    console.error("fitness: block start failed", error.code, error.message);
+    return {
+      ok: false,
+      error:
+        "Your training week was updated, but the programme could not start. Press Start again.",
+    };
+  }
+
+  revalidateFitness();
+  return { ok: true };
+}
+
+export async function archiveTrainingBlockAction(): Promise<FitnessActionResult> {
+  const { supabase, user } = await getAuthenticatedUser();
+  let blockId: string | null = null;
+  try {
+    blockId = (await getActiveTrainingBlock(supabase, user.id))?.id ?? null;
+  } catch (error) {
+    console.error("fitness: block lookup failed", error);
+  }
+  if (!blockId) return { ok: false, error: "No programme is running." };
+
+  const { error } = await supabase.rpc("archive_training_block", {
+    p_id: blockId,
+  });
+  if (error) {
+    console.error("fitness: block archive failed", error.code, error.message);
+    return { ok: false, error: "The programme could not be ended." };
+  }
+
+  revalidateFitness();
+  return { ok: true };
 }
