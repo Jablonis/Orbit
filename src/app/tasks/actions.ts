@@ -141,8 +141,13 @@ export async function toggleTaskAction(formData: FormData) {
     .eq("user_id", user.id)
     .maybeSingle();
   // No routines column means no routines: everything is a plain task.
+  // Nothing here throws: a thrown server action reaches the browser as an
+  // opaque reference number, which is the exact failure mode this codebase
+  // has now spent a week unlearning. Logged and dropped — the tick simply
+  // does not happen, and the unchanged checkbox is the honest signal.
   if (readError && !isMissingRoutineColumn(readError)) {
-    throw new Error(readError.message);
+    console.error("tasks: toggle read failed", readError.code, readError.message);
+    return;
   }
   if (!readError && !task) return;
 
@@ -157,14 +162,20 @@ export async function toggleTaskAction(formData: FormData) {
       p_done: completed,
       p_task_id: id,
     });
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("tasks: routine tick failed", error.code, error.message);
+      return;
+    }
   } else {
     const { error } = await supabase
       .from("tasks")
       .update({ completed })
       .eq("id", id)
       .eq("user_id", user.id);
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("tasks: toggle failed", error.code, error.message);
+      return;
+    }
   }
 
   revalidatePath("/");
