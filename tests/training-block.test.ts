@@ -14,6 +14,7 @@ import {
   buildFitnessPlanPayload,
   chooseGymDayCount,
   chooseGymWeekdays,
+  formatLastPerformance,
   type ExerciseSet,
   getBlockWeek,
   getLastPerformance,
@@ -433,4 +434,41 @@ test("the block decides which days are training days", () => {
       assert.equal(row.planned_duration_minutes, input.sessionLengthMinutes);
     }
   }
+});
+
+test("last time reads as a sentence, not a table", () => {
+  const year = new Date().getUTCFullYear();
+  assert.equal(
+    formatLastPerformance({
+      date: `${year}-08-17`,
+      sets: [
+        { reps: 8, weightKg: 60 },
+        { reps: 8, weightKg: 60 },
+        { reps: 7, weightKg: 60 },
+      ],
+      topWeightKg: 60,
+    }),
+    "17 Aug · 8, 8, 7 @ 60 kg",
+  );
+  assert.equal(
+    formatLastPerformance({
+      date: `${year}-01-02`,
+      sets: [{ reps: 12, weightKg: 0 }],
+      topWeightKg: 0,
+    }),
+    "2 Jan · 12 bodyweight",
+  );
+  // A weight that moved between sets is shown as it happened.
+  assert.equal(
+    formatLastPerformance({
+      date: `${year}-03-05`,
+      sets: [
+        { reps: 8, weightKg: 20 },
+        { reps: 6, weightKg: 22.5 },
+      ],
+      topWeightKg: 22.5,
+    }),
+    "5 Mar · 8, 6 @ 20/22.5 kg",
+  );
+  assert.equal(formatLastPerformance(null), "");
 });

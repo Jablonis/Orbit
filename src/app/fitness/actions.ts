@@ -469,3 +469,74 @@ export async function archiveTrainingBlockAction(): Promise<FitnessActionResult>
   revalidateFitness();
   return { ok: true };
 }
+
+/**
+ * Log what was lifted.
+ *
+ * One call per exercise, carrying every set at once: it is one round trip, one
+ * transaction, and it matches how the day-log form beside it already behaves.
+ * A row left blank is a set that did not happen, and sending fewer sets than
+ * last time removes the surplus — correcting a session is the same act as
+ * logging one.
+ */
+export async function logExerciseSetsAction(
+  formData: FormData,
+): Promise<FitnessActionResult> {
+  const { supabase, user } = await getAuthenticatedUser();
+  const weekday = String(formData.get("weekday") ?? "");
+  const exerciseId = String(formData.get("exerciseId") ?? "");
+  const blockId = String(formData.get("blockId") ?? "").trim();
+
+  if (!isWeekday(weekday) || !/^[a-z0-9-]{1,60}$/.test(exerciseId)) {
+    return { ok: false, error: "That is not an exercise." };
+  }
+
+  const sets: Array<{ reps: number; set_index: number; weight_kg: number }> = [];
+  for (let index = 1; index <= 10; index += 1) {
+    const repsInput = String(formData.get(`reps_${index}`) ?? "").trim();
+    const weightInput = String(formData.get(`kg_${index}`) ?? "").trim();
+    if (!repsInput) continue;
+
+    const reps = Number(repsInput);
+    const weightKg = weightInput ? Number(weightInput) : 0;
+    if (!Number.isInteger(reps) || reps < 1 || reps > 200) {
+      return { ok: false, error: "Reps go from 1 to 200." };
+    }
+    if (!Number.isFinite(weightKg) || weightKg < 0 || weightKg > 500) {
+      return { ok: false, error: "Weight goes from 0 to 500 kg." };
+    }
+    sets.push({
+      reps,
+      set_index: sets.length + 1,
+      weight_kg: Math.round(weightKg * 100) / 100,
+    });
+  }
+
+  const preferences = await getDashboardPreferences(supabase, user.id);
+  const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
+  const performedOn = getDateForWeekday(
+    today,
+    weekday,
+    preferences.regional.weekStartsOn,
+  );
+
+  const { error } = await supabase.rpc("log_exercise_sets", {
+    p_block_id: blockId || null,
+    p_exercise_id: exerciseId,
+    p_performed_on: performedOn,
+    p_sets: sets,
+  });
+  if (error) {
+    console.error("fitness: set log failed", error.code, error.message);
+    return {
+      ok: false,
+      error:
+        error.code === "PGRST202" || error.code === "PGRST205"
+          ? "The training programme migration has not been run yet."
+          : "Those sets could not be saved.",
+    };
+  }
+
+  revalidateFitness();
+  return { ok: true };
+}

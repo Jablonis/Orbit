@@ -11,6 +11,10 @@ import { PIP_KITS, getPanelPip } from "@/lib/mascot";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TrainingBlockPanel } from "@/components/fitness/TrainingBlockPanel";
 import {
+  BlockSessionLog,
+  type BlockSessionLogProps,
+} from "@/components/fitness/BlockSessionLog";
+import {
   SportType,
   TrainingQuality,
   TodayTraining,
@@ -40,10 +44,12 @@ type Notice = {
 
 export function FitnessClient({
   programme,
+  sessionLogs,
   stats,
   weeklyPlan,
 }: {
   programme: ComponentProps<typeof TrainingBlockPanel>;
+  sessionLogs: Partial<Record<WeekdayId, BlockSessionLogProps>>;
   stats: {
     completedSessionsCount: number;
     gymDaysCount: number;
@@ -440,6 +446,13 @@ export function FitnessClient({
               </button>
             </div>
           ) : null}
+
+          {/* The prescription right here, on the screen the day opens on.
+              Sending someone two taps away to find out what today contains is
+              how a programme stops being followed. */}
+          {todayDay.sport === "gym" && sessionLogs[todayDay.id] ? (
+            <BlockSessionLog {...sessionLogs[todayDay.id]!} />
+          ) : null}
         </article>
       </section>
       ) : null}
@@ -591,6 +604,10 @@ export function FitnessClient({
               Close
             </button>
           </div>
+
+          {openDay.sport === "gym" && sessionLogs[openDay.id] ? (
+            <BlockSessionLog {...sessionLogs[openDay.id]!} />
+          ) : null}
 
           {openDay.sport !== "rest" || openDay.log.sport ? (
           <form
