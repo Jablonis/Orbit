@@ -579,3 +579,32 @@ export function buildFitnessPlanPayload(
     };
   });
 }
+
+const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+/**
+ * Last time, in one line: the day and what was actually done on it.
+ *
+ * Context, not a demand. Reading "8, 8, 7 @ 60 kg" is what makes the next set
+ * an informed decision instead of a guess, and it is the whole reason the
+ * numbers are stored.
+ */
+export function formatLastPerformance(last: LastPerformance | null) {
+  if (!last || last.sets.length === 0) return "";
+  const [year, month, day] = last.date.split("-").map(Number);
+  const when = `${day} ${MONTHS[month - 1] ?? month}${
+    year === new Date().getUTCFullYear() ? "" : ` ${year}`
+  }`;
+  const reps = last.sets.map((set) => set.reps).join(", ");
+  const weights = [...new Set(last.sets.map((set) => set.weightKg))];
+  const load =
+    weights.length === 1
+      ? weights[0] > 0
+        ? ` @ ${weights[0]} kg`
+        : " bodyweight"
+      : ` @ ${last.sets.map((set) => set.weightKg).join("/")} kg`;
+  return `${when} · ${reps}${load}`;
+}

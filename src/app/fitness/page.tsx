@@ -8,21 +8,28 @@ import { getFitnessProfile } from "@/lib/fitness-setup";
 import { getDashboardPreferences } from "@/lib/preferences";
 import { getDateInTimeZone } from "@/lib/tasks";
 import { collectTrouble, settle } from "@/lib/settle";
-import { getExerciseName } from "@/lib/exercises";
+import { getExercise, getExerciseName } from "@/lib/exercises";
 import {
   buildBlock,
   buildFitnessPlanPayload,
+  formatLastPerformance,
   getBlockWeek,
   getCoverageForExercises,
+  getLastPerformance,
   getMuscleCoverage,
+  getProgressionTarget,
 } from "@/lib/training-block";
-import { getActiveTrainingBlock } from "@/lib/training-block-data";
+import {
+  getActiveTrainingBlock,
+  getExerciseSets,
+} from "@/lib/training-block-data";
 import { getSplit } from "@/lib/training-split";
 import type {
   PlanChange,
   ProgrammeView,
 } from "@/components/fitness/TrainingBlockPanel";
-import { sportLabels, type SportType } from "@/lib/fitness";
+import type { BlockSessionLogProps } from "@/components/fitness/BlockSessionLog";
+import { sportLabels, type SportType, type WeekdayId } from "@/lib/fitness";
 import { FitnessClient } from "./FitnessClient";
 import { FitnessSetupForm } from "./FitnessSetupForm";
 import { WatchLink } from "@/components/fitness/WatchLink";
@@ -69,6 +76,65 @@ export default async function FitnessPage() {
     getActiveTrainingBlock(supabase, user.id),
     null,
   );
+
+  // Far enough back that "last time" is there for an exercise trained once a
+  // week, and small enough to be a handful of rows either way.
+  const historyFrom = shiftDays(today, -120);
+  const sets = block.value
+    ? await settle(
+        "exercise sets",
+        getExerciseSets(supabase, user.id, historyFrom, shiftDays(today, 7)),
+        [],
+      )
+    : { trouble: "", value: [] };
+
+  const sessionLogs: Partial<Record<WeekdayId, BlockSessionLogProps>> = {};
+  if (block.value && weeklyPlan) {
+    for (const session of block.value.sessions) {
+      const day = weeklyPlan.find((entry) => entry.id === session.weekday);
+      if (!day) continue;
+      sessionLogs[session.weekday] = {
+        blockId: block.value.id,
+        exercises: session.exercises.map((exercise) => {
+          const logged = sets.value.filter(
+            (set) =>
+              set.performedOn === day.date &&
+              set.exerciseId === exercise.exerciseId,
+          );
+          const last = getLastPerformance(
+            sets.value,
+            exercise.exerciseId,
+            day.date,
+          );
+          return {
+            exerciseId: exercise.exerciseId,
+            lastLine: formatLastPerformance(last),
+            name: getExerciseName(exercise.exerciseId),
+            repHigh: exercise.repHigh,
+            repLow: exercise.repLow,
+            sets: Array.from(
+              { length: Math.max(exercise.targetSets, logged.length) },
+              (_, index) => {
+                const row = logged.find((set) => set.setIndex === index + 1);
+                return {
+                  reps: row?.reps ?? null,
+                  weightKg: row ? row.weightKg : null,
+                };
+              },
+            ),
+            targetNote: getProgressionTarget(
+              last,
+              exercise,
+              getExercise(exercise.exerciseId)?.isCompound ?? false,
+            ).note,
+            targetSets: exercise.targetSets,
+          };
+        }),
+        label: session.label,
+        weekday: session.weekday,
+      };
+    }
+  }
 
   const active: ProgrammeView | null = block.value
     ? {
@@ -139,7 +205,7 @@ export default async function FitnessPage() {
       : !nextBlock
         ? "With one training day a week no programme can train every muscle group twice. Add a second day in Training setup, and if two is all you have, make them at least 60 minutes."
         : null,
-    trouble: collectTrouble([block]),
+    trouble: collectTrouble([block, sets]),
     week: block.value ? getBlockWeek(block.value.startedOn, today) : 0,
     weeks: block.value?.weeks ?? 6,
   };
@@ -157,6 +223,7 @@ export default async function FitnessPage() {
               .map((day) => `${day.date}:${day.sport}:${day.log.completed}`)
               .join("|")}
             programme={programme}
+            sessionLogs={sessionLogs}
             stats={getFitnessStats(weeklyPlan, today)}
             weeklyPlan={weeklyPlan}
           />
@@ -200,4 +267,11 @@ export default async function FitnessPage() {
       )}
     </main>
   );
+}
+
+/** Plain date arithmetic on a YYYY-MM-DD, with no zone to get wrong. */
+function shiftDays(day: string, days: number) {
+  const date = new Date(`${day}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }
