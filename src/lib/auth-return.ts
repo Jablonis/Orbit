@@ -1,7 +1,12 @@
+// Every signed-in destination. A route missing here silently downgrades the
+// login redirect to "/", which is how /habits and /crew were sending people
+// back to the Overview instead of where they were going.
 const allowedReturnRoutes = [
   "/tasks",
   "/fitness",
+  "/habits",
   "/finance",
+  "/crew",
   "/reset-password",
   "/ui-lab",
 ] as const;
