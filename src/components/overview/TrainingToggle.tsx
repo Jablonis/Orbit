@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
+import { idleActionState } from "@/lib/action-state";
 import { setTrainingDoneAction } from "@/app/fitness/actions";
 
 /**
@@ -23,10 +24,7 @@ export function TrainingToggle({
   doneClassName: string;
   trained: boolean;
 }) {
-  const [state, save] = useActionState(setTrainingDoneAction, {
-    message: "",
-    ok: true,
-  });
+  const [state, save] = useActionState(setTrainingDoneAction, idleActionState);
 
   return (
     <form action={save}>
@@ -40,6 +38,7 @@ export function TrainingToggle({
       </PendingSubmitButton>
       {state.message ? (
         <ActionToast
+          key={state.at}
           message={state.message}
           tone={state.ok ? "success" : "error"}
         />

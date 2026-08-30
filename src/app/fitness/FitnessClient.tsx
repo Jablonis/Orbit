@@ -348,6 +348,11 @@ export function FitnessClient({
                     }`}
                     onClick={() => {
                       setNotice(null);
+                      // Set directly as well as via the URL: the URL seeds the
+                      // state only on a full load, and a client-side push does
+                      // not remount, so without this the week opened with no
+                      // day selected.
+                      setOpenDayId(day.id);
                       router.push(`/fitness?view=week&day=${day.id}`);
                     }}
                     type="button"
@@ -415,6 +420,7 @@ export function FitnessClient({
                 className="min-h-11 flex-1 rounded-xl bg-fitness px-5 text-[13px] font-bold text-white transition-colors hover:bg-fitness/90"
                 onClick={() => {
                   setNotice(null);
+                  setOpenDayId(todayDay.id);
                   router.push(`/fitness?view=week&day=${todayDay.id}`);
                 }}
                 type="button"

@@ -521,3 +521,67 @@ export function getFitnessStats(
         },
   };
 }
+
+/**
+ * Marks one day's session done or not, touching nothing else about it.
+ *
+ * Three server actions carried their own copy of read-then-branch for this,
+ * and every copy raced: two writers could both see "no row" and both insert,
+ * and the second died on the unique constraint with an error none of them
+ * handled. A blind upsert is not the fix — it would clobber the duration and
+ * quality of a session that was already logged in full, which is exactly why
+ * the copies were written read-then-branch in the first place.
+ *
+ * So: update first, and only if no row moved, insert the seed. If the insert
+ * loses the race (23505), the row exists now, and the update that follows is
+ * the write we wanted all along.
+ */
+export async function setSessionCompletion(
+  supabase: SupabaseClient,
+  userId: string,
+  performedOn: string,
+  completed: boolean,
+  seed: {
+    durationMinutes: number;
+    notes?: string;
+    performedAt?: string | null;
+    quality: TrainingQuality;
+    sport: SportType;
+  },
+): Promise<{ code?: string; message: string } | null> {
+  const update = () =>
+    supabase
+      .from("fitness_sessions")
+      .update({ completed })
+      .eq("user_id", userId)
+      .eq("performed_on", performedOn)
+      .select("id");
+
+  const updated = await update();
+  if (updated.error) {
+    return { code: updated.error.code, message: updated.error.message };
+  }
+  if ((updated.data ?? []).length > 0) return null;
+
+  const inserted = await supabase.from("fitness_sessions").insert({
+    completed,
+    duration_minutes: seed.durationMinutes,
+    notes: seed.notes ?? "",
+    performed_at: seed.performedAt || null,
+    performed_on: performedOn,
+    quality: seed.quality,
+    sport: seed.sport,
+    user_id: userId,
+  });
+  if (!inserted.error) return null;
+
+  if (inserted.error.code === "23505") {
+    const retried = await update();
+    if (retried.error) {
+      return { code: retried.error.code, message: retried.error.message };
+    }
+    return null;
+  }
+
+  return { code: inserted.error.code, message: inserted.error.message };
+}
