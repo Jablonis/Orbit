@@ -1,18 +1,51 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Pip } from "@/components/brand/Pip";
 
-export function ActionToast({
+type Tone = "error" | "loading" | "success";
+
+/**
+ * The audit's finding on this component: no auto-dismiss and no keying, so a
+ * toast stayed on screen forever and a repeat of the same message showed
+ * nothing at all. The outer component re-keys the body on every new
+ * message+tone, which restarts the clock and resets the dismissal without a
+ * single "set state when props change" effect — a fresh mount has no stale
+ * state to clear.
+ */
+export function ActionToast(props: {
+  action?: ReactNode;
+  message: string;
+  tone?: Tone;
+}) {
+  return <ToastBody key={`${props.tone ?? "success"}:${props.message}`} {...props} />;
+}
+
+function ToastBody({
   action,
   message,
   tone = "success",
 }: {
   action?: ReactNode;
   message: string;
-  tone?: "error" | "loading" | "success";
+  tone?: Tone;
 }) {
+  const [dismissed, setDismissed] = useState(false);
+
+  // Success has been read in four seconds; an error earns longer, because it
+  // is the one worth writing down. Loading stays until it is replaced.
+  useEffect(() => {
+    if (tone === "loading") return;
+    const timer = setTimeout(
+      () => setDismissed(true),
+      tone === "error" ? 8000 : 4200,
+    );
+    return () => clearTimeout(timer);
+  }, [tone]);
+
+  if (dismissed) return null;
   if (typeof document === "undefined") return null;
 
   const toast = (

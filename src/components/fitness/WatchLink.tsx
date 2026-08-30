@@ -6,8 +6,8 @@ import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import {
   clearWatchTokenAction,
   createWatchTokenAction,
-  idleWatchToken,
 } from "@/app/fitness/watch-actions";
+import { idleWatchToken } from "@/lib/watch-token-state";
 
 /**
  * Connecting a watch.

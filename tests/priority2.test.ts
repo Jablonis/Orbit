@@ -15,6 +15,10 @@ function read(path: string) {
 test("authentication return paths allow only Orbit routes", () => {
   assert.equal(getSafeReturnPath("/fitness?view=plan"), "/fitness?view=plan");
   assert.equal(getSafeReturnPath("/tasks/archived"), "/tasks/archived");
+  // The two routes that were missing from the allowlist: their login redirect
+  // silently went home instead of back to the page being visited.
+  assert.equal(getSafeReturnPath("/habits"), "/habits");
+  assert.equal(getSafeReturnPath("/crew"), "/crew");
   assert.equal(
     getSafeReturnPath("/reset-password?next=%2Ffitness"),
     "/reset-password?next=%2Ffitness",

@@ -1,18 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { ActionState } from "@/lib/action-state";
+import { actionResult } from "@/lib/action-state";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { describeHabitError } from "@/lib/habits";
 import { getDashboardPreferences } from "@/lib/preferences";
 import { normaliseRepeatDays } from "@/lib/routines";
 import { getDateInTimeZone } from "@/lib/tasks";
 
-export type HabitActionState = {
-  message: string;
-  ok: boolean;
-};
-
-export const idleHabitState: HabitActionState = { message: "", ok: true };
+// The state shape and idle constant live in src/lib/action-state.ts: a
+// "use server" file may only export async functions, and exporting the idle
+// constant from here was a contract violation waiting to become a production
+// crash with no line number.
+type HabitActionState = ActionState;
 
 function revalidateHabits() {
   revalidatePath("/");
@@ -30,7 +31,7 @@ function revalidateHabits() {
  */
 function failure(where: string, error: { code?: string; message?: string } | null) {
   console.error(`habits: ${where} failed`, error?.code, error?.message);
-  return { message: describeHabitError(error), ok: false } satisfies HabitActionState;
+  return actionResult(false, describeHabitError(error));
 }
 
 function readDays(formData: FormData) {
@@ -64,7 +65,7 @@ async function guarded(
     }
     const reason = error instanceof Error ? error.message : String(error);
     console.error(`habits: ${where} threw`, reason);
-    return { message: reason, ok: false };
+    return actionResult(false, reason);
   }
 }
 
@@ -81,12 +82,12 @@ async function saveHabit(formData: FormData): Promise<HabitActionState> {
   const id = String(formData.get("id") ?? "").trim();
   const days = readDays(formData);
 
-  if (!name) return { message: "Give the habit a name.", ok: false };
+  if (!name) return actionResult(false, "Give the habit a name.");
   if (name.length > 60) {
-    return { message: "Keep the name under 60 characters.", ok: false };
+    return actionResult(false, "Keep the name under 60 characters.");
   }
   if (days.length === 0) {
-    return { message: "Pick at least one day it should come back on.", ok: false };
+    return actionResult(false, "Pick at least one day it should come back on.");
   }
 
   const { error } = await supabase.rpc("save_habit", {
@@ -97,7 +98,7 @@ async function saveHabit(formData: FormData): Promise<HabitActionState> {
   if (error) return failure("save", error);
 
   revalidateHabits();
-  return { message: id ? "Habit updated." : "Habit added.", ok: true };
+  return actionResult(true, id ? "Habit updated." : "Habit added.");
 }
 
 export async function archiveHabitAction(
@@ -110,13 +111,13 @@ export async function archiveHabitAction(
 async function archiveHabit(formData: FormData): Promise<HabitActionState> {
   const { supabase } = await getAuthenticatedUser();
   const id = String(formData.get("id") ?? "").trim();
-  if (!id) return { message: "That habit no longer exists.", ok: false };
+  if (!id) return actionResult(false, "That habit no longer exists.");
 
   const { error } = await supabase.rpc("archive_habit", { p_id: id });
   if (error) return failure("archive", error);
 
   revalidateHabits();
-  return { message: "Habit removed.", ok: true };
+  return actionResult(true, "Habit removed.");
 }
 
 /**
@@ -130,7 +131,7 @@ export async function toggleHabitAction(formData: FormData) {
 async function tickHabit(formData: FormData): Promise<HabitActionState> {
   const { supabase, user } = await getAuthenticatedUser();
   const id = String(formData.get("id") ?? "").trim();
-  if (!id) return { message: "", ok: true };
+  if (!id) return actionResult(true, "");
   const preferences = await getDashboardPreferences(supabase, user.id);
   const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
   const done = formData.get("done") === "true";
@@ -142,9 +143,9 @@ async function tickHabit(formData: FormData): Promise<HabitActionState> {
   });
   if (error) {
     console.error("habits: tick failed", error.code, error.message);
-    return { message: describeHabitError(error), ok: false };
+    return actionResult(false, describeHabitError(error));
   }
 
   revalidateHabits();
-  return { message: "", ok: true };
+  return actionResult(true, "");
 }

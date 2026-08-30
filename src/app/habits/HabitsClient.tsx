@@ -10,9 +10,10 @@ import { TintPanel } from "@/components/ui/tint-panel";
 import type { Habit, getHabitHold } from "@/lib/habits";
 import { habitHoldSentence, isHabitDueOn } from "@/lib/habits";
 import { repeatSentence } from "@/lib/routines";
+import type { ActionState } from "@/lib/action-state";
+import { idleActionState, latestFeedback } from "@/lib/action-state";
 import {
   archiveHabitAction,
-  idleHabitState,
   saveHabitAction,
   toggleHabitAction,
 } from "./actions";
@@ -23,6 +24,8 @@ const secondary =
   "ui-button ui-button--secondary h-10 min-h-10 px-3 text-[12px]";
 const primary =
   "ui-button ui-button--primary h-11 min-h-11 px-4 text-[13px]";
+
+const EVERY_DAY = [1, 2, 3, 4, 5, 6, 0];
 
 /**
  * The third pillar, and the only one Orbit cannot write for you.
@@ -47,13 +50,40 @@ export function HabitsClient({
   /** Why the list could not be read, in the database's own words. */
   trouble?: string;
 }) {
-  const [state, save] = useActionState(saveHabitAction, idleHabitState);
-  const [archiveState, archive] = useActionState(
-    archiveHabitAction,
-    idleHabitState,
-  );
-  const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5, 6, 0]);
+  const [days, setDays] = useState<number[]>(EVERY_DAY);
   const [editing, setEditing] = useState<Habit | null>(null);
+  // Remounts the uncontrolled form after a successful add. Without it the
+  // typed name stayed in the field and a successful save read as a no-op.
+  const [formKey, setFormKey] = useState(0);
+  // The reset happens inside the action itself, not in an effect watching the
+  // result: the render that shows "Habit added." already sees a clean form,
+  // and there is no cascade for the lint rule to object to.
+  const [state, save] = useActionState(
+    async (previous: ActionState, formData: FormData) => {
+      const result = await saveHabitAction(previous, formData);
+      if (result.ok) {
+        setEditing(null);
+        setDays(EVERY_DAY);
+        setFormKey((current) => current + 1);
+      }
+      return result;
+    },
+    idleActionState,
+  );
+  const [archiveState, archive] = useActionState(
+    async (previous: ActionState, formData: FormData) => {
+      const removedId = String(formData.get("id") ?? "");
+      const result = await archiveHabitAction(previous, formData);
+      // Removing the habit that was open in the editor leaves the editor
+      // pointing at a row that no longer exists; the next save would fail
+      // with "Habit not found" for no visible reason.
+      if (result.ok) {
+        setEditing((current) => (current?.id === removedId ? null : current));
+      }
+      return result;
+    },
+    idleActionState,
+  );
   const done = new Set(doneToday);
   const dueToday = habits.filter((habit) => isHabitDueOn(habit, today, timeZone));
   const keptToday = dueToday.filter((habit) => done.has(habit.id)).length;
@@ -63,8 +93,9 @@ export function HabitsClient({
     "habits",
     PIP_KITS.habits,
   );
-  const message = state.message || archiveState.message;
-  const failed = !state.ok || !archiveState.ok;
+  // Whichever action actually spoke last — not whichever is truthy first. A
+  // failed remove used to be announced with a stale "Habit added.".
+  const feedback = latestFeedback([state, archiveState]);
 
   const startEdit = (habit: Habit) => {
     setEditing(habit);
@@ -72,7 +103,7 @@ export function HabitsClient({
   };
   const stopEdit = () => {
     setEditing(null);
-    setDays([1, 2, 3, 4, 5, 6, 0]);
+    setDays(EVERY_DAY);
   };
 
   return (
@@ -114,8 +145,15 @@ export function HabitsClient({
           {trouble}
         </p>
       ) : null}
-      {message && !trouble ? (
-        <ActionToast message={message} tone={failed ? "error" : "success"} />
+      {/* Action feedback renders regardless of read trouble: a page that
+          cannot read yesterday's checks can still add a habit today, and the
+          person who just pressed the button deserves the answer either way. */}
+      {feedback ? (
+        <ActionToast
+          key={feedback.at}
+          message={feedback.message}
+          tone={feedback.ok ? "success" : "error"}
+        />
       ) : null}
 
       {/* Today, ticked. A habit that is not asked for today is not shown here
@@ -183,7 +221,11 @@ export function HabitsClient({
         <h2 className="text-[16px] font-bold tracking-[-0.02em]">
           {editing ? `Edit “${editing.name}”` : "Add a habit"}
         </h2>
-        <form action={save} className="flex flex-col gap-4" key={editing?.id ?? "new"}>
+        <form
+          action={save}
+          className="flex flex-col gap-4"
+          key={editing ? editing.id : `new-${formKey}`}
+        >
           {editing ? (
             <input name="id" type="hidden" value={editing.id} />
           ) : null}

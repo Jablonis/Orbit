@@ -2,19 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@/lib/auth";
+import type { WatchTokenState } from "@/lib/watch-token-state";
 
-export type WatchTokenState = {
-  message: string;
-  ok: boolean;
-  /** Shown exactly once, at the moment it is made. Never stored in the clear. */
-  token: string;
-};
-
-export const idleWatchToken: WatchTokenState = {
-  message: "",
-  ok: true,
-  token: "",
-};
+// The shape and idle constant live in src/lib/watch-token-state.ts — a
+// "use server" file may only export async functions.
 
 /**
  * A 32-byte secret, hex. Generated on the server so it comes from a real
