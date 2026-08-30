@@ -27,6 +27,7 @@ import { AppNavigation } from "@/components/AppNavigation";
 import { DashboardCustomizer } from "@/components/DashboardCustomizer";
 import { OpenDashboardSettingsButton } from "@/components/OpenDashboardSettingsButton";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { collectTrouble, settle } from "@/lib/settle";
 import {
   type ProductivityDomain,
   getDailyRings,
@@ -52,6 +53,7 @@ import {
 import { getHabitChecks, getHabits } from "@/lib/habits";
 import {
   type DashboardCardId,
+  defaultDashboardPreferences,
   getDashboardPreferences,
 } from "@/lib/preferences";
 import type {
@@ -106,7 +108,14 @@ export default async function Home({
 }) {
   const { supabase, user } = await getAuthenticatedUser();
   const params = await searchParams;
-  const preferences = await getDashboardPreferences(supabase, user.id);
+  // Preferences degrade to defaults rather than blanking the app: they feed
+  // every other loader, so their failure used to be the whole page's failure.
+  const settledPreferences = await settle(
+    "Preferences",
+    getDashboardPreferences(supabase, user.id),
+    defaultDashboardPreferences,
+  );
+  const preferences = settledPreferences.value;
   const calendar = preferences.regional;
   const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
   const currentWeek = getWeekDateKeys(today, calendar.weekStartsOn);
@@ -114,28 +123,75 @@ export default async function Home({
   // feeds it is the account, not the last two months.
   const historyFrom = shiftDate(today, -VOYAGE_HISTORY_DAYS + 1);
   const historyTo = shiftDate(today, 1);
+  // Every loader settles instead of throwing: seven of these used to take the
+  // whole Overview down over one missing table, and that class of outage is
+  // what the last week was spent on. The page renders what it has and the
+  // banner below the header says what it could not get.
   const [
-    taskHistory,
-    weeklyPlanResult,
-    transactions,
-    completions,
-    sessions,
-    fitnessPlanHistory,
-    reflection,
+    settledTasks,
+    settledPlan,
+    settledTransactions,
+    settledCompletions,
+    settledSessions,
+    settledPlanHistory,
+    settledReflection,
     habitList,
     habitChecks,
   ] =
     await Promise.all([
-      getTasks(supabase, user.id, { includeHistory: true }),
-      ensureFitnessPlan(supabase, user.id, today, calendar.weekStartsOn),
-      getFinanceTransactions(supabase, user.id),
-      getTaskCompletions(supabase, user.id, historyFrom, historyTo),
-      getFitnessSessions(supabase, user.id, historyFrom, historyTo),
-      getFitnessPlanHistory(supabase, user.id, historyFrom, historyTo),
-      getWeeklyReflection(supabase, user.id, currentWeek[0]),
+      settle(
+        "Tasks",
+        getTasks(supabase, user.id, { includeHistory: true }),
+        [] as Task[],
+      ),
+      settle(
+        "Training plan",
+        ensureFitnessPlan(supabase, user.id, today, calendar.weekStartsOn),
+        null,
+      ),
+      settle("Finance", getFinanceTransactions(supabase, user.id), []),
+      settle(
+        "Task history",
+        getTaskCompletions(supabase, user.id, historyFrom, historyTo),
+        [],
+      ),
+      settle(
+        "Sessions",
+        getFitnessSessions(supabase, user.id, historyFrom, historyTo),
+        [],
+      ),
+      settle(
+        "Plan history",
+        getFitnessPlanHistory(supabase, user.id, historyFrom, historyTo),
+        [],
+      ),
+      settle(
+        "Weekly review",
+        getWeeklyReflection(supabase, user.id, currentWeek[0]),
+        { changeNextWeek: "", whatWorked: "" },
+      ),
       getHabits(supabase, user.id),
       getHabitChecks(supabase, user.id, historyFrom, historyTo),
     ]);
+  const taskHistory = settledTasks.value;
+  const weeklyPlanResult = settledPlan.value;
+  const transactions = settledTransactions.value;
+  const completions = settledCompletions.value;
+  const sessions = settledSessions.value;
+  const fitnessPlanHistory = settledPlanHistory.value;
+  const reflection = settledReflection.value;
+  const loadTrouble = collectTrouble([
+    settledPreferences,
+    settledTasks,
+    settledPlan,
+    settledTransactions,
+    settledCompletions,
+    settledSessions,
+    settledPlanHistory,
+    settledReflection,
+    { trouble: habitList.error ? `Habits: ${habitList.error}` : "" },
+    { trouble: habitChecks.error ? `Habit history: ${habitChecks.error}` : "" },
+  ]);
   // The third pillar, passed as one bundle to everything that scores a day.
   const habitInputs = { checks: habitChecks.rows, habits: habitList.rows };
   const visibleTasks = getVisibleTasks(taskHistory, today, calendar.timeZone);
@@ -528,6 +584,25 @@ export default async function Home({
               weekStart={recap.weekStart}
             />
           </WeekSealed>
+        ) : null}
+
+        {/* What could not be loaded, said plainly. Rendering a partial day
+            with a sentence beats a blank screen with a reference number —
+            which is what these failures used to produce. */}
+        {loadTrouble.length > 0 ? (
+          <div
+            className="settle-in rounded-2xl border border-[color-mix(in_srgb,var(--destructive)_30%,transparent)] bg-destructive/10 px-4 py-3"
+            role="alert"
+          >
+            <p className="text-[13px] font-bold text-destructive">
+              Some of today could not be loaded.
+            </p>
+            <ul className="mt-1 flex flex-col gap-0.5 text-[12px] leading-5 text-destructive">
+              {loadTrouble.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </div>
         ) : null}
 
         <SetupCard setup={setup} />
