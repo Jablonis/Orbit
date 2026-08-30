@@ -95,13 +95,23 @@ export function WatchLink({
           How to set up the Shortcut
         </summary>
         <ol className="mt-3 flex list-decimal flex-col gap-2 pl-5 text-[12px] leading-5 text-muted-foreground">
-          <li>In Mi Fitness, turn on writing to Apple Health, and allow workouts.</li>
           <li>
-            In Shortcuts, open <strong>Automation</strong> and add a personal
-            automation for <strong>Workout</strong> → <em>When: Ends</em>, any
-            workout. Turn off &ldquo;Ask Before Running&rdquo;.
+            In Mi Fitness: <strong>Profile → Settings → Apple Health</strong>,
+            turn it on, and allow <strong>Workouts</strong> when iOS asks. Only
+            what it writes from now on is visible to anything else.
           </li>
-          <li>Add the action <strong>Get Contents of URL</strong>, set as below.</li>
+          <li>
+            In Shortcuts, open <strong>Automation</strong> → <strong>+</strong>{" "}
+            → <strong>Workout</strong>, choose <em>When: Ends</em> and{" "}
+            <strong>Run Immediately</strong>. An automation that asks first will
+            not fire while your phone is in a pocket.
+          </li>
+          <li>
+            Add <strong>Health → Get Workouts</strong>. Sort by{" "}
+            <em>End Date</em>, newest first, <strong>Limit 1</strong> — the
+            trigger says a workout ended, it does not hand you the workout.
+          </li>
+          <li>Add <strong>Get Contents of URL</strong>, set as below.</li>
         </ol>
         <div className="mt-3 rounded-xl bg-muted p-3 text-[12px] leading-5">
           <p className="font-semibold">URL</p>
@@ -116,14 +126,16 @@ export function WatchLink({
           <code className="block break-all">
             sport (Text) → Workout Type
             <br />
-            durationMinutes (Number) → Duration
+            durationMinutes (Number) → Duration ÷ 60
           </code>
         </div>
         <p className="mt-2 text-[12px] leading-5 text-muted-foreground">
-          The duration must be in minutes — if the Shortcut hands you seconds,
-          divide by 60 first. The day comes from your own time zone unless the
-          body names a <code>date</code>, so an evening session lands on the
-          evening you did it rather than on UTC&rsquo;s tomorrow.
+          Duration arrives in seconds, so divide it by 60 — anything over 1440
+          minutes is refused rather than recorded as a twenty-hour session,
+          which is how you will find out if you forgot. The day comes from your
+          own time zone unless the body names a <code>date</code>, so an evening
+          session lands on the evening you did it rather than on UTC&rsquo;s
+          tomorrow.
         </p>
       </details>
 
