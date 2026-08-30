@@ -8,6 +8,7 @@ import {
   resolveFitnessPlanHistory,
   sportDescriptions,
 } from "../src/lib/fitness";
+import { getDailyRings } from "../src/lib/dashboard";
 
 test("keeps planned and actual fitness duration separate", () => {
   const day = mapDbFitnessDay(
@@ -123,5 +124,27 @@ test("effective-dated plans keep closed weeks stable", () => {
   assert.equal(
     plans.find((plan) => plan.date === "2026-07-27")?.sport,
     "cardio",
+  );
+});
+
+test("a session that exists but is not done scores like no session at all", () => {
+  // `log_exercise_sets` seeds a fitness_sessions row so the day exists to be
+  // ticked later. That seed must not move the day's score by itself: logging
+  // what you lifted is not the same act as finishing the session.
+  const day = "2026-08-24";
+  const seeded = {
+    day: { date: day, log: { completed: false }, sport: "gym" },
+  } as unknown as Parameters<typeof getDailyRings>[2];
+  const done = {
+    day: { date: day, log: { completed: true }, sport: "gym" },
+  } as unknown as Parameters<typeof getDailyRings>[2];
+
+  assert.deepEqual(
+    getDailyRings([], [], seeded, day, "Europe/Bratislava").fitness,
+    { completed: 0, percent: 0, total: 1 },
+  );
+  assert.deepEqual(
+    getDailyRings([], [], done, day, "Europe/Bratislava").fitness,
+    { completed: 1, percent: 100, total: 1 },
   );
 });

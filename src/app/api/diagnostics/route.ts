@@ -175,6 +175,48 @@ export async function GET() {
       ["22023"],
     ),
 
+    // -- training programme -------------------------------------------------
+    read("training_blocks", "id"),
+    read("training_block_sessions", "slot"),
+    read("training_block_exercises", "exercise_id"),
+    read("exercise_sets", "performed_on"),
+    rpcProbe(
+      "rpc start_training_block",
+      () =>
+        supabase.rpc("start_training_block", {
+          p_sessions: null,
+          p_split_id: "",
+          p_started_on: null,
+          p_weeks: 0,
+        }),
+      ["22023"],
+    ),
+    rpcProbe(
+      "rpc log_exercise_sets",
+      () =>
+        supabase.rpc("log_exercise_sets", {
+          p_block_id: null,
+          p_exercise_id: "",
+          p_performed_on: null,
+          p_sets: null,
+        }),
+      ["22023"],
+    ),
+    rpcProbe(
+      "rpc clear_exercise_sets",
+      () =>
+        supabase.rpc("clear_exercise_sets", {
+          p_exercise_id: "",
+          p_performed_on: null,
+        }),
+      ["22023"],
+    ),
+    rpcProbe(
+      "rpc archive_training_block",
+      () => supabase.rpc("archive_training_block", { p_id: noRow }),
+      ["P0002"],
+    ),
+
     // -- crew ---------------------------------------------------------------
     read("orbit_profiles", "user_id"),
     probe("friendships: read", async () =>

@@ -7,7 +7,10 @@ import {
   type MuscleGroup,
   parseAvoidList,
 } from "@/lib/exercises";
-import type { FitnessProfile } from "@/lib/fitness-setup";
+import {
+  buildReviewedFitnessPlan,
+  type FitnessProfile,
+} from "@/lib/fitness-setup";
 import { type WeekdayId, weekdayOrder } from "@/lib/fitness";
 import {
   getSplitForBlock,
@@ -212,6 +215,20 @@ export function getMuscleCoverage(
       );
       if (exercise) coverage[exercise.primaryMuscle] += 1;
     }
+  }
+  return coverage;
+}
+
+/** Coverage for a programme read back from the database, which is exercise
+ * ids and nothing else. An id the library no longer knows counts for nothing,
+ * and says so on the screen rather than crashing it. */
+export function getCoverageForExercises(
+  exerciseIds: string[],
+): MuscleCoverage {
+  const coverage = emptyCoverage();
+  for (const id of exerciseIds) {
+    const exercise = EXERCISES.find((item) => item.id === id);
+    if (exercise) coverage[exercise.primaryMuscle] += 1;
   }
   return coverage;
 }
@@ -514,4 +531,51 @@ export function getProgressionTarget(
     sets: prescription.targetSets,
     weightKg: last.topWeightKg,
   };
+}
+
+// ------------------------------------------------------------- the plan --
+
+export type PlanRow = {
+  notes: string;
+  planned_duration_minutes: number;
+  planned_time: string | null;
+  sport: string;
+  weekday: WeekdayId;
+};
+
+/**
+ * The weekly plan the block implies, in the shape `replace_fitness_plan`
+ * expects. Block days become gym; every other day keeps what the reviewed
+ * starter template gives it, except that a gym day the block has no session
+ * for becomes mobility — a gym day with nothing prescribed is exactly the
+ * hole this feature exists to close.
+ */
+export function buildFitnessPlanPayload(
+  profile: FitnessProfile,
+  block: Pick<BuiltBlock, "blockIndex" | "sessions">,
+): PlanRow[] {
+  const sessionByWeekday = new Map(
+    block.sessions.map((session) => [session.weekday, session]),
+  );
+
+  return buildReviewedFitnessPlan(profile).map((row) => {
+    const weekday = row.weekday as WeekdayId;
+    const session = sessionByWeekday.get(weekday);
+    if (session) {
+      return {
+        notes: `Block ${block.blockIndex} · ${session.label}`,
+        planned_duration_minutes: profile.sessionLengthMinutes,
+        planned_time: row.planned_time,
+        sport: "gym",
+        weekday,
+      };
+    }
+    return {
+      notes: row.sport === "gym" ? "" : row.notes,
+      planned_duration_minutes: row.planned_duration_minutes,
+      planned_time: row.planned_time,
+      sport: row.sport === "gym" ? "mobility" : row.sport,
+      weekday,
+    };
+  });
 }

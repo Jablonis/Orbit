@@ -11,6 +11,7 @@ import {
 } from "../src/lib/exercises";
 import {
   buildBlock,
+  buildFitnessPlanPayload,
   chooseGymDayCount,
   chooseGymWeekdays,
   type ExerciseSet,
@@ -22,7 +23,7 @@ import {
   meetsFrequencyRule,
 } from "../src/lib/training-block";
 import type { FitnessProfile } from "../src/lib/fitness-setup";
-import type { WeekdayId } from "../src/lib/fitness";
+import { type WeekdayId, weekdayOrder } from "../src/lib/fitness";
 
 const profile = (over: Partial<FitnessProfile> = {}): FitnessProfile => ({
   availableDays: ["monday", "tuesday", "thursday", "friday"],
@@ -396,4 +397,40 @@ test("the progression suggestion has one branch per situation", () => {
   assert.equal(bodyweight.kind, "sets");
   assert.equal(bodyweight.sets, 4);
   assert.equal(bodyweight.weightKg, 0);
+});
+
+test("the block decides which days are training days", () => {
+  const input = profile({
+    availableDays: ["monday", "tuesday", "thursday", "friday", "sunday"],
+    goal: "muscle_gain",
+  });
+  const block = buildBlock(input, 1)!;
+  const payload = buildFitnessPlanPayload(input, block);
+
+  assert.equal(payload.length, 7);
+  const gymDays = payload
+    .filter((row) => row.sport === "gym")
+    .map((row) => row.weekday);
+  assert.deepEqual(
+    gymDays,
+    block.sessions.map((session) => session.weekday).sort(
+      (a, b) => weekdayOrder.indexOf(a) - weekdayOrder.indexOf(b),
+    ),
+  );
+
+  // A gym day the programme has no session for would be a day with nothing
+  // prescribed, which is the hole this whole feature exists to close.
+  const stray = payload.filter(
+    (row) =>
+      row.sport === "gym" &&
+      !block.sessions.some((session) => session.weekday === row.weekday),
+  );
+  assert.deepEqual(stray, []);
+
+  for (const row of payload) {
+    if (row.sport === "gym") {
+      assert.match(row.notes, /^Block 1 · /);
+      assert.equal(row.planned_duration_minutes, input.sessionLengthMinutes);
+    }
+  }
 });
