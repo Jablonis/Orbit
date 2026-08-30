@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { after } from "next/server";
 import { cookies } from "next/headers";
 import { THEME_COOKIE, parseTheme } from "@/lib/theme";
 import type { ReactNode } from "react";
@@ -149,7 +150,14 @@ export default async function Home({
         ensureFitnessPlan(supabase, user.id, today, calendar.weekStartsOn),
         null,
       ),
-      settle("Finance", getFinanceTransactions(supabase, user.id), []),
+      settle(
+        "Finance",
+        // The weekly review is the only thing on this page that reads money,
+        // and it only reads this week. The whole ledger was being fetched,
+        // unbounded, on every load, for a card that is not even rendered.
+        getFinanceTransactions(supabase, user.id, { from: currentWeek[0] }),
+        [],
+      ),
       settle(
         "Task history",
         getTaskCompletions(supabase, user.id, historyFrom, historyTo),
@@ -254,20 +262,26 @@ export default async function Home({
     today,
     calendar,
   );
-  const momentumRange = rescoreProductivity(
-    getProductivityRange(
-      taskHistory,
-      completions,
-      sessions,
-      fitnessPlanHistory,
-      today,
-      30,
-      calendar,
-      habitInputs,
-    ),
-    enabledDomains,
-    preferences.scoring,
-  );
+  // When the dashboard is already showing the 30-day range, momentum's range
+  // is the same object — recomputing it was a byte-identical second pass over
+  // sixty days of history.
+  const momentumRange =
+    preferences.rangeDays === 30
+      ? productivity
+      : rescoreProductivity(
+          getProductivityRange(
+            taskHistory,
+            completions,
+            sessions,
+            fitnessPlanHistory,
+            today,
+            30,
+            calendar,
+            habitInputs,
+          ),
+          enabledDomains,
+          preferences.scoring,
+        );
   const momentum = getMomentum(momentumRange.current, today);
   const streak = getStreak(momentumRange.current, today);
   const momentumRecords = getMomentumRecords(momentumRange.current, today);
@@ -346,18 +360,22 @@ export default async function Home({
   });
 
   // The crew sees a published day, never the data underneath it — and nothing
-  // is published at all for an account with nobody in its crew.
-  if (await hasCrew(supabase)) {
-    await publishSnapshot(supabase, {
-      altitude: momentum.projected,
-      day: today,
-      ringsClosed: ringsClosedToday,
-      ringsTotal: ringsActiveToday,
-      score: momentum.todayScore ?? 0,
-      streak: streak.streak,
-      tierId: momentum.tier.id,
-    });
-  }
+  // is published at all for an account with nobody in its crew. Published
+  // after the response: this is a write plus a count, and it was being
+  // awaited inline on every single GET before the first byte of the page.
+  after(async () => {
+    if (await hasCrew(supabase)) {
+      await publishSnapshot(supabase, {
+        altitude: momentum.projected,
+        day: today,
+        ringsClosed: ringsClosedToday,
+        ringsTotal: ringsActiveToday,
+        score: momentum.todayScore ?? 0,
+        streak: streak.streak,
+        tierId: momentum.tier.id,
+      });
+    }
+  });
   const briefMode = params.brief === "weekly" ? "weekly" : "daily";
   const filter = getTaskFilter(params.tasks);
   const overviewQuery: OverviewQueryState = {

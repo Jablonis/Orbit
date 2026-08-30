@@ -100,12 +100,18 @@ export function toFinanceInsert(input: FinanceInput, userId: string) {
 export async function getFinanceTransactions(
   supabase: SupabaseClient,
   userId: string,
+  options: { from?: string } = {},
 ) {
-  const { data, error } = await supabase
+  let query = supabase
     .from("finance_transactions")
     .select("id,date,title,category,amount,status,statement_import_id,created_at,updated_at")
     .eq("user_id", userId)
-    .is("archived_at", null)
+    .is("archived_at", null);
+  // The finance page wants the whole ledger; the Overview wants one week. A
+  // window keeps the dashboard from re-downloading years of statements on
+  // every load.
+  if (options.from) query = query.gte("date", options.from);
+  const { data, error } = await query
     .order("date", { ascending: false })
     .order("created_at", { ascending: false });
 

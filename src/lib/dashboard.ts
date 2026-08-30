@@ -117,64 +117,116 @@ function completionDate(
   return getDateInTimeZone(completion.completedAt, timeZone);
 }
 
-function plannedTaskIds(
+/**
+ * Everything the per-day scorer needs, computed once per batch.
+ *
+ * `pointForDate` used to rescan every array it was handed — a `.find` over a
+ * 730-element plan, a filter over every completion, a Set rebuilt from
+ * scratch — and the Overview calls it ~864 times per load, 730 of them for
+ * the voyage. The scans made the page quadratic in account age. The answers
+ * do not change within a batch, so they are indexed once and looked up.
+ */
+type DayIndex = {
+  completionsByDay: Map<string, TaskCompletion[]>;
+  createdByDay: Map<string, string[]>;
+  dueByDay: Map<string, string[]>;
+  planByDate: Map<string, DatedFitnessPlan>;
+  plannedForByDay: Map<string, string[]>;
+  routines: Task[];
+  sessionDoneDays: Set<string>;
+};
+
+function buildDayIndex(
   tasks: Task[],
   completions: TaskCompletion[],
-  date: string,
+  sessions: FitnessSession[],
+  plan: DatedFitnessPlan[],
   timeZone: CalendarPreferences["timeZone"],
-) {
-  const tasksWithCompletionHistory = new Set(
-    completions.map((completion) => completion.taskId),
-  );
-  const ids = new Set(
-    tasks
-      .filter((task) => {
-        // A routine is planned for every day it repeats onto, which is the
-        // whole point of writing it down once.
-        if (isRepeating(task)) return isRoutineDueOn(task, date, timeZone);
-        if (task.dueDate) return task.dueDate === date;
-        if (tasksWithCompletionHistory.has(task.id)) return false;
-        const created = getDateInTimeZone(task.createdAt ?? "", timeZone);
-        return created === date;
-      })
-      .map((task) => task.id),
-  );
+): DayIndex {
+  const withHistory = new Set(completions.map((completion) => completion.taskId));
+  const completionsByDay = new Map<string, TaskCompletion[]>();
+  const plannedForByDay = new Map<string, string[]>();
   for (const completion of completions) {
-    if (completion.plannedFor === date) ids.add(completion.taskId);
+    const day = completionDate(completion, timeZone);
+    const bucket = completionsByDay.get(day);
+    if (bucket) bucket.push(completion);
+    else completionsByDay.set(day, [completion]);
+    if (completion.plannedFor) {
+      const planned = plannedForByDay.get(completion.plannedFor);
+      if (planned) planned.push(completion.taskId);
+      else plannedForByDay.set(completion.plannedFor, [completion.taskId]);
+    }
+  }
+
+  const createdByDay = new Map<string, string[]>();
+  const dueByDay = new Map<string, string[]>();
+  const routines: Task[] = [];
+  for (const task of tasks) {
+    if (isRepeating(task)) {
+      routines.push(task);
+      continue;
+    }
+    if (task.dueDate) {
+      const due = dueByDay.get(task.dueDate);
+      if (due) due.push(task.id);
+      else dueByDay.set(task.dueDate, [task.id]);
+      continue;
+    }
+    if (withHistory.has(task.id)) continue;
+    const created = getDateInTimeZone(task.createdAt ?? "", timeZone);
+    if (!created) continue;
+    const bucket = createdByDay.get(created);
+    if (bucket) bucket.push(task.id);
+    else createdByDay.set(created, [task.id]);
+  }
+
+  return {
+    completionsByDay,
+    createdByDay,
+    dueByDay,
+    planByDate: new Map(plan.map((day) => [day.date, day])),
+    plannedForByDay,
+    routines,
+    sessionDoneDays: new Set(
+      sessions
+        .filter((session) => session.completed)
+        .map((session) => session.performedOn),
+    ),
+  };
+}
+
+/** The same question `plannedTaskIds` answered, from the index. */
+function plannedIdsOn(index: DayIndex, date: string, timeZone: string) {
+  const ids = new Set<string>([
+    ...(index.dueByDay.get(date) ?? []),
+    ...(index.createdByDay.get(date) ?? []),
+    ...(index.plannedForByDay.get(date) ?? []),
+  ]);
+  // A routine is planned for every day it repeats onto, which is the whole
+  // point of writing it down once. Few tasks repeat, so this stays linear in
+  // routines, not in the account.
+  for (const task of index.routines) {
+    if (isRoutineDueOn(task, date, timeZone)) ids.add(task.id);
   }
   return ids;
 }
 
 function pointForDate(
   date: string,
-  tasks: Task[],
-  completions: TaskCompletion[],
-  sessions: FitnessSession[],
-  plan: DatedFitnessPlan[],
+  index: DayIndex,
   today: string,
   allowFuture: boolean,
   calendar: CalendarPreferences,
   habitInputs: HabitInputs,
 ): ProductivityPoint {
-  const dayPlan = plan.find((day) => day.date === date);
-  const plannedIds = plannedTaskIds(
-    tasks,
-    completions,
-    date,
-    calendar.timeZone,
-  );
-  const dayCompletions = completions.filter(
-    (completion) => completionDate(completion, calendar.timeZone) === date,
-  );
+  const dayPlan = index.planByDate.get(date);
+  const plannedIds = plannedIdsOn(index, date, calendar.timeZone);
+  const dayCompletions = index.completionsByDay.get(date) ?? [];
   const completedIds = new Set(dayCompletions.map((completion) => completion.taskId));
   const plannedTasks = Math.max(plannedIds.size, completedIds.size);
   const completedTasks = completedIds.size;
   const plannedFitness = dayPlan?.sport && dayPlan.sport !== "rest" ? 1 : 0;
-  const completedFitness = sessions.some(
-    (session) => session.performedOn === date && session.completed,
-  )
-    ? 1
-    : 0;
+  const completedFitness = index.sessionDoneDays.has(date) ? 1 : 0;
   const focusMinutes = dayCompletions.reduce(
     (total, completion) => total + completion.estimateMinutes,
     0,
@@ -235,33 +287,14 @@ export function getProductivityWeeks(
 ) {
   const currentDates = getWeekDateKeys(today, calendar.weekStartsOn);
   const previousDates = currentDates.map((date) => shiftDate(date, -7));
+  const index = buildDayIndex(tasks, completions, sessions, plan, calendar.timeZone);
 
   return {
     current: currentDates.map((date) =>
-      pointForDate(
-        date,
-        tasks,
-        completions,
-        sessions,
-        plan,
-        today,
-        true,
-        calendar,
-        habits,
-      ),
+      pointForDate(date, index, today, true, calendar, habits),
     ),
     previous: previousDates.map((date) =>
-      pointForDate(
-        date,
-        tasks,
-        completions,
-        sessions,
-        plan,
-        today,
-        false,
-        calendar,
-        habits,
-      ),
+      pointForDate(date, index, today, false, calendar, habits),
     ),
   };
 }
@@ -282,21 +315,10 @@ export function getProductivityHistory(
   calendar: CalendarPreferences,
   habits: HabitInputs = noHabits,
 ): ProductivityPoint[] {
-  return Array.from({ length: days }, (_, index) =>
-    shiftDate(today, index - days + 1),
-  ).map((date) =>
-    pointForDate(
-      date,
-      tasks,
-      completions,
-      sessions,
-      plan,
-      today,
-      false,
-      calendar,
-      habits,
-    ),
-  );
+  const index = buildDayIndex(tasks, completions, sessions, plan, calendar.timeZone);
+  return Array.from({ length: days }, (_, offset) =>
+    shiftDate(today, offset - days + 1),
+  ).map((date) => pointForDate(date, index, today, false, calendar, habits));
 }
 
 export function getProductivityRange(
@@ -309,37 +331,18 @@ export function getProductivityRange(
   calendar: CalendarPreferences,
   habits: HabitInputs = noHabits,
 ) {
-  const currentDates = Array.from({ length: days }, (_, index) =>
-    shiftDate(today, index - days + 1),
+  const currentDates = Array.from({ length: days }, (_, offset) =>
+    shiftDate(today, offset - days + 1),
   );
   const previousDates = currentDates.map((date) => shiftDate(date, -days));
+  const index = buildDayIndex(tasks, completions, sessions, plan, calendar.timeZone);
 
   return {
     current: currentDates.map((date) =>
-      pointForDate(
-        date,
-        tasks,
-        completions,
-        sessions,
-        plan,
-        today,
-        false,
-        calendar,
-        habits,
-      ),
+      pointForDate(date, index, today, false, calendar, habits),
     ),
     previous: previousDates.map((date) =>
-      pointForDate(
-        date,
-        tasks,
-        completions,
-        sessions,
-        plan,
-        today,
-        false,
-        calendar,
-        habits,
-      ),
+      pointForDate(date, index, today, false, calendar, habits),
     ),
   };
 }
@@ -365,14 +368,10 @@ export function getWeeklyReview(
   const dates = getWeekDateKeys(today, calendar.weekStartsOn);
   const weekStart = dates[0];
   const weekEnd = dates[6];
+  const index = buildDayIndex(tasks, completions, [], [], calendar.timeZone);
   const plannedIds = new Set<string>();
   for (const date of dates) {
-    for (const id of plannedTaskIds(
-      tasks,
-      completions,
-      date,
-      calendar.timeZone,
-    )) {
+    for (const id of plannedIdsOn(index, date, calendar.timeZone)) {
       plannedIds.add(id);
     }
   }
