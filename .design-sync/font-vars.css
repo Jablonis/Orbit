@@ -1,0 +1,13 @@
+/*
+ * The two font variables next/font injects into the app at runtime.
+ *
+ * globals.css resolves --font-sans / --font-mono through these, so without them
+ * every rendered design falls back to a system face instead of Orbit's brand
+ * type. The faces themselves are declared in fonts/fonts.css (cfg.extraFonts);
+ * that pass ships @font-face rules and drops everything else, so the variables
+ * are appended to the compiled stylesheet by buildCmd instead.
+ */
+:root {
+  --font-figtree: "Figtree";
+  --font-dm-mono: "DM Mono";
+}

@@ -1,0 +1,11 @@
+{
+  "pkg": "orbit-design-system",
+  "globalName": "OrbitDS",
+  "shape": "package",
+  "srcDir": "../src/components/ui",
+  "tsconfig": "../tsconfig.json",
+  "cssEntry": ".cache/orbit.css",
+  "extraFonts": ["fonts/fonts.css"],
+  "readmeHeader": ".design-sync/conventions.md",
+  "buildCmd": "npx @tailwindcss/cli@4 -i src/app/globals.css -o .design-sync/.cache/orbit.css && cat .design-sync/font-vars.css >> .design-sync/.cache/orbit.css && npx tsc -p .design-sync/tsconfig.dts.json"
+}

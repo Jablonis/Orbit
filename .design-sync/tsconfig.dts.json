@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./dist",
+    "rootDir": "../src",
+    "jsx": "react-jsx",
+    "target": "ES2020",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "strict": true,
+    "baseUrl": "..",
+    "paths": { "@/*": ["src/*"] }
+  },
+  "include": [
+    "../src/components/ui/badge.tsx",
+    "../src/components/ui/button.tsx",
+    "../src/components/ui/card.tsx",
+    "../src/components/ui/input.tsx",
+    "../src/components/ui/label.tsx",
+    "../src/components/ui/progress.tsx",
+    "../src/components/ui/separator.tsx",
+    "../src/components/ui/skeleton.tsx",
+    "../src/components/ui/tint-panel.tsx"
+  ]
+}

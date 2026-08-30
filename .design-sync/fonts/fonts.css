@@ -1,0 +1,37 @@
+/*
+ * Orbit's brand faces, shipped with the design system.
+ *
+ * The app loads these through next/font/google (see src/app/layout.tsx), which
+ * injects --font-figtree / --font-dm-mono at runtime. Designs rendered from this
+ * bundle have no Next.js runtime, so without these rules every design would
+ * silently fall back to a system face. The files are the same upstream Google
+ * fonts next/font serves, vendored via @fontsource so nothing loads remotely.
+ *
+ * Only the @font-face rules below are shipped — the converter's font pass drops
+ * anything else in this file, so the matching --font-* variables live in
+ * ../tokens/font-vars.css instead.
+ */
+
+@font-face {
+  font-family: "Figtree";
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url("./figtree-latin-variable.woff2") format("woff2-variations");
+}
+
+@font-face {
+  font-family: "DM Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./dm-mono-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "DM Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./dm-mono-500.woff2") format("woff2");
+}
