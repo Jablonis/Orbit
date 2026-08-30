@@ -2,12 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@/lib/auth";
+import type { ActionState } from "@/lib/action-state";
+import { actionResult } from "@/lib/action-state";
 import {
   type SportType,
   type TrainingQuality,
   type WeekdayId,
   ensureFitnessPlan,
   getDateForWeekday,
+  setSessionCompletion,
   weekdayOrder,
 } from "@/lib/fitness";
 import {
@@ -25,10 +28,7 @@ export type FitnessActionResult =
   | { ok: true }
   | { ok: false; error: string };
 
-export type FitnessSetupActionState = {
-  message: string;
-  ok: boolean;
-};
+export type FitnessSetupActionState = ActionState;
 
 function isWeekday(value: string): value is WeekdayId {
   return weekdayOrder.includes(value as WeekdayId);
@@ -154,31 +154,17 @@ export async function toggleFitnessDoneAction(
     weekday,
     preferences.regional.weekStartsOn,
   );
-  const { data: existingSession, error: readError } = await supabase
-    .from("fitness_sessions")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("performed_on", performedOn)
-    .maybeSingle();
-  if (readError) {
-    return { ok: false, error: "The training status could not be updated." };
+  const failure = await setSessionCompletion(
+    supabase,
+    user.id,
+    performedOn,
+    completed,
+    { durationMinutes: 60, quality: "medium", sport: sport as SportType },
+  );
+  if (failure) {
+    console.error("fitness: toggle failed", failure.code, failure.message);
+    return { ok: false, error: failure.message };
   }
-
-  const { error } = existingSession
-    ? await supabase
-        .from("fitness_sessions")
-        .update({ completed })
-        .eq("id", existingSession.id)
-        .eq("user_id", user.id)
-    : await supabase.from("fitness_sessions").insert({
-        completed,
-        duration_minutes: 60,
-        performed_on: performedOn,
-        quality: "medium",
-        sport,
-        user_id: user.id,
-      });
-  if (error) return { ok: false, error: "The training status could not be updated." };
 
   revalidateFitness();
   return { ok: true };
@@ -207,34 +193,16 @@ export async function completeTodayTrainingAction(): Promise<FitnessActionResult
   }
   if (day.log.completed) return { ok: true };
 
-  const { data: existingSession, error: readError } = await supabase
-    .from("fitness_sessions")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("performed_on", today)
-    .maybeSingle();
-  if (readError) {
-    return { ok: false, error: "Today’s training could not be updated." };
-  }
-
-  const { error } = existingSession
-    ? await supabase
-        .from("fitness_sessions")
-        .update({ completed: true })
-        .eq("id", existingSession.id)
-        .eq("user_id", user.id)
-    : await supabase.from("fitness_sessions").insert({
-        completed: true,
-        duration_minutes: day.plannedDurationMinutes || 60,
-        notes: day.log.notes,
-        performed_at: day.plannedTime || null,
-        performed_on: today,
-        quality: day.log.quality,
-        sport: day.sport,
-        user_id: user.id,
-      });
-  if (error) {
-    return { ok: false, error: "Today’s training could not be updated." };
+  const failure = await setSessionCompletion(supabase, user.id, today, true, {
+    durationMinutes: day.plannedDurationMinutes || 60,
+    notes: day.log.notes,
+    performedAt: day.plannedTime || null,
+    quality: day.log.quality,
+    sport: day.sport,
+  });
+  if (failure) {
+    console.error("fitness: complete-today failed", failure.code, failure.message);
+    return { ok: false, error: failure.message };
   }
 
   revalidateFitness();
@@ -281,42 +249,21 @@ export async function setTrainingDoneAction(
     return { message: "That day is a recovery day.", ok: false };
   }
 
-  const { data: existing, error: readError } = await supabase
-    .from("fitness_sessions")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("performed_on", date)
-    .maybeSingle();
-  if (readError) {
-    console.error("fitness: session read failed", readError.code, readError.message);
-    return { message: readError.message, ok: false };
-  }
-
-  const { error } = existing
-    ? await supabase
-        .from("fitness_sessions")
-        .update({ completed })
-        .eq("id", existing.id)
-        .eq("user_id", user.id)
-    : await supabase.from("fitness_sessions").insert({
-        completed,
-        duration_minutes: day.plannedDurationMinutes || 60,
-        performed_on: date,
-        quality: day.log.quality,
-        sport: day.sport,
-        user_id: user.id,
-      });
-
-  if (error) {
-    console.error("fitness: session write failed", error.code, error.message);
-    return { message: error.message, ok: false };
+  const failure = await setSessionCompletion(supabase, user.id, date, completed, {
+    durationMinutes: day.plannedDurationMinutes || 60,
+    quality: day.log.quality,
+    sport: day.sport,
+  });
+  if (failure) {
+    console.error("fitness: session write failed", failure.code, failure.message);
+    return actionResult(false, failure.message);
   }
 
   revalidateFitness();
-  return {
-    message: completed ? "Training logged." : "Training un-marked.",
-    ok: true,
-  };
+  return actionResult(
+    true,
+    completed ? "Training logged." : "Training un-marked.",
+  );
 }
 
 export async function toggleFitnessDoneFormAction(formData: FormData) {
