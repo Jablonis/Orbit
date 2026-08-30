@@ -9,6 +9,8 @@ import { getDashboardPreferences } from "@/lib/preferences";
 import { getDateInTimeZone } from "@/lib/tasks";
 import { FitnessClient } from "./FitnessClient";
 import { FitnessSetupForm } from "./FitnessSetupForm";
+import { WatchLink } from "@/components/fitness/WatchLink";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +31,20 @@ export default async function FitnessPage() {
     ),
     getFitnessProfile(supabase, user.id),
   ]);
+
+  // Only that a token exists and when it was last used — the token itself is
+  // stored as a hash and cannot be read back, here or anywhere.
+  const { data: watch } = await supabase
+    .from("ingest_tokens")
+    .select("created_at,last_used_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const asDay = (value: string | null | undefined) =>
+    value ? getDateInTimeZone(value, preferences.regional.timeZone) : null;
+  // Built from the request rather than an env var, so the Shortcut recipe on
+  // screen names the host you are actually looking at.
+  const host = (await headers()).get("host") ?? "";
+  const origin = host ? `https://${host}` : "";
 
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
 
@@ -56,6 +72,11 @@ export default async function FitnessPage() {
                   compact
                   existingPlan
                   profile={fitnessProfile}
+                />
+                <WatchLink
+                  connectedOn={asDay(watch?.created_at)}
+                  lastUsedOn={asDay(watch?.last_used_at)}
+                  origin={origin}
                 />
               </div>
             </details>
