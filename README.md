@@ -133,6 +133,19 @@ NEXT_PUBLIC_EXERCISE_MEDIA_BASE=/exercise-media
 
 Without it Orbit renders the names and the steps, which is the default.
 
+## The muscle map
+
+The programme's promise — every muscle group at least twice a week — is drawn
+on a body as well as counted in a grid. The map is the glance and the grid is
+the record: a bare back registers before a number is read, and the exact count
+is right underneath it, because colour alone says nothing to a colour-blind
+reader and nothing at all to a screen reader.
+
+The outlines are derived from [MuscleMap](https://github.com/melihcolpan/MuscleMap)
+by Melih Colpan under the MIT licence; `src/lib/body-map.ts` carries the full
+notice. They are drawn on the server, so the 42 kB of path data never reaches
+a phone.
+
 ## Daily rings
 
 Today is shown as three activity rings — tasks, fitness, finance — in the Apple

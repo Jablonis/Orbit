@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ActionToast } from "@/components/ActionToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { MuscleGroup } from "@/lib/exercises";
@@ -27,6 +27,8 @@ export type ProgrammeSession = {
 
 export type ProgrammeView = {
   blockIndex: number;
+  /** The muscle map, drawn on the server so its geometry stays there. */
+  bodyMap?: ReactNode;
   coverage: Record<MuscleGroup, number>;
   sessions: ProgrammeSession[];
   splitName: string;
@@ -120,7 +122,10 @@ export function TrainingBlockPanel({
           </ol>
 
           <div className="mt-4">
-            <MuscleCoverageGrid coverage={active.coverage} />
+            <MuscleCoverageGrid
+              bodyMap={active.bodyMap}
+              coverage={active.coverage}
+            />
           </div>
         </article>
       ) : null}

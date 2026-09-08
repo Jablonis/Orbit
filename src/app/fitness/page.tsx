@@ -3,6 +3,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { THEME_COOKIE, parseTheme } from "@/lib/theme";
 import { AppNavigation } from "@/components/AppNavigation";
+import { BodyHeatmap } from "@/components/fitness/BodyHeatmap";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { ensureFitnessPlan, getFitnessStats } from "@/lib/fitness";
 import { getFitnessProfile } from "@/lib/fitness-setup";
@@ -139,14 +140,19 @@ export default async function FitnessPage() {
     }
   }
 
-  const active: ProgrammeView | null = block.value
+  const activeCoverage = block.value
+    ? getCoverageForExercises(
+        block.value.sessions.flatMap((session) =>
+          session.exercises.map((exercise) => exercise.exerciseId),
+        ),
+      )
+    : null;
+
+  const active: ProgrammeView | null = block.value && activeCoverage
     ? {
         blockIndex: block.value.blockIndex,
-        coverage: getCoverageForExercises(
-          block.value.sessions.flatMap((session) =>
-            session.exercises.map((exercise) => exercise.exerciseId),
-          ),
-        ),
+        bodyMap: <BodyHeatmap coverage={activeCoverage} />,
+        coverage: activeCoverage,
         sessions: block.value.sessions.map((session) => ({
           exercises: session.exercises.map((exercise) => ({
             name: getExerciseName(exercise.exerciseId),
