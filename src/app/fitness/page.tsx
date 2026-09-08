@@ -37,6 +37,7 @@ import type { BlockSessionLogProps } from "@/components/fitness/BlockSessionLog"
 import { sportLabels, type SportType, type WeekdayId } from "@/lib/fitness";
 import { FitnessClient } from "./FitnessClient";
 import { FitnessSetupForm } from "./FitnessSetupForm";
+import { HistoryImport } from "@/components/fitness/HistoryImport";
 import { WatchLink } from "@/components/fitness/WatchLink";
 import { headers } from "next/headers";
 
@@ -263,6 +264,7 @@ export default async function FitnessPage() {
                   lastUsedOn={asDay(watch?.last_used_at)}
                   origin={origin}
                 />
+                <HistoryImport />
               </div>
             </details>
             <p className="mt-3 text-[13px] leading-5 text-muted-foreground">

@@ -74,7 +74,8 @@ The migrations create and secure:
 - reusable fitness plan days plus dated training sessions;
 - finance transactions and monthly statement-import summaries;
 - atomic Finance import, archive, and restore functions;
-- composite ownership constraints and a private statement-upload rate limit.
+- composite ownership constraints and a private statement-upload rate limit;
+- a single-call, append-only import for a training history from another app.
 
 All exposed user tables use RLS. Application reads also filter by the
 authenticated user.
@@ -160,6 +161,20 @@ the loaded history when today is not it. It exists because a set is two
 numbers and progress is one: 8 × 60 kg and 5 × 70 kg are the same effort, and
 nothing else in the app can say so. A single is reported as itself, and a set
 above twelve reps gets no estimate rather than a confident wrong one.
+
+## Importing a training history
+
+Fitness accepts a CSV export from Strong or Hevy — or any file with a date, an
+exercise name, reps and a weight — and turns it into logged sets, so "last
+time" and every estimate work from day one instead of after six weeks.
+
+It reads the file and shows what it found before it writes anything: the
+exercises it matched and how many sets each has, every name nothing here
+answers to, and every row it would drop with the reason. Names match across
+word order and equipment qualifiers, so "Bench Press (Barbell)" finds Orbit's
+own barbell bench press; a name that could mean two different lifts matches
+neither, and warm-up sets are left out. Importing the same file twice changes
+nothing, and an import never removes history that is already here.
 
 ## Daily rings
 
