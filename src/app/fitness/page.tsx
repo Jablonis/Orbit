@@ -12,6 +12,8 @@ import { getDateInTimeZone } from "@/lib/tasks";
 import { collectTrouble, settle } from "@/lib/settle";
 import { getExercise, getExerciseName } from "@/lib/exercises";
 import { guideFor } from "@/lib/exercise-catalog";
+import { bestOneRepMax, bestOneRepMaxFor, formatOneRepMax } from "@/lib/one-rm";
+import { restSecondsFor } from "@/lib/rest-timer";
 import {
   buildBlock,
   buildFitnessPlanPayload,
@@ -109,13 +111,25 @@ export default async function FitnessPage() {
             exercise.exerciseId,
             day.date,
           );
+          const isCompound =
+            getExercise(exercise.exerciseId)?.isCompound ?? false;
           return {
             exerciseId: exercise.exerciseId,
             guide: guideFor(exercise.exerciseId),
             lastLine: formatLastPerformance(last),
             name: getExerciseName(exercise.exerciseId),
+            // The estimate from the last session, against the best in the
+            // window that was loaded for "last time" anyway.
+            oneRmLine: formatOneRepMax(
+              bestOneRepMax(last?.sets ?? []),
+              bestOneRepMaxFor(sets.value, exercise.exerciseId),
+            ),
             repHigh: exercise.repHigh,
             repLow: exercise.repLow,
+            restSeconds: restSecondsFor({
+              isCompound,
+              repHigh: exercise.repHigh,
+            }),
             sets: Array.from(
               { length: Math.max(exercise.targetSets, logged.length) },
               (_, index) => {
@@ -126,11 +140,7 @@ export default async function FitnessPage() {
                 };
               },
             ),
-            targetNote: getProgressionTarget(
-              last,
-              exercise,
-              getExercise(exercise.exerciseId)?.isCompound ?? false,
-            ).note,
+            targetNote: getProgressionTarget(last, exercise, isCompound).note,
             targetSets: exercise.targetSets,
           };
         }),

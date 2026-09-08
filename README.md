@@ -146,6 +146,21 @@ by Melih Colpan under the MIT licence; `src/lib/body-map.ts` carries the full
 notice. They are drawn on the server, so the 42 kB of path data never reaches
 a phone.
 
+## The rest, and what a set was worth
+
+Saving a set starts the rest the programme implies — three minutes after heavy
+compound work, two after everything else compound, ninety seconds after
+isolation — and holds a screen wake lock for exactly as long as it runs, so a
+phone does not have to be unlocked with chalk on your hands. The clock is an
+end timestamp rather than a counter, so a locked screen or a backgrounded tab
+comes back to the right number. Skip and +30s are always there.
+
+Underneath each exercise is its estimated one-rep max, Epley, and the best in
+the loaded history when today is not it. It exists because a set is two
+numbers and progress is one: 8 × 60 kg and 5 × 70 kg are the same effort, and
+nothing else in the app can say so. A single is reported as itself, and a set
+above twelve reps gets no estimate rather than a confident wrong one.
+
 ## Daily rings
 
 Today is shown as three activity rings — tasks, fitness, finance — in the Apple
