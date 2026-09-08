@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { THEME_COOKIE, parseTheme } from "@/lib/theme";
 import { AppNavigation } from "@/components/AppNavigation";
@@ -9,6 +10,7 @@ import { getDashboardPreferences } from "@/lib/preferences";
 import { getDateInTimeZone } from "@/lib/tasks";
 import { collectTrouble, settle } from "@/lib/settle";
 import { getExercise, getExerciseName } from "@/lib/exercises";
+import { guideFor } from "@/lib/exercise-catalog";
 import {
   buildBlock,
   buildFitnessPlanPayload,
@@ -108,6 +110,7 @@ export default async function FitnessPage() {
           );
           return {
             exerciseId: exercise.exerciseId,
+            guide: guideFor(exercise.exerciseId),
             lastLine: formatLastPerformance(last),
             name: getExerciseName(exercise.exerciseId),
             repHigh: exercise.repHigh,
@@ -246,6 +249,16 @@ export default async function FitnessPage() {
                 />
               </div>
             </details>
+            <p className="mt-3 text-[13px] leading-5 text-muted-foreground">
+              <Link
+                className="font-semibold text-foreground underline-offset-4 hover:underline"
+                href="/fitness/library"
+              >
+                Exercise library
+              </Link>{" "}
+              — every exercise there is, with instructions, for when you need to
+              look one up or swap one out.
+            </p>
           </section>
         </>
       ) : (

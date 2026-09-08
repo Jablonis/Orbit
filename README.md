@@ -106,6 +106,33 @@ to change.
 On iPhone, Safari only allows notifications for an app added to the home
 screen; the setting says so rather than failing silently.
 
+## The exercise library
+
+`/fitness/library` carries 1 324 exercises with written instructions, searchable
+and filterable by body part, equipment, and whether your own kit can do it. The
+programme is still generated from the 55 curated lifts in `src/lib/exercises.ts`
+— the catalogue answers the other question a gym produces, what a lift is and
+what else trains the same muscle. Where a curated lift has an honest equivalent
+in the catalogue, its instructions also appear under "How to do it" in the
+session log.
+
+Names, metadata and instructions come from
+[hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset)
+under the MIT licence, baked into `src/lib/exercise-catalog.json` by
+`scripts/build-exercise-catalog.mjs` so no build reaches the network. The file
+is read only on the server; a phone receives the page of rows it asked for.
+
+The animations and photographs are **© Gym visual** and are not in this
+repository. To show them, settle your own terms at
+[gymvisual.com](https://gymvisual.com/), run `scripts/fetch-exercise-media.sh`,
+and set:
+
+```bash
+NEXT_PUBLIC_EXERCISE_MEDIA_BASE=/exercise-media
+```
+
+Without it Orbit renders the names and the steps, which is the default.
+
 ## Daily rings
 
 Today is shown as three activity rings — tasks, fitness, finance — in the Apple

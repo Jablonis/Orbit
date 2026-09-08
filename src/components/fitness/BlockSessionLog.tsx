@@ -2,6 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { ActionToast } from "@/components/ActionToast";
+import { ExerciseInstructions } from "@/components/fitness/ExerciseInstructions";
+// Type-only, so the 900 kB catalogue behind it never crosses the client
+// boundary — the page builds the guide and hands the finished sentences over.
+import type { ExerciseGuide } from "@/lib/exercise-catalog";
 import type { WeekdayId } from "@/lib/fitness";
 import { logExerciseSetsAction } from "@/app/fitness/actions";
 
@@ -12,6 +16,8 @@ export type LoggedSet = {
 
 export type SessionExercise = {
   exerciseId: string;
+  /** How to do it, or null for a lift the catalogue cannot explain. */
+  guide: ExerciseGuide | null;
   /** "17 Aug · 8, 8, 7 @ 60 kg", or empty the first time. */
   lastLine: string;
   name: string;
@@ -92,6 +98,23 @@ export function BlockSessionLog({
             <p className="mt-1 text-[12px] leading-4 text-muted-foreground">
               {exercise.targetNote}
             </p>
+
+            {/* Closed by default. Someone mid-session wants the boxes, not a
+                paragraph; someone who has never done the lift wants the
+                paragraph, and one tap is the whole distance between them. */}
+            {exercise.guide ? (
+              <details className="group mt-2">
+                <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-[12px] font-semibold text-muted-foreground hover:text-foreground">
+                  How to do it
+                  <span aria-hidden="true" className="ml-1.5 group-open:rotate-45">
+                    ＋
+                  </span>
+                </summary>
+                <div className="mt-2 rounded-xl border border-[var(--hairline)] bg-[var(--wash)] p-3">
+                  <ExerciseInstructions guide={exercise.guide} />
+                </div>
+              </details>
+            ) : null}
 
             <ol className="mt-3 flex flex-col gap-2">
               {exercise.sets.map((set, index) => {
