@@ -28,3 +28,32 @@ export function themeAttribute(choice: ThemeChoice) {
 
 /** A year: long enough to be a preference, short enough to expire eventually. */
 export const THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+/**
+ * Which palette, which is a different question from light or dark.
+ *
+ * Orbit is the one the app has always had: a plum accent and a tint per
+ * system, so the colour tells you which half of the app you are in. Instrument
+ * is the one `docs/UI_SYSTEM.md` has described all along and the code never
+ * got — warm bone type on a warm near-black, one lime action colour, and the
+ * domain tints turned right down so a screen reads as a document rather than
+ * as three coloured blocks.
+ *
+ * Both answer light and dark, because this is a second axis rather than a
+ * replacement. Nothing is thrown away: Orbit stays the default, and a palette
+ * nobody chose is a palette nobody has to notice.
+ */
+export const PALETTE_COOKIE = "orbit-palette";
+export const paletteChoices = ["orbit", "instrument"] as const;
+export type PaletteChoice = (typeof paletteChoices)[number];
+
+export function parsePalette(value: string | undefined | null): PaletteChoice {
+  return paletteChoices.includes(value as PaletteChoice)
+    ? (value as PaletteChoice)
+    : "orbit";
+}
+
+/** The default carries no stamp, the same way "system" carries no theme. */
+export function paletteAttribute(choice: PaletteChoice) {
+  return choice === "orbit" ? undefined : choice;
+}

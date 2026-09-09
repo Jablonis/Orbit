@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { THEME_COOKIE, parseTheme } from "@/lib/theme";
+import { getAppearance } from "@/lib/appearance";
 import { AppNavigation } from "@/components/AppNavigation";
 import { getAuthenticatedUser } from "@/lib/auth";
 import {
@@ -28,11 +27,12 @@ export default async function FinancePage() {
   const today = getDateInTimeZone(new Date(), preferences.regional.timeZone);
   const summary = getFinanceSummary(transactions, today.slice(0, 7));
 
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const { palette, theme } = await getAppearance();
 
   return (
     <main className="app-shell" id="main-content" tabIndex={-1}>
       <AppNavigation active="finance"
+        palette={palette}
         theme={theme} profile={preferences.regional} userEmail={user.email ?? "Orbit user"} />
       <FinanceClient
         regional={preferences.regional}

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { OrbitMark } from "@/components/BrandMark";
 import { LinkPendingIndicator } from "@/components/LinkPendingIndicator";
 import { ProfileMenu } from "@/components/ProfileMenu";
-import type { ThemeChoice } from "@/lib/theme";
+import type { PaletteChoice, ThemeChoice } from "@/lib/theme";
 import { QuickAdd } from "@/components/QuickAdd";
 import type { RegionalPreferences } from "@/lib/preferences";
 
@@ -30,12 +30,14 @@ const navItems: Array<{
 export function AppNavigation({
   active,
   profile,
+  palette,
   theme,
   settings,
   userEmail,
 }: {
   active: NavKey | null;
   profile?: RegionalPreferences;
+  palette: PaletteChoice;
   theme: ThemeChoice;
   settings?: ReactNode;
   userEmail: string;
@@ -96,7 +98,7 @@ export function AppNavigation({
         ))}
       </nav>
       <QuickAdd />
-      <ProfileMenu profile={profile} theme={theme} userEmail={userEmail}>
+      <ProfileMenu palette={palette} profile={profile} theme={theme} userEmail={userEmail}>
         {settings}
       </ProfileMenu>
     </>

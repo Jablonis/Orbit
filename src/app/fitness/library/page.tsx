@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { AppNavigation } from "@/components/AppNavigation";
 import { EmptyState } from "@/components/EmptyState";
 import { ExerciseInstructions } from "@/components/fitness/ExerciseInstructions";
@@ -20,7 +19,7 @@ import {
 import { expandEquipment } from "@/lib/exercises";
 import { getFitnessProfile } from "@/lib/fitness-setup";
 import { getDashboardPreferences } from "@/lib/preferences";
-import { THEME_COOKIE, parseTheme } from "@/lib/theme";
+import { getAppearance } from "@/lib/appearance";
 
 export const dynamic = "force-dynamic";
 
@@ -98,13 +97,14 @@ export default async function ExerciseLibraryPage({
     return query ? `/fitness/library?${query}` : "/fitness/library";
   };
 
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const { palette, theme } = await getAppearance();
 
   return (
     <main className="app-shell" id="main-content" tabIndex={-1}>
       <AppNavigation
         active="fitness"
         profile={preferences.regional}
+        palette={palette}
         theme={theme}
         userEmail={user.email ?? "Orbit user"}
       />

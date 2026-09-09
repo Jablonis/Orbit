@@ -9,22 +9,27 @@ import {
 } from "@/components/SettingsDirtyState";
 import type { RegionalPreferences } from "@/lib/preferences";
 import { ThemeChoice } from "@/components/ThemeChoice";
-import type { ThemeChoice as ThemeChoiceValue } from "@/lib/theme";
+import type {
+  PaletteChoice,
+  ThemeChoice as ThemeChoiceValue,
+} from "@/lib/theme";
 
 export function ProfileMenu({
   children,
   profile,
+  palette,
   theme,
   userEmail,
 }: {
   children?: ReactNode;
   profile?: RegionalPreferences;
+  palette: PaletteChoice;
   theme: ThemeChoiceValue;
   userEmail: string;
 }) {
   return (
     <SettingsDirtyStateProvider>
-      <ProfileMenuDialog profile={profile} theme={theme} userEmail={userEmail}>
+      <ProfileMenuDialog palette={palette} profile={profile} theme={theme} userEmail={userEmail}>
         {children}
       </ProfileMenuDialog>
     </SettingsDirtyStateProvider>
@@ -34,11 +39,13 @@ export function ProfileMenu({
 function ProfileMenuDialog({
   children,
   profile,
+  palette,
   theme,
   userEmail,
 }: {
   children?: ReactNode;
   profile?: RegionalPreferences;
+  palette: PaletteChoice;
   theme: ThemeChoiceValue;
   userEmail: string;
 }) {
@@ -244,7 +251,7 @@ function ProfileMenuDialog({
             </div>
           </section>
 
-          <ThemeChoice value={theme} />
+          <ThemeChoice palette={palette} value={theme} />
 
           {children ? (
             <section aria-labelledby="overview-preferences-heading">

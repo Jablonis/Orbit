@@ -54,6 +54,15 @@
   --plum-tint: #f3ecff;
   --plum-ink: #4b1e8c;
 
+  /* Type that sits *on* a domain colour. White was hard-coded at ten call
+     sites, which is right only while every domain colour happens to be dark
+     enough for it — a lime action colour is not, and white on it is unreadable
+     rather than merely off. */
+  --on-tasks: #ffffff;
+  --on-fitness: #ffffff;
+  --on-finance: #ffffff;
+  --on-plum: #ffffff;
+
   --chart-1: #6b2fbf;
   --chart-2: #f0568c;
   --chart-3: #22b07d;
@@ -135,6 +144,15 @@
   --plum-tint: #241a35;
   --plum-ink: #c9aef5;
 
+  /* Type that sits *on* a domain colour. White was hard-coded at ten call
+     sites, which is right only while every domain colour happens to be dark
+     enough for it — a lime action colour is not, and white on it is unreadable
+     rather than merely off. */
+  --on-tasks: #ffffff;
+  --on-fitness: #ffffff;
+  --on-finance: #ffffff;
+  --on-plum: #ffffff;
+
   --chart-1: #a274f5;
   --chart-2: #f56ba0;
   --chart-3: #2fc48f;
@@ -195,6 +213,15 @@
   --plum-tint: #241a35;
   --plum-ink: #c9aef5;
 
+  /* Type that sits *on* a domain colour. White was hard-coded at ten call
+     sites, which is right only while every domain colour happens to be dark
+     enough for it — a lime action colour is not, and white on it is unreadable
+     rather than merely off. */
+  --on-tasks: #ffffff;
+  --on-fitness: #ffffff;
+  --on-finance: #ffffff;
+  --on-plum: #ffffff;
+
   --chart-1: #a274f5;
   --chart-2: #f56ba0;
   --chart-3: #2fc48f;
@@ -209,6 +236,225 @@
   --wash: #201c29;
   --hairline: #2c2735;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 24px 60px -24px rgba(0, 0, 0, 0.75);
+}
+
+/*
+ * The instrument palette.
+ *
+ * A second answer to "what colour is this app", not a replacement for the
+ * first: Orbit stays the default and this is chosen. It is the palette
+ * `docs/UI_SYSTEM.md` has described from the beginning and the code never
+ * carried — warm bone type on a warm near-black, one lime action colour, and
+ * hairline edges instead of tinted blocks.
+ *
+ * The domain tints survive, turned right down. Losing them entirely was the
+ * one thing wrong with this direction when it was drawn: a screen where tasks,
+ * habits and fitness are the same colour makes you read a label to know where
+ * you are. Here the tint is a whisper and the small mark carries the rest.
+ *
+ * Written three times for the same reason the dark palette is written twice:
+ * the system preference, which yields to an explicit light, and then the two
+ * explicit choices. `:root[data-palette]` outranks bare `:root`, so these win
+ * wherever the stamp is present and are inert everywhere else.
+ */
+:root[data-palette="instrument"] {
+  color-scheme: light;
+  --background: #f6f2e9;
+  --foreground: #1c1a15;
+
+  --card: #fffdf7;
+  --card-foreground: #1c1a15;
+  --popover: #fffdf7;
+  --popover-foreground: #1c1a15;
+
+  --primary: #4d7c0f;
+  --primary-foreground: #ffffff;
+  --secondary: #efe9dc;
+  --secondary-foreground: #3b362c;
+
+  --muted: #f0ebdf;
+  --muted-foreground: #6b6459;
+  --accent: #eef1e2;
+  --accent-foreground: #3f5c0c;
+
+  --destructive: #b4472e;
+  --destructive-foreground: #ffffff;
+  --success: #4d7c0f;
+  --warning: #a86b1d;
+
+  --border: #e4ddcd;
+  --input: #ded6c3;
+  --ring: #4d7c0f;
+
+  --tasks: #a86b3c;
+  --tasks-tint: #f5efe3;
+  --tasks-ink: #7a4c26;
+  --fitness: #5c7c3a;
+  --fitness-tint: #eef1e4;
+  --fitness-ink: #425a28;
+  --finance: #4a6b8a;
+  --finance-tint: #eaeef2;
+  --finance-ink: #35506b;
+  --plum: #7a5c80;
+  --plum-tint: #f2edf1;
+  --plum-ink: #5b4260;
+
+  /* Type that sits *on* a domain colour. White was hard-coded at ten call
+     sites, which is right only while every domain colour happens to be dark
+     enough for it — a lime action colour is not, and white on it is unreadable
+     rather than merely off. */
+  --on-tasks: #ffffff;
+  --on-fitness: #ffffff;
+  --on-finance: #ffffff;
+  --on-plum: #ffffff;
+
+  --chart-1: #4d7c0f;
+  --chart-2: #a86b3c;
+  --chart-3: #5c7c3a;
+  --chart-4: #4a6b8a;
+  --chart-5: #a86b1d;
+
+  --pip-ink: #1c1a15;
+  --pip-paper: #fffdf7;
+
+  --wash: #f1ece0;
+  --hairline: #e7e0d0;
+  --shadow-card: 0 1px 2px rgba(28, 26, 21, 0.06);
+  --shadow-pop: 0 24px 60px -30px rgba(28, 26, 21, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-palette="instrument"]:not([data-theme="light"]) {
+    color-scheme: dark;
+  --background: #100f0d;
+  --foreground: #f4ebdd;
+
+  --card: #171410;
+  --card-foreground: #f4ebdd;
+  --popover: #1f1b15;
+  --popover-foreground: #f4ebdd;
+
+  --primary: #a3e635;
+  --primary-foreground: #14140f;
+  --secondary: #221e17;
+  --secondary-foreground: #e8dfd0;
+
+  --muted: #1b1712;
+  --muted-foreground: #9a9086;
+  --accent: #232a15;
+  --accent-foreground: #c7e88a;
+
+  --destructive: #e07a5f;
+  --destructive-foreground: #17110e;
+  --success: #a3e635;
+  --warning: #d9a05b;
+
+  --border: #2a241c;
+  --input: #322b21;
+  --ring: #a3e635;
+
+  --tasks: #d9a05b;
+  --tasks-tint: #1f1a14;
+  --tasks-ink: #e3c39a;
+  --fitness: #a3e635;
+  --fitness-tint: #181c13;
+  --fitness-ink: #c5d9a0;
+  --finance: #7aa5c4;
+  --finance-tint: #14181c;
+  --finance-ink: #a8c4d9;
+  --plum: #b09ac4;
+  --plum-tint: #1c1a1e;
+  --plum-ink: #cbbcd6;
+
+  /* Type that sits *on* a domain colour. White was hard-coded at ten call
+     sites, which is right only while every domain colour happens to be dark
+     enough for it — a lime action colour is not, and white on it is unreadable
+     rather than merely off. */
+  --on-tasks: #1b160f;
+  --on-fitness: #14140f;
+  --on-finance: #0f1519;
+  --on-plum: #17131a;
+
+  --chart-1: #a3e635;
+  --chart-2: #d9a05b;
+  --chart-3: #7aa5c4;
+  --chart-4: #b09ac4;
+  --chart-5: #e07a5f;
+
+  --pip-ink: #2a2620;
+  --pip-paper: #f4ebdd;
+
+  --wash: #1b1712;
+  --hairline: #2a241c;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-pop: 0 24px 60px -24px rgba(0, 0, 0, 0.75);
+  }
+}
+
+:root[data-palette="instrument"][data-theme="dark"] {
+  color-scheme: dark;
+  --background: #100f0d;
+  --foreground: #f4ebdd;
+
+  --card: #171410;
+  --card-foreground: #f4ebdd;
+  --popover: #1f1b15;
+  --popover-foreground: #f4ebdd;
+
+  --primary: #a3e635;
+  --primary-foreground: #14140f;
+  --secondary: #221e17;
+  --secondary-foreground: #e8dfd0;
+
+  --muted: #1b1712;
+  --muted-foreground: #9a9086;
+  --accent: #232a15;
+  --accent-foreground: #c7e88a;
+
+  --destructive: #e07a5f;
+  --destructive-foreground: #17110e;
+  --success: #a3e635;
+  --warning: #d9a05b;
+
+  --border: #2a241c;
+  --input: #322b21;
+  --ring: #a3e635;
+
+  --tasks: #d9a05b;
+  --tasks-tint: #1f1a14;
+  --tasks-ink: #e3c39a;
+  --fitness: #a3e635;
+  --fitness-tint: #181c13;
+  --fitness-ink: #c5d9a0;
+  --finance: #7aa5c4;
+  --finance-tint: #14181c;
+  --finance-ink: #a8c4d9;
+  --plum: #b09ac4;
+  --plum-tint: #1c1a1e;
+  --plum-ink: #cbbcd6;
+
+  /* Type that sits *on* a domain colour. White was hard-coded at ten call
+     sites, which is right only while every domain colour happens to be dark
+     enough for it — a lime action colour is not, and white on it is unreadable
+     rather than merely off. */
+  --on-tasks: #1b160f;
+  --on-fitness: #14140f;
+  --on-finance: #0f1519;
+  --on-plum: #17131a;
+
+  --chart-1: #a3e635;
+  --chart-2: #d9a05b;
+  --chart-3: #7aa5c4;
+  --chart-4: #b09ac4;
+  --chart-5: #e07a5f;
+
+  --pip-ink: #2a2620;
+  --pip-paper: #f4ebdd;
+
+  --wash: #1b1712;
+  --hairline: #2a241c;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.45);
   --shadow-pop: 0 24px 60px -24px rgba(0, 0, 0, 0.75);
 }
 
@@ -250,6 +496,11 @@
   --color-plum: var(--plum);
   --color-plum-tint: var(--plum-tint);
   --color-plum-ink: var(--plum-ink);
+
+  --color-on-tasks: var(--on-tasks);
+  --color-on-fitness: var(--on-fitness);
+  --color-on-finance: var(--on-finance);
+  --color-on-plum: var(--on-plum);
 
   --color-wash: var(--wash);
   --color-hairline: var(--hairline);

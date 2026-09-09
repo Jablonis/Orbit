@@ -77,6 +77,36 @@ Two washes from v1 survived as raw `rgba(244,235,221,…)` in sixty-odd places �
 bone at low alpha, invisible on paper and wrong at night. They are `--wash` and
 `--hairline` now, and `--shadow-card` / `--shadow-pop` answer the same way.
 
+## Two palettes
+
+Appearance is two questions, not one. Light or dark is how bright the room is.
+The palette is which app you would rather be looking at, and both palettes
+answer light and dark.
+
+| Palette | What it is |
+| --- | --- |
+| **Orbit** (default) | A plum accent and a tint per system, so colour says which half of the app you are in. |
+| **Instrument** | Warm bone type on a warm near-black, one lime action colour, and the domain tints turned right down. |
+
+The table below described Instrument from the beginning, and for a long time
+the code carried Orbit instead — none of `--canvas`, `--surface-1` or
+`--accent-primary` ever existed. Instrument is now real, under the token names
+the code actually uses, and it is chosen rather than imposed: the choice is a
+cookie the server reads, stamped as `data-palette` on the document beside
+`data-theme`, so the first paint is already right and there is no flash.
+
+`:root[data-palette="instrument"]` outranks bare `:root`, so those blocks win
+wherever the stamp is present and are inert everywhere else. Adding a third
+palette is one more block and one more entry in `paletteChoices`.
+
+### Type on a colour
+
+`--on-tasks`, `--on-fitness`, `--on-finance` and `--on-plum` are the ink that
+sits on a domain colour. They exist because white was hard-coded at thirteen
+call sites, which is correct only while every domain colour happens to be dark
+enough for it — a lime action colour is not, and white on it is unreadable
+rather than merely off. Never write `text-white` on a `bg-` domain class.
+
 ## Semantic tokens
 
 Tokens live in `src/app/globals.css`. Nothing in the product may introduce a

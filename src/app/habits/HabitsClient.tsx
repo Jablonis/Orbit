@@ -187,7 +187,7 @@ export function HabitsClient({
                         aria-hidden="true"
                         className={`grid size-6 shrink-0 place-items-center rounded-full border-2 transition-colors ${
                           kept
-                            ? "border-plum bg-plum text-white"
+                            ? "border-plum bg-plum text-on-plum"
                             : "border-input"
                         }`}
                       >

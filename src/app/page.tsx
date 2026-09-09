@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { after } from "next/server";
-import { cookies } from "next/headers";
-import { THEME_COOKIE, parseTheme } from "@/lib/theme";
+import { getAppearance } from "@/lib/appearance";
 import type { ReactNode } from "react";
 import { DayCardShare } from "@/components/DayCardShare";
 import { DayComplete } from "@/components/DayComplete";
@@ -560,12 +559,13 @@ export default async function Home({
     weekday: "long",
   }).format(new Date(`${today}T12:00:00Z`));
 
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const { palette, theme } = await getAppearance();
 
   return (
     <main className="app-shell" id="main-content" tabIndex={-1}>
       <AppNavigation
         active="dashboard"
+        palette={palette}
         theme={theme}
         profile={preferences.regional}
         settings={(
