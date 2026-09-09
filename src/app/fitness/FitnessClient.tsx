@@ -378,7 +378,7 @@ export function FitnessClient({
                       aria-hidden="true"
                       className={`grid size-7 place-items-center rounded-full text-[12px] font-bold ${
                         done
-                          ? "bg-fitness text-white"
+                          ? "bg-fitness text-on-fitness"
                           : resting
                             ? "border border-dashed border-border text-muted-foreground"
                             : "border-2 border-fitness/45 text-fitness-ink"
@@ -434,7 +434,7 @@ export function FitnessClient({
           {todayDay.sport !== "rest" ? (
             <div className="mt-4 flex flex-wrap gap-2">
               <button
-                className="min-h-11 flex-1 rounded-xl bg-fitness px-5 text-[13px] font-bold text-white transition-colors hover:bg-fitness/90"
+                className="min-h-11 flex-1 rounded-xl bg-fitness px-5 text-[13px] font-bold text-on-fitness transition-colors hover:bg-fitness/90"
                 onClick={() => {
                   setNotice(null);
                   setOpenDayId(todayDay.id);

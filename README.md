@@ -178,31 +178,22 @@ nothing, and an import never removes history that is already here.
 
 ## Applying migrations
 
-Merging to `main` applies any new file in `supabase/migrations/` to the
-production database, through `.github/workflows/migrate.yml`. A pull request
-never touches the database — a migration is reviewed before it exists anywhere
-— and two runs can never race, because the workflow takes a lock.
+The Supabase GitHub integration applies migrations to production on merge to
+`main`. Nothing in this repository needs a database password, and no workflow
+here touches the database.
 
-It needs three repository secrets (Settings → Secrets and variables → Actions):
-
-| Secret | Where it comes from |
-| --- | --- |
-| `SUPABASE_ACCESS_TOKEN` | Supabase → Account → Access Tokens |
-| `SUPABASE_DB_PASSWORD` | Supabase → Project Settings → Database |
-| `SUPABASE_PROJECT_REF` | the project ref in the dashboard URL |
-
-Until all three are set the workflow stops on its first step and names the ones
-that are missing. It never echoes them, and it prints `migration list` before
-and after the push, so the log says what the database had and what it has now —
-which is the whole of the answer when the two have drifted apart.
-
-`workflow_dispatch` runs it by hand, for a migration added before this workflow
-existed. Applying by hand still works, and is the same command:
+Applying one by hand is the same command it always was:
 
 ```bash
 npx supabase link --project-ref <ref>
 npx supabase db push
 ```
+
+If the CLI reports **"Remote migration versions not found in local migrations
+directory"**, the record and the files have drifted apart rather than the
+schema being wrong. `supabase_migrations.schema_migrations` is an ordinary
+table: read it, compare its versions with the file names here, and reconcile
+the record — never the schema — from the SQL editor.
 
 ## Daily rings
 

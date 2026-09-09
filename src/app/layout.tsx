@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { THEME_COOKIE, parseTheme, themeAttribute } from "@/lib/theme";
+import {
+  PALETTE_COOKIE,
+  THEME_COOKIE,
+  paletteAttribute,
+  parsePalette,
+  parseTheme,
+  themeAttribute,
+} from "@/lib/theme";
 import { DM_Mono, Figtree } from "next/font/google";
 import "./globals.css";
 import { PullToRefresh } from "@/components/PullToRefresh";
@@ -58,11 +65,14 @@ export default async function RootLayout({
 }>) {
   // Stamped here, before the document is sent, so the first paint is already
   // the right colour. No stamp means "follow the system".
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const jar = await cookies();
+  const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
+  const palette = parsePalette(jar.get(PALETTE_COOKIE)?.value);
 
   return (
     <html
       className={`${figtree.variable} ${dmMono.variable} h-full bg-background`}
+      data-palette={paletteAttribute(palette)}
       data-theme={themeAttribute(theme)}
       lang="en"
     >

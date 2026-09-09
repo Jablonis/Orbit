@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { THEME_COOKIE, parseTheme } from "@/lib/theme";
+import { getAppearance } from "@/lib/appearance";
 import { CrewBoard } from "@/components/crew/CrewBoard";
 import { getAuthenticatedUser } from "@/lib/auth";
 import {
@@ -40,10 +39,13 @@ export default async function CrewPage() {
     getCrewReactions(supabase, shiftDate(today, -13), today),
   ]);
 
+  const appearance = await getAppearance();
+
   return (
     <CrewBoard
       calendar={calendar}
-      theme={parseTheme((await cookies()).get(THEME_COOKIE)?.value)}
+      palette={appearance.palette}
+      theme={appearance.theme}
       crew={crew}
       feed={getCrewFeed({
         members: crew.members,

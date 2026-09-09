@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { THEME_COOKIE, parseTheme } from "@/lib/theme";
+import { getAppearance } from "@/lib/appearance";
 import { AppNavigation } from "@/components/AppNavigation";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { getDashboardPreferences } from "@/lib/preferences";
@@ -56,11 +55,12 @@ export default async function TasksPage() {
   );
   const categorySuggestions = getMostUsedTaskCategories(taskHistory);
 
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const { palette, theme } = await getAppearance();
 
   return (
     <main className="app-shell" id="main-content" tabIndex={-1}>
       <AppNavigation active="tasks"
+        palette={palette}
         theme={theme} profile={preferences.regional} userEmail={user.email ?? "Orbit user"} />
       <TasksClient
         archivedTasks={archivedTasks}

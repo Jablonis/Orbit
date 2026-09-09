@@ -425,7 +425,7 @@ export function TasksCard({
                     <span
                       aria-hidden="true"
                       className={`grid size-5 shrink-0 place-items-center rounded-full border-2 transition ${
-                        done ? "border-tasks bg-tasks text-white" : "border-tasks/35"
+                        done ? "border-tasks bg-tasks text-on-tasks" : "border-tasks/35"
                       }`}
                     >
                       {done ? <CheckGlyph /> : null}
@@ -545,7 +545,7 @@ export function HabitsCard({
                     aria-hidden="true"
                     className={`grid size-5 shrink-0 place-items-center rounded-full border-2 transition ${
                       done
-                        ? "border-plum bg-plum text-white"
+                        ? "border-plum bg-plum text-on-plum"
                         : "border-plum/35"
                     }`}
                   >
@@ -654,7 +654,7 @@ export function FitnessCard({
 
       {resting ? null : (
         <TrainingToggle
-          className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-fitness px-5 text-[13px] font-semibold text-white transition hover:bg-fitness/90"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-fitness px-5 text-[13px] font-semibold text-on-fitness transition hover:bg-fitness/90"
           date={training.day.date}
           doneClassName="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-input px-5 text-[13px] font-semibold text-foreground transition hover:bg-muted"
           trained={done}
@@ -969,7 +969,7 @@ export function SetupCard({ setup }: { setup: SetupState }) {
                 aria-hidden="true"
                 className={`grid size-5 shrink-0 place-items-center rounded-full ${
                   step.done
-                    ? "bg-plum text-white"
+                    ? "bg-plum text-on-plum"
                     : "border-2 border-plum/30"
                 }`}
               >
@@ -1029,7 +1029,7 @@ export function MilestonesCard({ milestones }: { milestones: Milestone[] }) {
               aria-hidden="true"
               className={`grid size-8 shrink-0 place-items-center rounded-full ${
                 item.achieved
-                  ? "bg-fitness text-white"
+                  ? "bg-fitness text-on-fitness"
                   : "bg-card text-muted-foreground"
               }`}
             >
@@ -1062,7 +1062,7 @@ export function RecapCard({ recap }: { recap: WeekRecap }) {
       <CardHeading
         action={
           recap.isBestWeek ? (
-            <Badge className="bg-plum text-white" variant="plum">
+            <Badge className="bg-plum text-on-plum" variant="plum">
               Best week yet
             </Badge>
           ) : (

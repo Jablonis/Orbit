@@ -2,7 +2,7 @@ import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { CrewActionForm } from "@/components/crew/CrewActionForm";
 import { CrewCodePanel } from "@/components/crew/CrewCodePanel";
 import { AppNavigation } from "@/components/AppNavigation";
-import type { ThemeChoice } from "@/lib/theme";
+import type { PaletteChoice, ThemeChoice } from "@/lib/theme";
 import { Pip } from "@/components/brand/Pip";
 import { Badge } from "@/components/ui/badge";
 import { TintPanel } from "@/components/ui/tint-panel";
@@ -32,6 +32,7 @@ export function CrewBoard({
   crew,
   feed,
   leaderboard,
+  palette,
   theme,
   today,
   userEmail,
@@ -40,6 +41,7 @@ export function CrewBoard({
   crew: CrewState;
   feed: FeedEntry[];
   leaderboard: LeaderboardRow[];
+  palette: PaletteChoice;
   theme: ThemeChoice;
   today: string;
   userEmail: string;
@@ -56,6 +58,7 @@ export function CrewBoard({
       <AppNavigation
         active="crew"
         profile={calendar}
+        palette={palette}
         theme={theme}
         userEmail={userEmail}
       />

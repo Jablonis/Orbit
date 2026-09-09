@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { THEME_COOKIE, parseTheme } from "@/lib/theme";
+import { getAppearance } from "@/lib/appearance";
 import { AppNavigation } from "@/components/AppNavigation";
 import { BodyHeatmap } from "@/components/fitness/BodyHeatmap";
 import { getAuthenticatedUser } from "@/lib/auth";
@@ -169,11 +168,12 @@ export default async function FitnessPage() {
     weeks: block.value?.weeks ?? 6,
   };
 
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const { palette, theme } = await getAppearance();
 
   return (
     <main className="app-shell" id="main-content" tabIndex={-1}>
       <AppNavigation active="fitness"
+        palette={palette}
         theme={theme} profile={preferences.regional} userEmail={user.email ?? "Orbit user"} />
       {weeklyPlan ? (
         <>

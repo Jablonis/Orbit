@@ -11,7 +11,7 @@ const button =
 // A tile's own colour on its own action: a plum button on the green card reads
 // as something borrowed from somewhere else on the page.
 const fitnessPrimary =
-  "ui-button h-10 min-h-10 w-full bg-fitness px-3 text-[12px] text-white transition-colors hover:bg-fitness/90";
+  "ui-button h-10 min-h-10 w-full bg-fitness px-3 text-[12px] text-on-fitness transition-colors hover:bg-fitness/90";
 
 /**
  * The three things a day is actually made of.

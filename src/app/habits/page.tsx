@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { THEME_COOKIE, parseTheme } from "@/lib/theme";
+import { getAppearance } from "@/lib/appearance";
 import { AppNavigation } from "@/components/AppNavigation";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { shiftDate } from "@/lib/fitness";
@@ -98,13 +97,14 @@ export default async function HabitsPage() {
     ]),
   );
 
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const { palette, theme } = await getAppearance();
 
   return (
     <main className="app-shell" id="main-content" tabIndex={-1}>
       <AppNavigation
         active="habits"
         profile={preferences.regional}
+        palette={palette}
         theme={theme}
         userEmail={user.email ?? "Orbit user"}
       />

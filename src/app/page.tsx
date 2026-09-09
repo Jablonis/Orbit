@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { after } from "next/server";
-import { cookies } from "next/headers";
-import { THEME_COOKIE, parseTheme } from "@/lib/theme";
+import { getAppearance } from "@/lib/appearance";
 import type { ReactNode } from "react";
 import { DayCardShare } from "@/components/DayCardShare";
 import { DayComplete } from "@/components/DayComplete";
@@ -421,14 +420,10 @@ export default async function Home({
           preferences.pinnedTaskCategory.toLocaleLowerCase(),
       )
     : orderedTasks;
-  // Six rather than four: the card's job is to answer "what is on today",
-  // and four with three filters above them answered "some of it".
-  const quickTasks = filterTasks(
-    pinnedTasks,
-    filter,
-    today,
-    calendar.timeZone,
-  ).slice(0, 6);
+  // All of them, not the first six. The card is the first thing the dashboard
+  // shows and the place the day is worked from, so a cap means a task you have
+  // to go somewhere else to find — which is the one thing this page is for.
+  const quickTasks = filterTasks(pinnedTasks, filter, today, calendar.timeZone);
   const pinnedTaskStats = getTaskStats(pinnedTasks);
   // The tiles answer "what is the day", so they count the whole day. The
   // pinned category is a lens on the card underneath them, and a tile reading
@@ -564,12 +559,13 @@ export default async function Home({
     weekday: "long",
   }).format(new Date(`${today}T12:00:00Z`));
 
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const { palette, theme } = await getAppearance();
 
   return (
     <main className="app-shell" id="main-content" tabIndex={-1}>
       <AppNavigation
         active="dashboard"
+        palette={palette}
         theme={theme}
         profile={preferences.regional}
         settings={(
@@ -669,26 +665,28 @@ export default async function Home({
 
         <SetupCard setup={setup} />
 
-        {/* The week first, because "which day am I in" is answered before
-            anything else is read, and then the day itself as four tiles. */}
+        {/* The lists, first and in full: every task today asks for, every
+            habit, every set, each one ticked where it is read. Opening the app
+            should put the day's work under your thumb, not a count of it —
+            a tile saying "3" is a number you then have to go and find. */}
+        {listCards.map((card) => dashboardCards[card])}
+
+        {/* Then the same day as numbers, for the glance rather than the doing,
+            and then how it is going. Both read after the work, not before it:
+            an altitude is not something you can act on, and a task, a set and
+            a habit are. */}
         <WeekStrip
           locale={calendar.locale}
           points={weeklyProductivity.current}
           today={today}
         />
 
-        {/* The day itself first. An altitude is not something you can do
-            anything about; a task and a session are. */}
         <DayTiles
           habits={dailyRings.habits}
           taskStats={dayTaskStats}
           training={fitnessStats.todayTraining}
         />
 
-        {listCards.map((card) => dashboardCards[card])}
-
-        {/* And then how it is going, underneath, small. It reads after the
-            three you can act on, not before them. */}
         {dashboardCards.momentum}
 
         {/* The history is worth having and is not worth reading first: the
