@@ -202,6 +202,13 @@ export async function GET() {
         }),
       ["22023"],
     ),
+    // A null payload is refused before anything is read or written, so this
+    // proves the function is there without touching a single set.
+    rpcProbe(
+      "rpc import_exercise_sets",
+      () => supabase.rpc("import_exercise_sets", { p_rows: null }),
+      ["22023"],
+    ),
     rpcProbe(
       "rpc clear_exercise_sets",
       () =>

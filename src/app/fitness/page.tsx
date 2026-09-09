@@ -10,31 +10,25 @@ import { getFitnessProfile } from "@/lib/fitness-setup";
 import { getDashboardPreferences } from "@/lib/preferences";
 import { getDateInTimeZone } from "@/lib/tasks";
 import { collectTrouble, settle } from "@/lib/settle";
-import { getExercise, getExerciseName } from "@/lib/exercises";
-import { guideFor } from "@/lib/exercise-catalog";
-import { bestOneRepMax, bestOneRepMaxFor, formatOneRepMax } from "@/lib/one-rm";
-import { restSecondsFor } from "@/lib/rest-timer";
+import { getExerciseName } from "@/lib/exercises";
 import {
   buildBlock,
   buildFitnessPlanPayload,
-  formatLastPerformance,
   getBlockWeek,
   getCoverageForExercises,
-  getLastPerformance,
   getMuscleCoverage,
-  getProgressionTarget,
 } from "@/lib/training-block";
 import {
   getActiveTrainingBlock,
   getExerciseSets,
 } from "@/lib/training-block-data";
+import { buildSessionLogs } from "@/lib/session-log";
 import { getSplit } from "@/lib/training-split";
 import type {
   PlanChange,
   ProgrammeView,
 } from "@/components/fitness/TrainingBlockPanel";
-import type { BlockSessionLogProps } from "@/components/fitness/BlockSessionLog";
-import { sportLabels, type SportType, type WeekdayId } from "@/lib/fitness";
+import { sportLabels, type SportType } from "@/lib/fitness";
 import { FitnessClient } from "./FitnessClient";
 import { FitnessSetupForm } from "./FitnessSetupForm";
 import { HistoryImport } from "@/components/fitness/HistoryImport";
@@ -94,62 +88,7 @@ export default async function FitnessPage() {
       )
     : { trouble: "", value: [] };
 
-  const sessionLogs: Partial<Record<WeekdayId, BlockSessionLogProps>> = {};
-  if (block.value && weeklyPlan) {
-    for (const session of block.value.sessions) {
-      const day = weeklyPlan.find((entry) => entry.id === session.weekday);
-      if (!day) continue;
-      sessionLogs[session.weekday] = {
-        blockId: block.value.id,
-        exercises: session.exercises.map((exercise) => {
-          const logged = sets.value.filter(
-            (set) =>
-              set.performedOn === day.date &&
-              set.exerciseId === exercise.exerciseId,
-          );
-          const last = getLastPerformance(
-            sets.value,
-            exercise.exerciseId,
-            day.date,
-          );
-          const isCompound =
-            getExercise(exercise.exerciseId)?.isCompound ?? false;
-          return {
-            exerciseId: exercise.exerciseId,
-            guide: guideFor(exercise.exerciseId),
-            lastLine: formatLastPerformance(last),
-            name: getExerciseName(exercise.exerciseId),
-            // The estimate from the last session, against the best in the
-            // window that was loaded for "last time" anyway.
-            oneRmLine: formatOneRepMax(
-              bestOneRepMax(last?.sets ?? []),
-              bestOneRepMaxFor(sets.value, exercise.exerciseId),
-            ),
-            repHigh: exercise.repHigh,
-            repLow: exercise.repLow,
-            restSeconds: restSecondsFor({
-              isCompound,
-              repHigh: exercise.repHigh,
-            }),
-            sets: Array.from(
-              { length: Math.max(exercise.targetSets, logged.length) },
-              (_, index) => {
-                const row = logged.find((set) => set.setIndex === index + 1);
-                return {
-                  reps: row?.reps ?? null,
-                  weightKg: row ? row.weightKg : null,
-                };
-              },
-            ),
-            targetNote: getProgressionTarget(last, exercise, isCompound).note,
-            targetSets: exercise.targetSets,
-          };
-        }),
-        label: session.label,
-        weekday: session.weekday,
-      };
-    }
-  }
+  const sessionLogs = buildSessionLogs(block.value, weeklyPlan, sets.value);
 
   const activeCoverage = block.value
     ? getCoverageForExercises(

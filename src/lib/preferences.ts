@@ -15,6 +15,7 @@ import {
 export const dashboardCardIds = [
   "tasks",
   "fitness",
+  "habits",
   "rings",
   "momentum",
   "voyage",
@@ -46,6 +47,7 @@ const LEGACY_CARD_ORDER = [
 export const dashboardCardLabels: Record<DashboardCardId, string> = {
   analytics: "Analytics",
   fitness: "Fitness today",
+  habits: "Habits today",
   milestones: "Milestones",
   momentum: "Momentum orbit",
   voyage: "Voyage",
