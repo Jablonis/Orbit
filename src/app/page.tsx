@@ -14,6 +14,7 @@ import { WeekStrip } from "@/components/overview/WeekStrip";
 import {
   AnalyticsCard,
   FitnessCard,
+  HabitsCard,
   MilestonesCard,
   MomentumCard,
   PipGreeting,
@@ -51,7 +52,12 @@ import {
 import {
   getFinanceTransactions,
 } from "@/lib/finance";
-import { getHabitChecks, getHabits } from "@/lib/habits";
+import { getDayHabits, getHabitChecks, getHabits } from "@/lib/habits";
+import { buildSessionLogs } from "@/lib/session-log";
+import {
+  getActiveTrainingBlock,
+  getExerciseSets,
+} from "@/lib/training-block-data";
 import {
   type DashboardCardId,
   defaultDashboardPreferences,
@@ -138,6 +144,8 @@ export default async function Home({
     settledReflection,
     habitList,
     habitChecks,
+    settledBlock,
+    settledSets,
   ] =
     await Promise.all([
       settle(
@@ -180,6 +188,15 @@ export default async function Home({
       ),
       getHabits(supabase, user.id),
       getHabitChecks(supabase, user.id, historyFrom, historyTo),
+      // Today's prescription, so the session can be logged where the day is
+      // read. Both are allowed to fail: a missing table costs the fitness card
+      // its sets, not the dashboard.
+      settle("Training block", getActiveTrainingBlock(supabase, user.id), null),
+      settle(
+        "Exercise sets",
+        getExerciseSets(supabase, user.id, historyFrom, historyTo),
+        [],
+      ),
     ]);
   const taskHistory = settledTasks.value;
   const weeklyPlanResult = settledPlan.value;
@@ -197,6 +214,8 @@ export default async function Home({
     settledSessions,
     settledPlanHistory,
     settledReflection,
+    settledBlock,
+    settledSets,
     { trouble: habitList.error ? `Habits: ${habitList.error}` : "" },
     { trouble: habitChecks.error ? `Habit history: ${habitChecks.error}` : "" },
   ]);
@@ -212,6 +231,12 @@ export default async function Home({
   const weeklyPlan =
     weeklyPlanResult ??
     createUnconfiguredWeeklyPlan(today, calendar.weekStartsOn);
+  // Today's session, if a block is running and today is a training day.
+  const todaySessionLog = buildSessionLogs(
+    settledBlock.value,
+    weeklyPlanResult,
+    settledSets.value,
+  );
   const fitnessStats = getFitnessStats(
     weeklyPlan,
     today,
@@ -454,7 +479,23 @@ export default async function Home({
       />
     ),
     fitness: (
-      <FitnessCard key="fitness" training={fitnessStats.todayTraining} />
+      <FitnessCard
+        key="fitness"
+        sessionLog={todaySessionLog[fitnessStats.todayTraining.day.id]}
+        training={fitnessStats.todayTraining}
+      />
+    ),
+    habits: (
+      <HabitsCard
+        dayHabits={getDayHabits(
+          habitInputs.habits,
+          habitInputs.checks,
+          today,
+          calendar.timeZone,
+        )}
+        key="habits"
+        trouble={habitList.error ? `Habits could not be loaded: ${habitList.error}` : ""}
+      />
     ),
     momentum: (
       <MomentumCard
@@ -503,14 +544,17 @@ export default async function Home({
     "recap",
     "review",
   ];
-  // The tiles answer the glance; the list answers "which ones". Everything
-  // else is detail, and detail goes under the fold.
-  const listCards = visibleCards.filter((card) => card === "tasks");
-  // Momentum is the hero above, and the tasks list sits under the tiles; what
-  // is left is detail, and detail goes under the fold.
+  // The three things today actually asks of you, and all three are ticked
+  // where they are read: a task, a set, a habit. The tiles answer the glance;
+  // these answer "which ones", and then let you do them without opening
+  // another page. Everything else is detail, and detail goes under the fold.
+  const dayCardIds: DashboardCardId[] = ["tasks", "fitness", "habits"];
+  const listCards = visibleCards.filter((card) => dayCardIds.includes(card));
   const foldedCards = visibleCards.filter(
     (card) =>
-      card !== "tasks" && card !== "momentum" && !trendCardIds.includes(card),
+      !dayCardIds.includes(card) &&
+      card !== "momentum" &&
+      !trendCardIds.includes(card),
   );
   const trendCards = visibleCards.filter((card) => trendCardIds.includes(card));
   const dateLabel = new Intl.DateTimeFormat(preferences.regional.locale, {
@@ -641,10 +685,11 @@ export default async function Home({
           training={fitnessStats.todayTraining}
         />
 
-        {/* And then how it is going, underneath, small. */}
-        {dashboardCards.momentum}
-
         {listCards.map((card) => dashboardCards[card])}
+
+        {/* And then how it is going, underneath, small. It reads after the
+            three you can act on, not before them. */}
+        {dashboardCards.momentum}
 
         {/* The history is worth having and is not worth reading first: the
             day is the point, and five charts under it is why the page felt

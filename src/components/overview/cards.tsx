@@ -49,6 +49,9 @@ import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 import { TrainingToggle } from "@/components/overview/TrainingToggle";
 import { clearPinnedTaskCategoryAction } from "@/app/actions";
 import { toggleTaskAction } from "@/app/tasks/actions";
+import { toggleHabitAction } from "@/app/habits/actions";
+import { BlockSessionLog, type BlockSessionLogProps } from "@/components/fitness/BlockSessionLog";
+import type { DayHabit } from "@/lib/habits";
 
 export function greeting(locale: string, timeZone: string) {
   const hour = Number(
@@ -476,6 +479,110 @@ export function TasksCard({
   );
 }
 
+/**
+ * Today's habits, tickable where they are read.
+ *
+ * The same row as a task and the same one tap, because from the day's point of
+ * view they are the same act: something asked of today, kept or not. Habits
+ * had a page of their own and no place on the dashboard, which meant the one
+ * screen that opens first could not answer "what have I got today" in full.
+ *
+ * Only what today asks for. A habit that repeats on Tuesdays is not a thing
+ * you failed on Wednesday, so Wednesday does not list it.
+ */
+export function HabitsCard({
+  dayHabits,
+  trouble,
+}: {
+  dayHabits: DayHabit[];
+  /** Habits are allowed to fail without costing the dashboard. */
+  trouble: string;
+}) {
+  const kept = dayHabits.filter((entry) => entry.done).length;
+
+  return (
+    <TintPanel className="settle-in settle-3 flex flex-col gap-5" system="plum">
+      <CardHeading
+        action={
+          dayHabits.length > 0 ? (
+            <Badge variant="outline">
+              {kept}/{dayHabits.length}
+            </Badge>
+          ) : null
+        }
+        eyebrow="Habits"
+        pip={getPanelPip(kept, dayHabits.length, "habits", PIP_KITS.habits)}
+        seed={9}
+        title={
+          dayHabits.length === 0
+            ? "Nothing today."
+            : kept === dayHabits.length
+              ? "All kept."
+              : `${dayHabits.length - kept} left today.`
+        }
+      />
+
+      {trouble ? (
+        <p className="rounded-xl bg-card/70 p-4 text-[13px] text-muted-foreground">
+          {trouble}
+        </p>
+      ) : dayHabits.length === 0 ? (
+        <p className="rounded-xl bg-card/70 p-4 text-[13px]">
+          No habit repeats onto today.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {dayHabits.map(({ done, habit }) => (
+            <li key={habit.id}>
+              <form action={toggleHabitAction}>
+                <input name="id" type="hidden" value={habit.id} />
+                <input name="done" type="hidden" value={done ? "false" : "true"} />
+                <button
+                  className="press-row flex w-full items-center gap-3 rounded-xl bg-card/70 p-3 text-left hover:bg-card"
+                  type="submit"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`grid size-5 shrink-0 place-items-center rounded-full border-2 transition ${
+                      done
+                        ? "border-plum bg-plum text-white"
+                        : "border-plum/35"
+                    }`}
+                  >
+                    {done ? <CheckGlyph /> : null}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span
+                      className={`block truncate text-[14px] font-semibold ${
+                        done ? "text-muted-foreground line-through" : ""
+                      }`}
+                    >
+                      {habit.name}
+                    </span>
+                    <span className="mt-0.5 block text-[12px] text-muted-foreground">
+                      {describeRepeat(habit.repeatDays)}
+                    </span>
+                  </span>
+                  <span className="sr-only">
+                    {done ? "Undo" : "Keep"} {habit.name}
+                  </span>
+                </button>
+              </form>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Button asChild variant="outline">
+        <Link href="/habits">
+          All habits
+          <LinkPendingIndicator label="Opening habits" />
+        </Link>
+      </Button>
+    </TintPanel>
+  );
+}
+
 export function CheckGlyph() {
   return (
     <svg fill="none" height="12" viewBox="0 0 12 12" width="12">
@@ -491,8 +598,11 @@ export function CheckGlyph() {
 }
 
 export function FitnessCard({
+  sessionLog,
   training,
 }: {
+  /** Today's prescription, when a block is running and today is a gym day. */
+  sessionLog?: BlockSessionLogProps;
   training: import("@/lib/fitness").TodayTraining;
 }) {
   const resting = training.day.sport === "rest";
@@ -526,6 +636,10 @@ export function FitnessCard({
         <p className="text-[13px] text-muted-foreground">
           No session is planned. Recovery is part of the plan, not a gap in it.
         </p>
+      ) : sessionLog ? (
+        // The sets, where the day is read. Walking to Fitness to type two
+        // numbers is the difference between logging a session and not.
+        <BlockSessionLog {...sessionLog} />
       ) : (
         // What the session is, not only that there is one. The minutes and the
         // focus used to be two tiles above this; they are four words, and the
