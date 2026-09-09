@@ -2,6 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { ActionToast } from "@/components/ActionToast";
+import { ExerciseInstructions } from "@/components/fitness/ExerciseInstructions";
+import { RestTimer } from "@/components/fitness/RestTimer";
+// Type-only, so the 900 kB catalogue behind it never crosses the client
+// boundary — the page builds the guide and hands the finished sentences over.
+import type { ExerciseGuide } from "@/lib/exercise-catalog";
 import type { WeekdayId } from "@/lib/fitness";
 import { logExerciseSetsAction } from "@/app/fitness/actions";
 
@@ -12,12 +17,18 @@ export type LoggedSet = {
 
 export type SessionExercise = {
   exerciseId: string;
+  /** How to do it, or null for a lift the catalogue cannot explain. */
+  guide: ExerciseGuide | null;
   /** "17 Aug · 8, 8, 7 @ 60 kg", or empty the first time. */
   lastLine: string;
   name: string;
+  /** "Est. 1RM 76 kg · best 82 kg", or empty when no set can support one. */
+  oneRmLine: string;
   repHigh: number;
   repLow: number;
   /** The suggestion, as a sentence. Never typed into the inputs. */
+  /** How long the programme implies you rest after a set of this. */
+  restSeconds: number;
   targetNote: string;
   targetSets: number;
   sets: LoggedSet[];
@@ -50,6 +61,11 @@ export function BlockSessionLog({
 }: BlockSessionLogProps) {
   const [notice, setNotice] = useState<{ text: string; tone: "error" | "success" } | null>(null);
   const [pending, startTransition] = useTransition();
+  // One rest at a time, started by a save. `startedAt` is what makes saving the
+  // same exercise twice restart the clock rather than leave it where it was.
+  const [rest, setRest] = useState<{ seconds: number; startedAt: number } | null>(
+    null,
+  );
 
   return (
     <section className="mt-6 border-t border-[var(--hairline)] pt-5">
@@ -57,6 +73,17 @@ export function BlockSessionLog({
         <p className="text-[15px] font-semibold">{label}</p>
         <p className="label-caps text-muted-foreground">Today’s prescription</p>
       </div>
+
+      {rest ? (
+        <div className="mt-3">
+          <RestTimer
+            key={rest.startedAt}
+            onDone={() => setRest(null)}
+            seconds={rest.seconds}
+            startedAt={rest.startedAt}
+          />
+        </div>
+      ) : null}
 
       <div className="mt-3 flex flex-col gap-3">
         {exercises.map((exercise) => (
@@ -69,6 +96,14 @@ export function BlockSessionLog({
                     ? { text: `${exercise.name} saved.`, tone: "success" }
                     : { text: result.error, tone: "error" },
                 );
+                // The rest begins when the set is done, not when someone
+                // remembers to start a timer.
+                if (result.ok) {
+                  setRest({
+                    seconds: exercise.restSeconds,
+                    startedAt: Date.now(),
+                  });
+                }
               });
             }}
             className="rounded-xl border border-[var(--hairline)] p-3"
@@ -89,9 +124,33 @@ export function BlockSessionLog({
                 Last time · {exercise.lastLine}
               </p>
             ) : null}
+            {/* Two numbers are a set; one number is progress. 8 × 60 kg and
+                5 × 70 kg are the same effort, and only this says so. */}
+            {exercise.oneRmLine ? (
+              <p className="mt-1 text-[12px] leading-4 text-muted-foreground">
+                {exercise.oneRmLine}
+              </p>
+            ) : null}
             <p className="mt-1 text-[12px] leading-4 text-muted-foreground">
               {exercise.targetNote}
             </p>
+
+            {/* Closed by default. Someone mid-session wants the boxes, not a
+                paragraph; someone who has never done the lift wants the
+                paragraph, and one tap is the whole distance between them. */}
+            {exercise.guide ? (
+              <details className="group mt-2">
+                <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-[12px] font-semibold text-muted-foreground hover:text-foreground">
+                  How to do it
+                  <span aria-hidden="true" className="ml-1.5 group-open:rotate-45">
+                    ＋
+                  </span>
+                </summary>
+                <div className="mt-2 rounded-xl border border-[var(--hairline)] bg-[var(--wash)] p-3">
+                  <ExerciseInstructions guide={exercise.guide} />
+                </div>
+              </details>
+            ) : null}
 
             <ol className="mt-3 flex flex-col gap-2">
               {exercise.sets.map((set, index) => {

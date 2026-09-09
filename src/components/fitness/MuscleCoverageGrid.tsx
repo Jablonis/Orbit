@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { MuscleGroup } from "@/lib/exercises";
 import { MUSCLE_GROUPS } from "@/lib/exercises";
 import { WEEKLY_FREQUENCY_TARGET } from "@/lib/training-block";
@@ -23,10 +24,20 @@ const MUSCLE_LABELS: Record<MuscleGroup, string> = {
  * anyone to count. Each cell carries a mark and a number as well as a colour —
  * green and amber alone would say nothing to a colour-blind reader, and this
  * is the one thing on the page that has to be unambiguous.
+ *
+ * The body above it says the same thing in the shape of the thing being
+ * trained. It is the glance and the grid is the record: a bare back registers
+ * before any number is read, and then the number is right there underneath.
+ *
+ * It arrives as a node rather than a component this file renders, because the
+ * outlines are 42 kB and everything this file imports is inside a client
+ * component. Drawn on the server, the geometry never leaves it.
  */
 export function MuscleCoverageGrid({
+  bodyMap,
   coverage,
 }: {
+  bodyMap?: ReactNode;
   coverage: Record<MuscleGroup, number>;
 }) {
   return (
@@ -34,6 +45,7 @@ export function MuscleCoverageGrid({
       <p className="text-[13px] leading-5 text-muted-foreground">
         Every muscle group at least {WEEKLY_FREQUENCY_TARGET} times a week.
       </p>
+      {bodyMap ? <div className="mt-3">{bodyMap}</div> : null}
       <ul className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-5">
         {MUSCLE_GROUPS.map((muscle) => {
           const count = coverage[muscle] ?? 0;

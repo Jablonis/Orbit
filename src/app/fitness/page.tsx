@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { THEME_COOKIE, parseTheme } from "@/lib/theme";
 import { AppNavigation } from "@/components/AppNavigation";
+import { BodyHeatmap } from "@/components/fitness/BodyHeatmap";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { ensureFitnessPlan, getFitnessStats } from "@/lib/fitness";
 import { getFitnessProfile } from "@/lib/fitness-setup";
@@ -9,6 +11,9 @@ import { getDashboardPreferences } from "@/lib/preferences";
 import { getDateInTimeZone } from "@/lib/tasks";
 import { collectTrouble, settle } from "@/lib/settle";
 import { getExercise, getExerciseName } from "@/lib/exercises";
+import { guideFor } from "@/lib/exercise-catalog";
+import { bestOneRepMax, bestOneRepMaxFor, formatOneRepMax } from "@/lib/one-rm";
+import { restSecondsFor } from "@/lib/rest-timer";
 import {
   buildBlock,
   buildFitnessPlanPayload,
@@ -32,6 +37,7 @@ import type { BlockSessionLogProps } from "@/components/fitness/BlockSessionLog"
 import { sportLabels, type SportType, type WeekdayId } from "@/lib/fitness";
 import { FitnessClient } from "./FitnessClient";
 import { FitnessSetupForm } from "./FitnessSetupForm";
+import { HistoryImport } from "@/components/fitness/HistoryImport";
 import { WatchLink } from "@/components/fitness/WatchLink";
 import { headers } from "next/headers";
 
@@ -106,12 +112,25 @@ export default async function FitnessPage() {
             exercise.exerciseId,
             day.date,
           );
+          const isCompound =
+            getExercise(exercise.exerciseId)?.isCompound ?? false;
           return {
             exerciseId: exercise.exerciseId,
+            guide: guideFor(exercise.exerciseId),
             lastLine: formatLastPerformance(last),
             name: getExerciseName(exercise.exerciseId),
+            // The estimate from the last session, against the best in the
+            // window that was loaded for "last time" anyway.
+            oneRmLine: formatOneRepMax(
+              bestOneRepMax(last?.sets ?? []),
+              bestOneRepMaxFor(sets.value, exercise.exerciseId),
+            ),
             repHigh: exercise.repHigh,
             repLow: exercise.repLow,
+            restSeconds: restSecondsFor({
+              isCompound,
+              repHigh: exercise.repHigh,
+            }),
             sets: Array.from(
               { length: Math.max(exercise.targetSets, logged.length) },
               (_, index) => {
@@ -122,11 +141,7 @@ export default async function FitnessPage() {
                 };
               },
             ),
-            targetNote: getProgressionTarget(
-              last,
-              exercise,
-              getExercise(exercise.exerciseId)?.isCompound ?? false,
-            ).note,
+            targetNote: getProgressionTarget(last, exercise, isCompound).note,
             targetSets: exercise.targetSets,
           };
         }),
@@ -136,14 +151,19 @@ export default async function FitnessPage() {
     }
   }
 
-  const active: ProgrammeView | null = block.value
+  const activeCoverage = block.value
+    ? getCoverageForExercises(
+        block.value.sessions.flatMap((session) =>
+          session.exercises.map((exercise) => exercise.exerciseId),
+        ),
+      )
+    : null;
+
+  const active: ProgrammeView | null = block.value && activeCoverage
     ? {
         blockIndex: block.value.blockIndex,
-        coverage: getCoverageForExercises(
-          block.value.sessions.flatMap((session) =>
-            session.exercises.map((exercise) => exercise.exerciseId),
-          ),
-        ),
+        bodyMap: <BodyHeatmap coverage={activeCoverage} />,
+        coverage: activeCoverage,
         sessions: block.value.sessions.map((session) => ({
           exercises: session.exercises.map((exercise) => ({
             name: getExerciseName(exercise.exerciseId),
@@ -244,8 +264,19 @@ export default async function FitnessPage() {
                   lastUsedOn={asDay(watch?.last_used_at)}
                   origin={origin}
                 />
+                <HistoryImport />
               </div>
             </details>
+            <p className="mt-3 text-[13px] leading-5 text-muted-foreground">
+              <Link
+                className="font-semibold text-foreground underline-offset-4 hover:underline"
+                href="/fitness/library"
+              >
+                Exercise library
+              </Link>{" "}
+              — every exercise there is, with instructions, for when you need to
+              look one up or swap one out.
+            </p>
           </section>
         </>
       ) : (

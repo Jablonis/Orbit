@@ -74,7 +74,8 @@ The migrations create and secure:
 - reusable fitness plan days plus dated training sessions;
 - finance transactions and monthly statement-import summaries;
 - atomic Finance import, archive, and restore functions;
-- composite ownership constraints and a private statement-upload rate limit.
+- composite ownership constraints and a private statement-upload rate limit;
+- a single-call, append-only import for a training history from another app.
 
 All exposed user tables use RLS. Application reads also filter by the
 authenticated user.
@@ -105,6 +106,75 @@ to change.
 
 On iPhone, Safari only allows notifications for an app added to the home
 screen; the setting says so rather than failing silently.
+
+## The exercise library
+
+`/fitness/library` carries 1 324 exercises with written instructions, searchable
+and filterable by body part, equipment, and whether your own kit can do it. The
+programme is still generated from the 55 curated lifts in `src/lib/exercises.ts`
+— the catalogue answers the other question a gym produces, what a lift is and
+what else trains the same muscle. Where a curated lift has an honest equivalent
+in the catalogue, its instructions also appear under "How to do it" in the
+session log.
+
+Names, metadata and instructions come from
+[hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset)
+under the MIT licence, baked into `src/lib/exercise-catalog.json` by
+`scripts/build-exercise-catalog.mjs` so no build reaches the network. The file
+is read only on the server; a phone receives the page of rows it asked for.
+
+The animations and photographs are **© Gym visual** and are not in this
+repository. To show them, settle your own terms at
+[gymvisual.com](https://gymvisual.com/), run `scripts/fetch-exercise-media.sh`,
+and set:
+
+```bash
+NEXT_PUBLIC_EXERCISE_MEDIA_BASE=/exercise-media
+```
+
+Without it Orbit renders the names and the steps, which is the default.
+
+## The muscle map
+
+The programme's promise — every muscle group at least twice a week — is drawn
+on a body as well as counted in a grid. The map is the glance and the grid is
+the record: a bare back registers before a number is read, and the exact count
+is right underneath it, because colour alone says nothing to a colour-blind
+reader and nothing at all to a screen reader.
+
+The outlines are derived from [MuscleMap](https://github.com/melihcolpan/MuscleMap)
+by Melih Colpan under the MIT licence; `src/lib/body-map.ts` carries the full
+notice. They are drawn on the server, so the 42 kB of path data never reaches
+a phone.
+
+## The rest, and what a set was worth
+
+Saving a set starts the rest the programme implies — three minutes after heavy
+compound work, two after everything else compound, ninety seconds after
+isolation — and holds a screen wake lock for exactly as long as it runs, so a
+phone does not have to be unlocked with chalk on your hands. The clock is an
+end timestamp rather than a counter, so a locked screen or a backgrounded tab
+comes back to the right number. Skip and +30s are always there.
+
+Underneath each exercise is its estimated one-rep max, Epley, and the best in
+the loaded history when today is not it. It exists because a set is two
+numbers and progress is one: 8 × 60 kg and 5 × 70 kg are the same effort, and
+nothing else in the app can say so. A single is reported as itself, and a set
+above twelve reps gets no estimate rather than a confident wrong one.
+
+## Importing a training history
+
+Fitness accepts a CSV export from Strong or Hevy — or any file with a date, an
+exercise name, reps and a weight — and turns it into logged sets, so "last
+time" and every estimate work from day one instead of after six weeks.
+
+It reads the file and shows what it found before it writes anything: the
+exercises it matched and how many sets each has, every name nothing here
+answers to, and every row it would drop with the reason. Names match across
+word order and equipment qualifiers, so "Bench Press (Barbell)" finds Orbit's
+own barbell bench press; a name that could mean two different lifts matches
+neither, and warm-up sets are left out. Importing the same file twice changes
+nothing, and an import never removes history that is already here.
 
 ## Daily rings
 

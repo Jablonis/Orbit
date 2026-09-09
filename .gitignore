@@ -40,6 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Exercise animations: © Gym visual, licensed by the deployment, never by us.
+/public/exercise-media
+
 # local product and agent notes
 /AGENTS.md
 /PROJECT_MEMORY.md
